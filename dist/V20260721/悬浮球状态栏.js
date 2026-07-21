@@ -254,17 +254,15 @@
         st.textContent =
             '#hx4,#hx4-p,#hx4-m{--hx-accent:#5fd0ff;--hx-good:#22c55e;--hx-warn:#eab308;--hx-danger:#ef4444;--hx-bg:rgba(14,20,32,.9);--hx-card:rgba(22,32,50,.72);--hx-border:rgba(95,208,255,.28);--hx-text:#eaf2f8;--hx-sub:#8b95a6;--hx-dark:#070a10;box-sizing:border-box}' +
             '#hx4 *,#hx4-p *,#hx4-m *{box-sizing:border-box}' +
-            /* 悬浮球 */
-            '#hx4{position:fixed;top:14px;right:14px;z-index:99999;width:248px;padding:10px 12px;background:var(--hx-bg);border:1px solid var(--hx-border);border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.5);display:flex;align-items:center;gap:10px;color:var(--hx-text);font:13px "Segoe UI","Microsoft YaHei",sans-serif;cursor:grab;user-select:none;backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);transition:opacity .2s,transform .2s;touch-action:none}' +
+            /* 悬浮球 (圆形小球, 对齐 轮回战场 samsara-ball) */
+            '#hx4{position:fixed;top:15%;right:20px;z-index:999999;width:36px;height:36px;border-radius:50%;background:radial-gradient(circle,var(--hx-bg) 35%,var(--hx-dark) 100%);border:1.5px solid var(--hx-border);box-shadow:0 0 12px var(--hx-accent);cursor:pointer;user-select:none;touch-action:none;display:flex;justify-content:center;align-items:center;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:transform .25s,box-shadow .3s}' +
+            '#hx4:hover{transform:scale(1.1);box-shadow:0 0 18px var(--hx-accent)}' +
+            '#hx4:active{transform:scale(.95)}' +
             '#hx4.open{display:none}' +
-            '#hx4 .hx-ico{flex:0 0 42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--hx-dark),var(--hx-card));border:2px solid var(--hx-accent);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 14px rgba(95,208,255,.25)}' +
-            '#hx4 .hx-meta{flex:1;min-width:0}' +
-            '#hx4 .hx-title{font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
-            '#hx4 .hx-sub{font-size:11px;color:var(--hx-sub);line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
-            '#hx4 .hx-dot{flex:0 0 16px;height:16px;border-radius:50%;background:radial-gradient(circle,var(--hx-accent) 30%,transparent 70%);animation:hxp 1.6s infinite}' +
-            '@keyframes hxp{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:1;transform:scale(1.25)}}' +
+            '#hx4 .core{width:12px;height:12px;background:var(--hx-accent);border-radius:50%;box-shadow:0 0 7px var(--hx-accent);pointer-events:none}' +
+            '@keyframes hxp{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:1;transform:scale(1.3)}}' +
             /* 面板 */
-            '#hx4-p{position:fixed;top:14px;right:14px;z-index:99998;width:430px;max-width:calc(100vw - 24px);height:78vh;max-height:78vh;background:var(--hx-bg);border:1px solid var(--hx-border);border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,.55);display:none;flex-direction:column;overflow:hidden;font:13px "Segoe UI","Microsoft YaHei",sans-serif;color:var(--hx-text);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%)}' +
+            '#hx4-p{position:fixed!important;right:66px;top:6%;z-index:999998;width:430px;max-width:calc(100vw - 24px);height:78vh;max-height:78vh;background:var(--hx-bg);border:1px solid var(--hx-border);border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,.55),inset 0 0 40px rgba(0,0,0,.2);display:none;flex-direction:column;overflow:hidden;font:13px "Segoe UI","Microsoft YaHei",sans-serif;color:var(--hx-text);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%)}' +
             '#hx4-p.open{display:flex}' +
             '#hx4-p .hx-header{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--hx-border);background:linear-gradient(180deg,rgba(255,255,255,.04),transparent);touch-action:none}' +
             '#hx4-p .hx-htitle{font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}' +
@@ -308,11 +306,8 @@
             '#hx4-m .hx-mbody{padding:12px 16px;overflow-y:auto;-webkit-overflow-scrolling:touch}' +
             /* 移动端底部弹出模式 (与 轮回 一致) */ +
             '@media(max-width:768px){' +
-              '#hx4{top:auto;bottom:16px;right:16px;width:150px;padding:7px 10px;gap:8px;font-size:12px}' +
-              '#hx4 .hx-ico{flex:0 0 36px;height:36px;font-size:16px}' +
-              '#hx4 .hx-title{font-size:11px}' +
-              '#hx4 .hx-sub{font-size:10px}' +
-              '#hx4 .hx-dot{flex:0 0 12px;height:12px}' +
+              '#hx4{top:auto!important;bottom:16px;right:16px;width:30px;height:30px}' +
+              '#hx4 .core{width:10px;height:10px}' +
               '#hx4-p{left:0!important;right:0!important;top:auto!important;bottom:0!important;width:100vw;max-width:100vw;height:55vh;max-height:55vh;border-radius:18px 18px 0 0;border-bottom:none}' +
               '#hx4-p .hx-body{flex-direction:column}' +
               '#hx4-p .hx-rail{width:100%;flex:0 0 auto;flex-direction:row;overflow-x:auto;overflow-y:hidden;padding:6px 8px;gap:4px;border-right:none;border-bottom:1px solid var(--hx-border);white-space:nowrap}' +
@@ -327,8 +322,8 @@
               '#hx4-m .hx-mbox{width:calc(100vw - 24px);max-height:70vh}' +
             '}' +
             '@media(max-width:480px){' +
-              '#hx4{width:130px;bottom:10px;right:10px;padding:6px 8px}' +
-              '#hx4 .hx-ico{flex:0 0 32px;height:32px}' +
+              '#hx4{width:28px;height:28px;bottom:10px;right:10px}' +
+              '#hx4 .core{width:9px;height:9px}' +
               '#hx4-p{height:65vh;max-height:65vh;border-radius:16px 16px 0 0}' +
               '#hx4-p .hx-header{padding:8px 12px}' +
               '#hx4-p .hx-htitle{font-size:12px}' +
@@ -340,7 +335,7 @@
     } catch (e) { console.warn('[员工终端] 样式注入失败:', e.message); }
 
     /* ===== 9. DOM 构建 ===== */
-    var elCard, elPanel, elModal, elContent, elRail, elCp, elMoney, elTitle, elCrack, elClose, elRefresh, elTheme;
+    var elCard, elPanel, elModal, elContent, elRail, elTitle, elCrack, elClose, elRefresh, elTheme;
 
     /* ===== 9.5 内联 SVG 图标 (必须在 initHxDOM 之前定义, 因 DOM 构建会引用) ===== */
     var ICON_PROFILE = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>';
@@ -355,10 +350,8 @@
             hxPreClean();
             elCard = document.createElement('div');
             elCard.id = 'hx4';
-            elCard.innerHTML = '<div class="hx-ico">' + ICON_ENV + '</div><div class="hx-meta"><div class="hx-title">催眠助理·环晓科技</div><div class="hx-sub">¥<span id="hx-money">—</span> · 贡献点 <span class="hx-cp" id="hx-cp">—</span></div></div><div class="hx-dot"></div>';
+            elCard.innerHTML = '<div class="core"></div>';
             document.body.appendChild(elCard);
-            elCp = elCard.querySelector('#hx-cp');
-            elMoney = elCard.querySelector('#hx-money');
 
             elPanel = document.createElement('div');
             elPanel.id = 'hx4-p';
@@ -512,11 +505,9 @@
             }
             // 已收到数据: 清除"终端未响应"自动刷新定时器
             if (window.hxRefreshTimer) { clearInterval(window.hxRefreshTimer); window.hxRefreshTimer = null; }
-            // 悬浮球摘要
+            // 面板内状态更新
             var ps = d['主角状态'] || {};
             var crack = !!ps['破解模式'];
-            if (elCp) elCp.textContent = crack ? '∞' : (ps['贡献点'] == null ? '0' : ps['贡献点']);
-            if (elMoney) elMoney.textContent = crack ? '∞' : (ps['个人金钱'] == null ? '0' : ps['个人金钱']);
             if (elCrack) elCrack.classList.toggle('on', crack);
 
             if (curTab === '主角状态') {
