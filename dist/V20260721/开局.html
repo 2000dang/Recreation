@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>环晓科技 · 入职建档协议</title>
+<style>
+  :root{
+    --bg:#080a10; --surface:#10131e; --surface2:#181d2c;
+    --accent:#5fd0ff; --accent-d:#2b7fa8; --accent-bright:#8be0ff;
+    --text:#e2e8f0; --sub:#8899aa; --sub2:#5c6b7c;
+    --ok:#22c55e; --warn:#f59e0b; --danger:#ef4444; --info:#3b82f6;
+    --border:rgba(95,208,255,.22); --border-light:rgba(255,255,255,.06);
+    --input-bg:rgba(0,0,0,.35); --card-bg:var(--surface2);
+    --radius-sm:3px; --radius-md:5px; --radius-lg:8px;
+    --shadow:0 4px 20px rgba(0,0,0,.45); --shadow-lg:0 0 30px rgba(0,0,0,.7);
+    --tf:.2s; --tn:.3s;
+    --font-mono:'Consolas','Courier New',monospace;
+    /* 权限/品质色板 */
+    --q-1:#94a3b8; --q-2:#22c55e; --q-3:#3b82f6; --q-4:#a855f7; --q-5:#f97316;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;word-break:break-word}
+  html,body{background:var(--bg);color:var(--text);font-family:'Segoe UI','Microsoft YaHei',sans-serif;
+    min-height:0!important;height:auto!important;overflow:hidden}
+  body{padding:16px;background-image:radial-gradient(rgba(95,208,255,.04) 1px,transparent 1px);background-size:20px 20px}
+  .wizard-layout{width:100%;max-width:860px;margin:0 auto;min-height:580px;display:flex;flex-direction:column;
+    background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-lg);border-radius:var(--radius-lg);overflow:hidden}
+
+  /* 头部 */
+  .app-header{display:flex;justify-content:space-between;align-items:center;padding:14px 24px;
+    border-bottom:1px dashed var(--border);background:rgba(0,0,0,.25);gap:12px;flex-wrap:wrap}
+  .app-header h1{margin:0;font-size:1.15rem;color:#fff;letter-spacing:.08em}
+  .app-header .brand-tag{font-size:.72rem;color:var(--accent);padding:3px 10px;border:1px solid var(--accent-d);border-radius:var(--radius-lg);white-space:nowrap}
+  .header-actions{display:flex;align-items:center;gap:12px}
+  .icon-btn{padding:7px 13px;font-size:.8rem;background:transparent;color:var(--accent);border:1px solid var(--accent-d);
+    border-radius:var(--radius-md);cursor:pointer;transition:var(--tn);white-space:nowrap}
+  .icon-btn:hover{background:var(--accent);color:#0a1018}
+
+  /* 步骤导航 */
+  .step-nav{display:flex;align-items:center;gap:0;background:var(--surface2);border-bottom:1px solid var(--border);padding:5px 8px}
+  .step-nav .step{flex:1;display:flex;align-items:center;justify-content:center;color:var(--sub2);font-size:.82rem;font-weight:700;
+    background:var(--surface);margin-left:-5px;clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 50%,100% 100%,12px 100%,0 50%);
+    transition:var(--tn);padding:9px 14px;position:relative;cursor:pointer}
+  .step-nav .step:first-child{clip-path:polygon(0 0,100% 0,calc(100% - 12px) 50%,100% 100%,0 100%,0 50%);padding-left:16px;margin-left:0}
+  .step-nav .step:last-child{clip-path:polygon(12px 0,100% 0,100% 50%,100% 100%,12px 100%,0 50%);padding-right:16px}
+  .step-nav .step .tt{text-align:center;width:100%;line-height:1.3;word-break:keep-all}
+  .step-nav .step.active{background:var(--accent);color:#0a1018}
+  .step-nav .step.done{background:var(--accent-d);color:#fff}
+
+  /* 面板 */
+  .content-area{flex:1;overflow-y:auto;padding:22px;min-height:0}
+  .step-pane{display:none;animation:fade .35s ease}
+  .step-pane.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+  /* 表单 */
+  .form-group{margin-bottom:15px}
+  .form-group>label,.form-label{display:block;margin-bottom:5px;color:var(--accent);font-size:.78rem;font-weight:700;letter-spacing:.5px}
+  .form-control{width:100%;padding:9px 12px;background:var(--input-bg);border:1px solid var(--border);color:#fff;border-radius:var(--radius-md);outline:none;transition:var(--tn);font-size:.9rem;font-family:inherit}
+  .form-control:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(95,208,255,.12);background:#000}
+  .form-control.readonly{background:var(--surface);color:var(--accent-bright);font-weight:600;letter-spacing:.04em}
+  textarea.form-control{resize:vertical;line-height:1.5;min-height:60px}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .section-title{font-size:1rem;color:#fff;margin:0 0 12px;padding-bottom:7px;border-bottom:2px solid var(--border);font-weight:700}
+  .hint{color:var(--sub);font-size:.74rem;margin-top:4px;line-height:1.45}
+
+  /* 属性面板 */
+  .attr-panel{margin-top:20px;background:var(--input-bg);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+  .attr-panel .panel-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;background:rgba(0,0,0,.2)}
+  .attr-panel .panel-header h3{margin:0;color:#fff;font-size:.95rem;font-weight:700}
+  .points-summary{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .points-badge{font-size:.8rem;color:var(--text);padding:5px 10px;background:rgba(0,0,0,.45);border:1px solid var(--border);border-radius:var(--radius-sm)}
+  .points-badge strong{color:var(--accent);font-size:1rem;font-family:var(--font-mono);margin-left:4px}
+  .points-badge strong.over{color:var(--danger);animation:shake .3s}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+  .attr-editor{padding:14px 16px}
+  .attr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+  .attr-item{display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,.25);padding:9px 13px;border:1px solid var(--border);border-left:3px solid var(--accent-d);border-radius:var(--radius-md);transition:var(--tn)}
+  .attr-item:hover{border-color:var(--accent);background:rgba(0,0,0,.4)}
+  .attr-item .attr-label{font-size:.88rem;color:var(--text);font-weight:700;width:70px;letter-spacing:1px}
+  .attr-controls{display:flex;align-items:center;gap:7px}
+  .attr-controls .attr-step{width:26px;height:26px;border:1px solid var(--accent-d);background:rgba(95,208,255,.06);color:var(--accent);font-size:1.15rem;font-weight:700;cursor:pointer;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;transition:var(--tn);line-height:0;padding-bottom:2px}
+  .attr-controls .attr-step:hover:not(:disabled){background:var(--accent);color:#0a1018;box-shadow:0 0 8px rgba(95,208,255,.4)}
+  .attr-controls .attr-step:active:not(:disabled){transform:scale(.92)}
+  .attr-controls .attr-step:disabled{opacity:.25;cursor:not-allowed;border-color:var(--sub2);color:var(--sub2);background:transparent}
+  .attr-controls .attr-input{width:42px;text-align:center;background:#000;color:var(--accent);font-weight:700;border:1px solid var(--accent-d);padding:3px;border-radius:var(--radius-sm);font-size:.9rem;font-family:var(--font-mono);outline:none;transition:var(--tn)}
+  .attr-controls .attr-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(95,208,255,.12)}
+  .attr-controls .attr-input.over{color:var(--danger);border-color:var(--danger)}
+  .attr-controls .attr-input::-webkit-outer-spin-button,.attr-controls .attr-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .attr-controls .attr-input[type=number]{-moz-appearance:textfield;appearance:textfield}
+  .attr-item .attr-tier{font-size:.74rem;padding:3px 9px;min-width:36px;text-align:center;border-radius:var(--radius-sm);font-weight:900;font-family:var(--font-mono)}
+  .tier-1{background:var(--q-1);color:#1a1a1a}.tier-2{background:var(--q-2);color:#fff}
+  .tier-3{background:var(--q-3);color:#fff}.tier-4{background:var(--q-4);color:#fff}
+  .tier-5{background:var(--q-5);color:#fff;box-shadow:0 0 6px var(--q-5)}
+
+  .total-points{display:flex;justify-content:flex-end;align-items:center;margin-top:12px;padding-top:9px;border-top:1px solid var(--border-light);font-size:.84rem;gap:8px;flex-wrap:wrap}
+  .total-points .total-label{color:var(--sub)}
+  .total-points .total-value{font-weight:700;color:var(--accent);font-family:var(--font-mono);font-size:1rem}
+
+  /* 破解模式选择器 */
+  .crack-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+  .crack-card{background:var(--card-bg);border:2px solid var(--border);border-radius:var(--radius-lg);padding:14px;cursor:pointer;transition:var(--tn)}
+  .crack-card:hover{border-color:var(--accent)}
+  .crack-card.selected{border-color:var(--accent);background:rgba(95,208,255,.08);box-shadow:0 0 0 2px rgba(95,208,255,.15)}
+  .crack-card .crack-name{font-size:.95rem;color:#fff;font-weight:700;margin-bottom:6px}
+  .crack-card .crack-desc{font-size:.78rem;color:var(--sub);line-height:1.45}
+
+  /* 确认页 */
+  .summary-box{background:var(--surface2);padding:20px;border:1px solid var(--border);border-radius:var(--radius-md)}
+  .summary-box .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--border-light);font-size:.84rem}
+  .summary-box .row span:first-child{color:var(--sub)}
+  .summary-box .row span:last-child{color:var(--text);font-weight:600}
+  .summary-box .row.highlight{background:rgba(95,208,255,.06);margin:0 -12px;padding:6px 12px;border-radius:var(--radius-sm)}
+  .output-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+  .output-actions .btn{flex:1;min-width:160px}
+
+  /* 页脚 */
+  .app-footer{display:flex;justify-content:space-between;padding:14px 22px;border-top:1px solid var(--border);background:var(--surface2)}
+  .btn{padding:10px 22px;font-size:.88rem;font-weight:700;background:transparent;color:var(--text);border:1px solid var(--sub2);border-radius:var(--radius-md);cursor:pointer;transition:var(--tn)}
+  .btn:hover{border-color:#fff;color:#fff}
+  .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-d));color:#0a1018;border:none}
+  .btn.primary:hover{box-shadow:0 0 16px rgba(95,208,255,.4)}
+  .btn.danger{border-color:var(--danger);color:var(--danger)}
+  .btn.danger:hover{background:var(--danger);color:#fff}
+
+  .skip-link{text-align:center;margin-top:6px;font-size:.74rem;color:var(--sub);cursor:pointer}
+  .skip-link:hover{color:var(--accent)}
+
+  .err-msg{color:var(--danger);font-size:.74rem;min-height:14px;margin-top:5px}
+  .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--accent);color:var(--text);padding:9px 18px;border-radius:20px;font-size:.8rem;opacity:0;transition:.3s;pointer-events:none;z-index:9999}
+  .toast.show{opacity:1}
+
+  /* 移动端 */
+  @media(max-width:768px){
+    .wizard-layout{border-radius:0;border:none}
+    .app-header{padding:12px 14px}.app-header h1{font-size:1rem}
+    .content-area{padding:14px}
+    .grid-2{grid-template-columns:1fr}
+    .step-nav .step{font-size:.72rem;padding:8px 8px}
+  }
+  @media(max-width:480px){
+    body{padding:8px}
+    .step-nav .step .tt{font-size:.68rem}
+    .crack-options{grid-template-columns:1fr}
+    .btn{padding:9px 14px;font-size:.82rem}
+  }
+</style>
+</head>
+<body>
+<div class="wizard-layout">
+  <div class="app-header">
+    <h1>环晓科技 · 入职建档协议</h1>
+    <span class="brand-tag">员工终端 v2</span>
+  </div>
+
+  <div class="step-nav">
+    <div class="step active" data-step="1"><span class="tt">① 身份登记</span></div>
+    <div class="step" data-step="2"><span class="tt">② 资源与模式</span></div>
+    <div class="step" data-step="3"><span class="tt">③ 入职公司</span></div>
+  </div>
+
+  <!-- STEP 1: 身份 -->
+  <div class="content-area">
+    <div class="step-pane active" id="pane-1">
+      <div class="section-title">员工身份登记</div>
+      <div class="form-group">
+        <label>姓名 <span style="color:var(--danger)">*</span></label>
+        <input type="text" class="form-control" id="f-name" placeholder="请输入主角姓名" maxlength="16" data-required>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>性别</label>
+          <select class="form-control" id="f-gender">
+            <option value="男">男</option>
+            <option value="女">女</option>
+            <option value="未指定">未指定</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>年龄 <span style="color:var(--danger)">*</span></label>
+          <input type="number" class="form-control" id="f-age" value="25" min="18" max="99">
+          <div class="hint">环晓科技仅招收成年员工（≥18岁）</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>入职部门</label>
+          <select class="form-control" id="f-dept">
+            <option value="行政部">行政部</option>
+            <option value="研发部">研发部</option>
+            <option value="催眠事业部">催眠事业部</option>
+            <option value="安保部">安保部</option>
+            <option value="外勤组">外勤组</option>
+            <option value="总经办">总经办</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>工号（系统自动生成）</label>
+          <input type="text" class="form-control readonly" id="f-empid" readonly>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>自我简述</label>
+        <textarea class="form-control" id="f-bio" placeholder="可选填写。简要描述主角来到环晓科技的动机、背景或性格特质（30字以内）。留空将由AI自动适配。" maxlength="60" rows="2"></textarea>
+        <div class="hint">留空 = AI 将根据部门与背景自动推演</div>
+      </div>
+      <div class="err-msg" id="err-1"></div>
+    </div>
+
+    <!-- STEP 2: 资源与模式 -->
+    <div class="step-pane" id="pane-2">
+      <div class="section-title">资源分配</div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>职级</label>
+          <select class="form-control" id="f-rank">
+            <option value="实习生">实习生</option>
+            <option value="初级专员" selected>初级专员</option>
+            <option value="中级专员">中级专员</option>
+            <option value="高级专员">高级专员</option>
+            <option value="主管">主管</option>
+            <option value="总监">总监</option>
+          </select>
+          <div class="hint">不同职级影响公司内部资源和NPC互动方式</div>
+        </div>
+        <div class="form-group">
+          <label>初始贡献点</label>
+          <input type="number" class="form-control" id="f-credit" value="100" min="0" max="99999">
+          <div class="hint">用于解锁权限与剧情节点</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>个人资金（¥）</label>
+        <input type="number" class="form-control" id="f-money" value="5000" min="0" max="99999999">
+      </div>
+
+      <div class="section-title" style="margin-top:18px">破解模式</div>
+      <div class="crack-options">
+        <div class="crack-card selected" data-crack="关闭">
+          <div class="crack-name">🔒 普通模式</div>
+          <div class="crack-desc">标准规则，贡献点经济与权限体系正常运作。推荐首次体验。</div>
+        </div>
+        <div class="crack-card" data-crack="开启">
+          <div class="crack-name">⚡ 绝对权限</div>
+          <div class="crack-desc">获取系统最高管理权限，所有限制解除，贡献点无限，自由操控一切。</div>
+        </div>
+      </div>
+      <input type="hidden" id="f-crack" value="关闭">
+      <div class="err-msg" id="err-2"></div>
+    </div>
+
+    <!-- STEP 3: 入职公司 -->
+    <div class="step-pane" id="pane-3">
+      <div class="section-title">入职确认</div>
+      <div class="summary-box" id="summary"></div>
+      <div class="err-msg" id="err-3"></div>
+      <div class="output-actions">
+        <button class="btn primary" id="btn-descend">入职 · 开始剧情</button>
+        <button class="btn danger" id="btn-skip">快速入职，默认开局</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 页脚 -->
+  <div class="app-footer" id="footer-buttons">
+    <button class="btn" id="btn-prev">← 上一步</button>
+    <button class="btn primary" id="btn-next">下一步 →</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+  var curStep = 1, TOTAL_STEPS = 3;
+
+  function $(id){ return document.getElementById(id); }
+  function $$(s){ return document.querySelectorAll(s); }
+
+  // 工号自动生成
+  var empId = 'HX-' + String(Math.floor(1000 + Math.random() * 9000));
+  $('f-empid').value = empId;
+
+  // === Toast ===
+  var _toastTimer = 0;
+  function toast(msg, cls){
+    var t=$('toast'); t.textContent=msg; t.className='toast show'+(cls?' '+cls:'');
+    clearTimeout(_toastTimer);
+    _toastTimer=setTimeout(function(){ t.classList.remove('show'); },2400);
+  }
+
+  // === 步骤导航 ===
+  function setStep(n){
+    curStep = n;
+    // 面板
+    for(var i=1;i<=TOTAL_STEPS;i++){ $('pane-'+i).classList.toggle('active', i===n); }
+    // 导航
+    $$('.step-nav .step').forEach(function(s,i){
+      s.classList.toggle('active', i+1===n);
+      s.classList.toggle('done', i+1<n);
+    });
+    // 页脚按钮
+    $('btn-prev').style.display = (n===1)?'none':'inline-block';
+    $('btn-next').style.display = (n===TOTAL_STEPS)?'none':'inline-block';
+    if(n===TOTAL_STEPS) buildSummary();
+    // 步骤2初始化破解卡片
+    if(n===2) initCrackCards();
+    reportHeight();
+  }
+
+  // === 验证 ===
+  function validateStep(n){
+    var e=$('err-'+n); e.textContent='';
+    if(n===1){
+      var nm=$('f-name').value.trim();
+      var age=parseInt($('f-age').value,10);
+      if(!nm){ e.textContent='请填写主角姓名'; return false; }
+      if(!age||age<18){ e.textContent='主角年龄须≥18岁'; return false; }
+    }
+    if(n===2){
+      var cr=parseInt($('f-credit').value,10), mo=parseInt($('f-money').value,10);
+      if(isNaN(cr)||cr<0){ $('err-2').textContent='贡献点须为非负整数'; return false; }
+      if(isNaN(mo)||mo<0){ $('err-2').textContent='资金须为非负整数'; return false; }
+    }
+    return true;
+  }
+
+  function goNext(){
+    if(!validateStep(curStep)) return;
+    if(curStep<TOTAL_STEPS) setStep(curStep+1);
+  }
+  function goPrev(){
+    if(curStep>1) setStep(curStep-1);
+  }
+
+  // === 破解模式 ===
+  function initCrackCards(){
+    var cur=$('f-crack').value;
+    $$('.crack-card').forEach(function(c){
+      c.classList.toggle('selected', c.getAttribute('data-crack')===cur);
+    });
+  }
+
+  $$('.crack-card').forEach(function(c){
+    c.addEventListener('click',function(){
+      var v=this.getAttribute('data-crack');
+      $('f-crack').value=v;
+      $$('.crack-card').forEach(function(x){x.classList.toggle('selected',x.getAttribute('data-crack')===v);});
+    });
+  });
+
+  // === 数据收集 ===
+  function collect(){
+    var bio = $('f-bio').value.trim();
+    if(!bio) bio = '环晓科技新晋员工，正在适应公司氛围';
+    return {
+      name: $('f-name').value.trim()||'（未命名）',
+      gender: $('f-gender').value,
+      age: parseInt($('f-age').value,10)||25,
+      dept: $('f-dept').value,
+      empId: $('f-empid').value,
+      bio: bio,
+      rank: $('f-rank').value,
+      credit: parseInt($('f-credit').value,10)||0,
+      money: parseInt($('f-money').value,10)||0,
+      crackMode: $('f-crack').value
+    };
+  }
+
+  // === 摘要 ===
+  function buildSummary(){
+    var d=collect();
+    var rows=[
+      ['姓名', d.name], ['性别', d.gender], ['年龄', d.age+'岁'],
+      ['部门', d.dept], ['工号', d.empId], ['职级', d.rank],
+      ['贡献点', String(d.credit)], ['个人资金', '¥'+String(d.money)],
+      ['破解模式', d.crackMode==='关闭'?'普通模式':'绝对权限']
+    ];
+    var h='';
+    rows.forEach(function(r){
+      h+='<div class="row'+(r[0]==='姓名'?' highlight':'')+'"><span>'+esc(r[0])+'</span><span>'+esc(String(r[1]))+'</span></div>';
+    });
+    if(d.bio && d.bio!=='环晓科技新晋员工，正在适应公司氛围'){
+      h+='<div class="row"><span>简述</span><span>'+esc(d.bio)+'</span></div>';
+    }
+    $('summary').innerHTML=h;
+  }
+
+  function esc(s){ return String(s).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+
+  // === 提示词构建 ===
+  function buildPrompt(d){
+    var parts = [];
+    parts.push('【环晓科技 · 入职建档协议】');
+    parts.push('');
+    parts.push('【角色档案】');
+    parts.push('姓名：'+d.name+'　性别：'+d.gender+'　年龄：'+d.age+'岁');
+    parts.push('入职部门：'+d.dept+'　工号：'+d.empId+'　职级：'+d.rank);
+    if(d.bio&&d.bio!=='环晓科技新晋员工，正在适应公司氛围'){
+      parts.push('简述：'+d.bio);
+    }
+
+    parts.push('【公司资产】');
+    parts.push('贡献点：'+d.credit+'　个人资金：¥'+d.money);
+    parts.push('破解模式：'+(d.crackMode==='关闭'?'普通模式':'绝对权限'));
+    parts.push('');
+    parts.push('【系统指令】');
+    parts.push('你是角色卡「催眠助理·环晓科技」的叙事引擎。请基于以上建档数据，生成一段沉浸式开局场景：');
+    parts.push('');
+    parts.push('1. 环境描写：主角以"'+d.name+'"的身份，于清晨走入环晓科技大厦——一座融合脑机接口与催眠科技的超级企业总部。第一人称视角，细腻刻画大堂的赛博质感、专属终端弹出的员工界面、擦肩而过的工作人员的微表情。');
+    parts.push('2. 角色引入：自然引出1-2名女性员工/助理（杨玉兰、卫璎、娄琛雨等角色池）与主角的首次互动。根据选择的部门('+d.dept+')与职级('+d.rank+')，呈现合理的职场层级关系。');
+    parts.push('3. 系统展示：通过员工终端界面，简要展示贡献点系统、催眠权限评级、任务面板的存在——但不要一次性堆砌数据。让主角在剧情中"发现"自己的权限与资源。');
+    if(d.crackMode!=='关闭'){
+      parts.push('4. 暗线铺垫：绝对权限模式已激活。在场景中植入1-2处微妙的异常细节（如系统日志闪现、防火墙警报静默、某位NPC的眼神中带着不同寻常的"认识"），暗示公司的表层运作之下存在更深的秘密。');
+    } else {
+      parts.push('4. 暗线铺垫：在场景中植入1-2处微妙的异常细节（如走廊尽头的门禁系统发出一声异常蜂鸣、电梯镜面中出现不该存在的倒影），暗示公司的表层运作之下存在更深的秘密。');
+    }
+    parts.push('5. 基调要求：科幻职场悬疑风格。保持专业冷静的科技公司氛围，对话自然有张力。');
+    parts.push('6. 叙事准则：直接以场景描写开始，无需整理或寒暄。绝对禁止任何色情或露骨性描写。将建档信息融合到开场叙事中，而非机械罗列。');
+    parts.push('7. 变量接入：角色档案已写入MVU系统。请基于职级与部门自然体现在叙事中。');
+    return parts.join('\n');
+  }
+
+  // === MVU同步 (使用 _.set 深层写入 + replaceMvuData, 对齐 轮回战场 模式) ===
+  function syncMVU(d){
+    try {
+      var win = window.parent || window;
+      if (!win.Mvu || !win._ || typeof win.Mvu.getMvuData !== 'function') {
+        // 回退到 updateVariable
+        if (win.Mvu && typeof win.Mvu.updateVariable === 'function') {
+          win.Mvu.updateVariable('主角状态', {
+            工号:d.empId, 职级:d.rank, 贡献点:d.credit, '个人金钱':d.money,
+            '破解模式':d.crackMode!=='关闭'
+          });
+          return true;
+        }
+        return false;
+      }
+
+      var cloned = win.Mvu.getMvuData({type:'message', message_id:'latest'});
+      if(!cloned || !cloned.stat_data) return false;
+
+      // deep clone
+      cloned = win._.cloneDeep ? win._.cloneDeep(cloned) : JSON.parse(JSON.stringify(cloned));
+      if(!cloned.stat_data['主角状态']) cloned.stat_data['主角状态'] = {};
+
+      var ps = cloned.stat_data['主角状态'];
+      win._.set(ps, '工号', d.empId);
+      win._.set(ps, '职级', d.rank);
+      win._.set(ps, '贡献点', d.credit);
+      win._.set(ps, '个人金钱', d.money);
+      win._.set(ps, '破解模式', d.crackMode!=='关闭');
+
+      // 写回
+      win.Mvu.replaceMvuData(cloned, {type:'message', message_id:'latest'});
+      try { win.Mvu.replaceMvuData(cloned, {type:'chat'}); } catch(e2){}
+
+      // 手动广播更新事件
+      try {
+        var evt = win.Mvu.events && win.Mvu.events.VARIABLE_UPDATE_ENDED;
+        if(evt && typeof win.eventEmit === 'function') win.eventEmit(evt, cloned, cloned);
+      } catch(e3){}
+
+      console.log('✅ MVU 主角状态已同步 (_.set 深度写入)');
+      return true;
+    } catch(e){
+      console.warn('[开局] MVU同步失败(非致命):', e.message);
+      return false;
+    }
+  }
+
+  // === 发送到酒馆 ===
+  function sendToTavern(text){
+    try {
+      var win = window.parent || window;
+      var ta = win.document.getElementById('send_textarea');
+      var btn = win.document.getElementById('send_but');
+      if(ta&&btn){
+        ta.value = text;
+        ta.dispatchEvent(new Event('input',{bubbles:true}));
+        btn.click();
+        toast('正在降临环晓科技...','success');
+        try { parent.postMessage({type:'embed-resize',height:0},'*'); } catch(e){}
+        return true;
+      } else {
+        console.log(text);
+        toast('未检测到酒馆界面，已输出到控制台','warn');
+        return false;
+      }
+    } catch(e){
+      console.error(e);
+      toast('跨域访问受限，无法自动发送','error');
+      return false;
+    }
+  }
+
+  // === 降临 ===
+  function descend(){
+    var nm=$('f-name').value.trim();
+    if(!nm){ $('err-3').textContent='请返回第一步填写姓名'; setStep(1); return; }
+    var d=collect();
+    syncMVU(d);
+    var prompt=buildPrompt(d);
+    sendToTavern(prompt);
+  }
+
+  function skipDescend(){
+    var d=collect();
+    d.name = d.name||'新员工';
+    d.rank = d.rank||'初级专员';
+    d.dept = d.dept||'行政部';
+    d.credit = d.credit||100;
+    d.money = d.money||5000;
+    d.crackMode = '关闭';
+    syncMVU(d);
+    var p = '【环晓科技 · 默认开局】\n请直接以一名新入职初级专员的视角，生成环晓科技的开局场景：推开公司旋转门，步入大厅，初步接触员工终端系统。自然引出至少一名女性NPC互动。保持科幻职场悬疑基调。严禁色情或露骨描写。';
+    sendToTavern(p);
+  }
+
+  // === iframe 高度 ===
+  function reportHeight(){
+    try {
+      var h = Math.ceil(document.body.scrollHeight||0);
+      parent.postMessage({type:'embed-resize',height:h},'*');
+    } catch(e){}
+  }
+
+  // === 事件绑定 ===
+  $('btn-next').addEventListener('click', goNext);
+  $('btn-prev').addEventListener('click', goPrev);
+  $('btn-descend').addEventListener('click', descend);
+  $('btn-skip').addEventListener('click', skipDescend);
+
+  // 步骤导航点击
+  $$('.step-nav .step').forEach(function(s){
+    s.addEventListener('click',function(){
+      var n=parseInt(this.getAttribute('data-step'),10);
+      if(n<curStep) setStep(n); // 允许回退
+    });
+  });
+
+  // 键盘导航
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'&&!e.ctrlKey&&!e.metaKey){e.preventDefault();goNext();}
+    else if(e.key==='ArrowLeft'&&!e.ctrlKey&&!e.metaKey){e.preventDefault();goPrev();}
+    else if(e.key==='Enter'&&e.ctrlKey&&curStep===TOTAL_STEPS){e.preventDefault();descend();}
+  });
+
+  // 初始化
+  window.addEventListener('load',function(){
+    reportHeight();
+    setTimeout(reportHeight,300);
+  });
+  if(window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.body);
+
+  // 暴露
+  window.HX_OPENING = { collect:collect, descend:descend, skip:skipDescend, buildPrompt:buildPrompt, setStep:setStep };
+})();
+</script>
+</body>
+</html>

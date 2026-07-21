@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>环晓科技 · 接入协议</title>
+<style>
+  :root{
+    --bg:#0b0c10; --surface:#12141a; --text:#c5c6c7; --text-sub:#7a7f85;
+    --accent:#5fd0ff; --accent-dark:#2a7fa0; --accent-soft:rgba(95,208,255,.12);
+    --font-ui:'Segoe UI','Microsoft YaHei',sans-serif;
+    --font-lore:'Noto Serif SC',serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:var(--bg);color:var(--text);font-family:var(--font-ui);
+    line-height:1.8;overflow:hidden}
+  body{border-left:2px solid var(--accent-dark);border-right:2px solid var(--accent-dark);
+    box-shadow:inset 0 0 100px rgba(0,0,0,.8);min-height:0!important;height:auto!important}
+  .main{max-width:680px;margin:0 auto;padding:24px 24px 40px}
+  .header{text-align:center;padding:24px 0 28px}
+  .tag{font-size:.65rem;letter-spacing:.6rem;color:var(--accent);opacity:.8;
+    text-transform:uppercase;font-family:monospace}
+  h1{font-family:var(--font-lore);font-size:2.4rem;font-weight:900;letter-spacing:.3rem;
+    margin:12px 0;color:#fff;text-shadow:0 0 20px var(--accent-soft)}
+  .sub{color:var(--text-sub);font-size:.95rem}
+  .panel{background:var(--surface);border:1px solid rgba(95,208,255,.2);border-radius:14px;
+    padding:18px 20px;margin-top:18px;box-shadow:0 0 30px rgba(0,0,0,.4)}
+  .panel h2{font-size:1rem;color:var(--accent);margin-bottom:10px;letter-spacing:.1rem}
+  .panel p{font-size:.9rem;color:var(--text);margin:6px 0}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  .chip{padding:6px 14px;border:1px solid rgba(95,208,255,.3);border-radius:20px;
+    font-size:.82rem;color:var(--text)}
+  .foot{text-align:center;color:var(--text-sub);font-size:.75rem;margin-top:24px}
+  @media(max-width:768px){
+    body{border-left:none;border-right:none;line-height:1.6}
+    .main{padding:16px 16px 28px}
+    h1{font-size:1.8rem;letter-spacing:.15rem}
+    .panel{padding:14px 16px;margin-top:14px}
+    .sub{font-size:.82rem}
+    .chip{font-size:.74rem;padding:5px 11px}
+    .foot{font-size:.7rem}
+  }
+  @media(max-width:480px){
+    .main{padding:12px 12px 22px}
+    h1{font-size:1.5rem}
+    .tag{font-size:.58rem;letter-spacing:.4rem}
+    .panel{padding:12px 14px;border-radius:10px}
+    .panel p{font-size:.82rem}
+  }
+</style>
+</head>
+<body>
+  <div class="main">
+    <div class="header">
+      <div class="tag">HUANXIAO TECH</div>
+      <h1>环晓科技</h1>
+      <div class="sub">员工系统 · 接入协议 v20260721</div>
+    </div>
+    <div class="panel">
+      <h2>欢迎，{{user}} 博士</h2>
+      <p>您已通过脑机接口鉴权。当前职级：<b>正式员工</b>，贡献点余额：<b>5</b>。</p>
+      <p>本终端通过外部资源加载（jsdelivr CDN）实时渲染，更新无需重装角色卡。</p>
+    </div>
+    <div class="panel">
+      <h2>快速入口</h2>
+      <div class="row">
+        <span class="chip">员工系统</span>
+        <span class="chip">贡献点商城</span>
+        <span class="chip">催眠剧本</span>
+        <span class="chip">隐藏场景</span>
+        <span class="chip">破解模式</span>
+      </div>
+    </div>
+    <div class="foot">环晓科技集团 · 陵东市总部 · 25F</div>
+  </div>
+<script>
+  // 机制A 关键: 向父窗口(对话流)回报高度以实现自适应
+  (function () {
+    function report() {
+      var h = Math.ceil(document.body.scrollHeight || document.documentElement.scrollHeight || 0);
+      try { parent.postMessage({ type: 'embed-resize', height: h }, '*'); } catch (e) {}
+    }
+    window.addEventListener('load', function () { report(); setTimeout(report, 300); });
+    if (window.ResizeObserver) {
+      new ResizeObserver(report).observe(document.body);
+    } else {
+      setInterval(report, 1000);
+    }
+  })();
+</script>
+</body>
+</html>

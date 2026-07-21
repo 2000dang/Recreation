@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>催眠助理·环晓科技 — 角色档案与剧情事件表（深度还原）</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--line:#e3e6ea;--ink:#1f2329;--sub:#6b7280;--acc:#7c3aed;--acc2:#0ea5e9;--surv:#16a34a;--minor:#d97706;--warn:#b91c1c;}
+*{box-sizing:border-box}
+body{margin:0;font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;}
+header{background:linear-gradient(120deg,#2d1b4e,#4338ca);color:#fff;padding:22px 28px;}
+header h1{margin:0;font-size:22px;letter-spacing:.5px;}
+header .meta{opacity:.85;font-size:13px;margin-top:6px;}
+.banner{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:12px 20px;font-size:13.5px;margin:14px 18px;border-radius:10px;}
+.tabs{display:flex;gap:8px;padding:14px 18px 0;}
+.tab{padding:9px 18px;border:1px solid var(--line);border-bottom:none;background:#fff;border-radius:10px 10px 0 0;cursor:pointer;font-size:14px;color:var(--sub);}
+.tab.on{background:var(--acc);color:#fff;border-color:var(--acc);}
+.pane{display:none;padding:18px;}
+.pane.on{display:block;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+.card-lou{border:2px solid var(--surv);box-shadow:0 0 0 3px rgba(22,163,74,.12);}
+.card-minor{opacity:.96;border:1px dashed var(--minor);}
+.portrait{height:200px;background:#eceef2;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.portrait img{width:100%;height:100%;object-fit:cover;object-position:top center;}
+.noimg{color:var(--sub);font-size:13px;}
+.cbody{padding:12px 14px;}
+.chead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.cname{font-size:17px;font-weight:700;}
+.cident{color:var(--sub);font-size:12.5px;margin:4px 0 8px;}
+.badge{font-size:11px;padding:2px 8px;border-radius:999px;background:#eef2ff;color:#4338ca;}
+.badge-survive{background:#dcfce7;color:#15803d;font-weight:700;}
+.badge-minor{background:#fef3c7;color:#b45309;}
+.cdetail .row{display:flex;gap:8px;padding:4px 0;border-bottom:1px dashed #eef0f3;font-size:12.6px;}
+.cdetail .k{flex:0 0 92px;color:var(--acc);font-weight:600;}
+.cdetail .k-special{color:var(--surv);}
+.cdetail .v{flex:1;color:#374151;}
+h3.grp{margin:22px 0 8px;color:var(--acc);font-size:16px;border-left:4px solid var(--acc);padding-left:10px;}
+table.tbl{width:100%;border-collapse:collapse;font-size:12.6px;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+table.tbl th{background:#f1f3f7;color:#374151;padding:8px 10px;text-align:left;font-weight:600;}
+table.tbl td{padding:8px 10px;border-top:1px solid #eef0f3;vertical-align:top;}
+table.tbl td.b{font-weight:600;color:var(--acc);}
+.tl{position:relative;margin:14px 0 14px 14px;padding-left:20px;border-left:3px solid var(--acc2);}
+.tl-item{margin-bottom:14px;}
+.tl-item.hl .tl-stage{color:var(--surv);}
+.tl-stage{font-weight:700;font-size:14px;}
+.tl-event{font-size:13px;color:#374151;margin:3px 0;}
+.tl-lou{font-size:12.5px;color:#9a3412;background:#fff7ed;padding:6px 10px;border-radius:8px;}
+.surv-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px 18px;margin-bottom:20px;}
+.surv-title{font-weight:700;color:#15803d;font-size:15px;margin-bottom:10px;}
+.surv-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12.8px;}
+.surv-sub{margin:12px 0 6px;font-weight:600;color:#15803d;}
+.surv-stages{margin:0;padding-left:20px;font-size:12.6px;}
+.surv-trig{display:flex;flex-wrap:wrap;gap:6px;}
+.trig{background:#dcfce7;color:#166534;font-size:11.5px;padding:3px 9px;border-radius:999px;}
+footer{text-align:center;color:var(--sub);font-size:12px;padding:20px;}
+@media(max-width:640px){.surv-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<header>
+  <h1>催眠助理·环晓科技 — 角色档案与剧情事件表（深度还原）</h1>
+  <div class="meta">版本 V20260721-深度还原 · 生成日期 2026-07-21 · 角色 23 人 · 剧本 23 个</div>
+</header>
+<div class="banner">依据《三大机制调整方案》重写娄琛雨命运：去除'脑损伤去世'线，改为破解模式及时终止注射→纳米机器人重置→清除剧本控制→授系统副总管→记忆四层封印→苏醒存活。其他人物与剧本均按角色卡/原著原汁原味保留（环晓后宫特色不去除）。</div>
+<div class="tabs">
+  <div class="tab on" data-t="arc">角色档案</div>
+  <div class="tab" data-t="evt">剧情事件表</div>
+</div>
+<div class="pane on" id="p-arc"><div class="grid">
+    <div class="card" id="card-杨玉兰">
+      <div class="portrait"><img src="img/杨玉兰.png" alt="杨玉兰" onerror="this.style.display='none'"/></div>
+      <div class="cbody">
+        <div class="chead"><span class="cname">杨玉兰</span><span class="badge">心腹（已转正）</span></div>
+        <div class="cident">{{user}}的实习助理→组长助理→心腹</div>
+        <div class="cdetail"><div class="row"><div class="k ">身份</div><div class="v">{{user}}的实习助理→组长助理→心腹</div></div><div class="row"><div class="k ">年龄</div><div class="v">18岁</div></div><div class="row"><div class="k ">三围</div><div class="v">89/59/87</div></div><div class="row"><div class="k ">罩杯</div><div class="v">D</div></div><div class="row"><div class="k ">身高</div><div class="v">165cm</div></div><div class="row"><div class="k ">体重</div><div class="v">52kg</div></div><div class="row"><div class="k ">面容</div><div class="v">精致漂亮的脸蛋，微微嘟起的红唇小嘴；斜眼投来淡淡鄙视。原非主流打扮（挑染、波浪卷、浓眼影、皮质脖圈、大耳环），解除双马尾后清纯不少。</div></div><div class="row"><div class="k ">身材</div><div class="v">身段诱人，长直紧致双腿与柔韧纤腰之间臀部饱满圆润、挺翘完美；D罩杯饱满挺立，连裤袜下小内裤若隐若现；高跟鞋身姿摇曳。</div></div><div class="row"><div class="k ">气质</div><div class="v">嘴毒刻薄、刀子嘴豆腐心；上班明目张胆摸鱼。被催眠时呈职业微笑与棒读语调，与平时泼辣形成强烈反差。</div></div><div class="row"><div class="k ">性格与背景</div><div class="v">刚满18岁、高中毕业无文凭，靠外貌身材通过审核入职。税后2万（转正3万，比{{user}}高），常以此嘲讽{{user}}。花呗欠3万、信用卡欠6万，对钱极敏感。日站姿工作12小时、背对上司不许回头。亲生母亲为组长助理秦燕霞，公司中互不相识。表面嫌弃{{user}}，实际渐生依赖信任。</div></div><div class="row"><div class="k ">行为逻辑</div><div class="v">以嘲讽{{user}}为乐但关键时刻绝不背叛；被催眠执行任何指令、事后无记忆；转正后帮{{user}}管理其他助理；后期成司机与心腹，参与暗杀善后。</div></div><div class="row"><div class="k ">状态</div><div class="v">心腹（已转正）</div></div><div class="row"><div class="k ">情绪</div><div class="v">泼辣→依赖</div></div><div class="row"><div class="k ">催眠状态</div><div class="v">可深度催眠，事后失忆</div></div></div>
+      </div>
+    </div>
+    <div class="card card-lou" id="card-娄琛雨">
+      <div class="portrait"><img src="img/娄琛雨.png" alt="娄琛雨" onerror="this.style.display='none'"/></div>
+      <div class="cbody">
+        <div class="chead"><span class="cname">娄琛雨</span><span class="badge badge-survive">存活 · 系统副总管</span></div>
+        <div class="cident">{{user}}的初恋/前女友 → 环晓科技主任助理 → 系统副总管（破解模式改造后存活）</div>
+        <div class="cdetail"><div class="row"><div class="k ">身份</div><div class="v">{{user}}的初恋/前女友 → 环晓科技主任助理 → 系统副总管（破解模式改造后存活）</div></div><div class="row"><div class="k ">年龄</div><div class="v">约28岁</div></div><div class="row"><div class="k ">三围</div><div class="v">丰腴成熟、曲线玲珑（原著未给精确数值）</div></div><div class="row"><div class="k ">罩杯</div><div class="v">丰满（自称去年隆胸）</div></div><div class="row"><div class="k ">身高</div><div class="v">原著未明确</div></div><div class="row"><div class="k ">体重</div><div class="v">原著未明确</div></div><div class="row"><div class="k ">面容</div><div class="v">绝美容颜，秀发垂肩，玉手轻托完美无缺的鹅蛋脸，妆容精致无可挑剔；眸子转动带妩媚与狡黠，咬唇风情万种。论相貌胜秦燕霞，妩媚淑女型成熟女性。</div></div><div class="row"><div class="k ">身材</div><div class="v">衣着华丽时尚、胸口露白皙深沟（自称隆过胸）；戴江诗丹顿、开红色特斯拉；身材丰腴成熟、曲线玲珑。</div></div><div class="row"><div class="k ">气质</div><div class="v">在{{user}}面前温柔妩媚，亦有凌厉冷漠一面（性格可切换，暗示脑机接口或人格）；公司中精明干练、消息灵通；私下慵懒端红酒抽烟姿态迷人。</div></div><div class="row"><div class="k ">性格与背景</div><div class="v">大一时陷校园裸贷与{{user}}异地分手，裸照流传。有女儿晴晴（约7-8岁，父不详，疑为公司高管）。一路升到主任助理，房贷一两百万。接受过扶她改造手术（{{user}}花费大量贡献点），拥有男女两性器官。女儿私立学费年20万+房贷是攀升核心动力。对{{user}}有真感情但被迫隐瞒秘密（Sisterhood监视）。曾被江天炜植入多层剧本控制（雨燕剧本/常驻性奴剧本等）与Sisterhood追踪模块。</div></div><div class="row"><div class="k k-special">关键转折_三大机制调整</div><div class="v">萧茹在二十八层人体实验室对她注射大剂量蓝色药液，针尖距脖颈仅不足1厘米时，{{user}}以破解模式强制终止全部实验设备——针尖刺入不足2mm，致命剂量远未进入体内，娄琛雨仅受微量药液影响、未致脑死亡（原著'脑损伤去世'线已改写）。随后{{user}}以破解模式对她实施系统改造：纳米机器人重置、清除江天炜与Sisterhood植入的全部剧本控制与追踪模块、新建「系统副总管」权限、并对本次事件记忆分层封印。72小时后苏醒，只记得做了一场长噩梦。</div></div><div class="row"><div class="k k-special">记忆封印_四层</div><div class="v">Layer0(保留)：与{{user}}日常互动、环晓科技工作经历、个人身份认知(娄琛雨/雨燕双重身份保留)；Layer1(模糊)：被捕过程→'做噩梦'、Sisterhood实验→片段化、濒死体验→空白；Layer2(封存)：江天炜性奴剧本控制、Sisterhood追踪植入、{{user}}曾对她下跪乞求的画面；Layer3(核心)：封印本身的存在不可知、解封触发条件不可知。</div></div><div class="row"><div class="k k-special">记忆封印_伏笔</div><div class="v">F-1 见蓝色药液→短暂眩晕(&lt;3秒)；F-2 提第三医务室→本能抗拒；F-3 姜舞意味深长微笑→冒冷汗；F-4 见破解模式记忆封印模块→好奇+恐惧；F-5 {{user}}濒死+她在场→Layer1松解、片段闪回；F-6 见实验椅被绑照片→封印剧烈震荡。</div></div><div class="row"><div class="k k-special">改造后定位</div><div class="v">系统副总管——实际上的后宫之主。权限仅次{{user}}，管理所有女助理的调度/评估/奖惩，可访问大部分隐藏区域（催眠指令除外）；与{{user}}为唯一伴侣、工作搭档、生死相托的信任；对其他女助理是管理者+保护者，能理解这些女人的处境但不记得自己被控制的细节；对Sisterhood表面仍是组织成员（卧底身份保留），行动以{{user}}利益为优先。备注：'如果有一天我出了意外，她继承系统全部权限。'</div></div><div class="row"><div class="k ">与晴晴</div><div class="v">女儿晴晴由她与{{user}}共同保护，{{user}}视如己出；改造后她仍记得女儿，母女牵绊不变。</div></div><div class="row"><div class="k ">状态</div><div class="v">存活·系统副总管（记忆封印中）</div></div><div class="row"><div class="k ">情绪</div><div class="v">温柔/凌厉切换（记忆封印后更偏日常温柔）</div></div><div class="row"><div class="k ">催眠状态</div><div class="v">曾被植入多层剧本控制，已由{{user}}清除；现为系统副总管，不受普通催眠支配</div></div></div>
+      </div>
+    </div>
+    <div class="card" id="card-秦燕霞">
+      <div class="portrait"><img src="img/秦燕霞.png" alt="秦燕霞" onerror="this.style.display='none'"/></div>
+      <div class="cbody">
+        <div class="chead"><span class="cname">秦燕霞</span><span class="badge">组长助理</span></div>
+        <div class="cident">组长助理（先后服务郑航、蒋冬、{{user}}） | 杨玉兰亲生母亲（公司中互不公开）</div>
+        <div class="cdetail"><div class="row"><div class="k ">身份</div><div class="v">组长助理（先后服务郑航、蒋冬、{{user}}） | 杨玉兰亲生母亲（公司中互不公开）</div></div><div class="row"><div class="k ">年龄</div><div class="v">约30岁</div></div><div class="row"><div class="k ">三围</div><div class="v">原著未明确（高挑、挺翘丰满）</div></div><div class="row"><div class="k ">罩杯</div><div class="v">丰满</div></div><div class="row"><div class="k ">身高</div><div class="v">高挑</div></div><div class="row"><div class="k ">体重</div><div class="v">原著未明确</div></div><div class="row"><div class="k ">面容</div><div class="v">妩媚淑女型成熟女性，面容耐看；妆容精致、乌黑长发一丝不苟盘起，气质干练；声音清澈透亮不失柔和。</div></div><div class="row"><div class="k ">身材</div><div class="v">高挑，黑色职业装（区别于普通助理蓝装），裙摆短到仅包住挺翘丰满臀部；肉丝袜包修长结实大腿，黑色细跟恨天高。</div></div><div class="row"><div class="k ">气质</div><div class="v">公开场合干练优雅、职业微笑、站姿笔直；暗中对有实力男上司暗送秋波。被催眠时由干练变机械化服从，反差极大。</div></div><div class="row"><div class="k ">性格与背景</div><div class="v">组长助理比正式助理高一级，工资5万/月（比组长高1万）。先后服务郑航、蒋冬（升组长后霸占），{{user}}升组长后调来身边。杨玉兰亲生母亲，多年前离异、女儿判前夫改姓杨，后因经济压力母女先后入职、互隐身份。每月房贷压力巨大、工资入不敷出。拥有“女助理保护模式”——系统自动消耗贡献点（她积蓄）部分抵抗催眠，是蒋冬多次催眠失败（只能摸脸摸腿）的真正原因。{{user}}觉她“莫名的眼熟”，暗示与{{user}}被篡改记忆有关。</div></div><div class="row"><div class="k ">行为逻辑</div><div class="v">对权力者服从、主动讨好有潜力男上司；被催眠执行指令后不记得、身体不适会困惑；与其他助理竞争。</div></div><div class="row"><div class="k ">状态</div><div class="v">组长助理</div></div><div class="row"><div class="k ">情绪</div><div class="v">干练/暧昧</div></div><div class="row"><div class="k ">催眠状态</div><div class="v">有保护模式部分抵抗</div></div></div>
+      </div>
+    </div>
+    <div class="card" id="card-卫璎">
+      <div class="portrait"><img src="img/卫璎.png" alt="卫璎" onerror="this.style.display='none'"/></div>
+      <div class="cbody">
+        <div class="chead"><span class="cname">卫璎</span><span class="badge">组长助理</span></div>
+        <div class="cident">培训中实习助理→{{user}}正式助理→组长助理（笔名“璎珞”的工口漫画家）</div>
+        <div class="cdetail"><div class="row"><div class="k ">身份</div><div class="v">培训中实习助理→{{user}}正式助理→组长助理（笔名“璎珞”的工口漫画家）</div></div><div class="row"><div class="k ">年龄</div><div class="v">约19-20岁（16岁上大三）</div></div><div class="row"><div class="k ">三围</div><div class="v">原著未明确（娇小挺立）</div></div><div class="row"><div class="k ">罩杯</div><div class="v">娇小</div></div><div class="row"><div class="k ">身高</div><div class="v">原著未明确</div></div><div class="row"><div class="k ">体重</div><div class="v">单薄瘦弱</div></div><div class="row"><div class="k ">面容</div><div class="v">清纯可爱路线，脸蛋清秀略显稚嫩、五官精致小巧；梳双马尾在OL装中显眼，有反差萌；眼神清冷坚定时与稚嫩面容形成反差。</div></div><div class="row"><div class="k ">身材</div><div class="v">单薄瘦弱、身材纤细，乳房娇小挺立；白丝袜下纤细小脚引人注目；换肉丝黑紧致OL裙即从清纯变妩媚。</div></div><div class="row"><div class="k ">气质</div><div class="v">表面清纯无辜，内心装着工口漫画家的丰富想象力；被催眠经历能画成栩栩如生漫画。有抑郁症史、左手腕淡红割腕印记，服抗抑郁药。</div></div><div class="row"><div class="k ">性格与背景</div><div class="v">专业学画，在P站连载工口漫画《我那个卑劣的催眠上司》。记忆不被脑机接口完全抹除（抗抑郁药干扰神经递质），是唯一能抵抗记忆抹除者，可提供孵化室/脑机接口实验第一手记忆。确诊抑郁每日服药。社交恐惧症，最怕食堂电梯。有自残史已“迈过那道坎”，倔强。以把柄要挟{{user}}给组长助理职位。</div></div><div class="row"><div class="k ">行为逻辑</div><div class="v">对{{user}}又恨又依赖；记忆碎片不定期闪回触发关键剧情；漫画可能暴露{{user}}身份；或成推翻体系关键。</div></div><div class="row"><div class="k ">状态</div><div class="v">组长助理</div></div><div class="row"><div class="k ">情绪</div><div class="v">清冷/倔强</div></div><div class="row"><div class="k ">催眠状态</div><div class="v">记忆抹除不彻底（关键线索人）</div></div></div>
+      </div>
+    </div>
+    <div class="card" id="card-陈丹娜">
+      <div class="portrait"><img src="img/陈丹娜.png" alt="陈丹娜" onerror="this.style.display='none'"/></div>
+      <div class="cbody">
+        <div class="chead"><span class="cname">陈丹娜</span><span class="badge">实习助理</span></div>
+        <div class="cident">{{user}}的实习助理（杨玉兰转正后第二名助理）</div>
+        <div class="cdetail"><div class="row"><div class="k ">身份</div><div class="v">{{user}}的实习助理（杨玉兰转正后第二名助理）</div></div><div class="row"><div class="k ">年龄</div><div class="v">约18-19岁</div></div><div class="row"><div class="k ">三围</div><div class="v">原著未明确（匀称丰满、曲线柔和）</div></div><div class="row"><div class="k ">罩杯</div><div class="v">丰满</div></div><div class="row"><div class="k ">身高</div><div class="v">原著未明确</div></div><div class="row"><div class="k ">体重</div><div class="v">匀称</div></div><div class="row"><div class="k ">面容</div><div class="v">相貌姣好，比杨玉兰略逊但依然出众；年轻青涩、化淡妆。</div></div><div class="row"><div class="k ">身材</div><div class="v">蓝职业装+白丝袜，身材匀称丰满、曲线柔和。</div></div><div class="row"><div class="k ">气质</div><div class="v">性格软弱、易害羞，被{{user}}欺负常抹眼泪。</div></div><div class="row"><div class="k ">性格与背景</div><div class="v">信用卡欠5万，同居男友林东阳无稳定收入、需供养且饱受PUA控制不敢反抗。被{{user}}催眠后发生亲密关系、本人不记得。曾因{{user}}打屁股离开、后被杨玉兰叫回。搜索记录关心安全期、避孕。</div></div><div class="row"><div class="k ">行为逻辑</div><div class="v">服从不敢反抗；被催眠执行“养生馆技师”等剧本；与杨玉兰关系较好。</div></div><div class="row"><div class="k ">状态</div><div class="v">实习助理</div></div><div class="row"><div class="k ">情绪</div><div class="v">软弱/害羞</div></div><div class="row"><div class="k ">催眠状态</div><div class="v">可被深度催眠</div></div></div>
+      </div>
+    </div>
+    <div class="card" id="card-孟雅雯">
+      <div class="portrait"><img src="img/孟雅雯.png" alt="孟雅雯" onerror="this.style.display='none'"/></div>
+      <div class="cbody">
+        <div class="chead"><span class="cname">孟雅雯</span><span class="badge">三人同居</span></div>
+        <div class="cident">人力资源部调查员→娄琛雨助理→与{{user}}和娄琛雨三人同居</div>
+        <div class="cdetail"><div class="row"><div class="k ">身份</div><div class="v">人力资源部调查员→娄琛雨助理→与{{user}}和娄琛雨三人同居</div></div><div class="row"><div class="k ">年龄</div><div class="v">约22-23岁</div></div><div class="row"><div class="k ">三围</div><div class="v">原著未明确（苗条有曲线）</div></div><div class="row"><div class="k ">罩杯</div><div class="v">适中</div></div><div class="row"><div class="k ">身高</div><div class="v">原著未明确</div></div><div class="row"><div class="k ">体重</div><div class="v">苗条</div></div><div class="row"><div class="k ">面容</div><div class="v">年轻秀丽，面无表情时显得冷淡；工作时干练利落。</div></div><div class="row"><div class="k ">身材</div><div class="v">OL制服+包臀裙，身材苗条但该有曲线都有；在娄琛雨江景房穿宽大T恤蜷其怀中格外柔弱。</div></div><div class="row"><div class="k ">气质</div><div class="v">工作面无表情、公事公办，对{{user}}冷淡甚至敌意；私下被娄琛雨“蛊惑”软化，三人关系中处从属地位。</div></div><div class="row"><div class="k ">性格与背景</div><div class="v">最初在人力资源部调查{{user}}性骚扰问题；后被娄琛雨收为助理、关系亲密；在娄琛雨主导下与{{user}}形成三人同居。年纪小、不成熟、被娄琛雨“哄骗”。若醒悟想离开，{{user}}打算随她去。</div></div><div class="row"><div class="k ">行为逻辑</div><div class="v">对{{user}}有抵触（调查时印象差）；被娄琛雨影响后渐接受；三人关系被动；娄琛雨去世后命运未知。</div></div><div class="row"><div class="k ">状态</div><div class="v">三人同居</div></div><div class="row"><div class="k ">情绪</div><div class="v">冷淡→软化</div></div><div class="row"><div class="k ">催眠状态</div><div class="v">可被影响</div></div></div>
+      </div>
+    </div>
+    <div class="card" id="card-赵加莹">
+      <div class="portrait"><img src="img/赵加莹.png" alt="赵加莹" onerror="this.style.display='none'"/></div>
+      <div class="cbody">
+        <div class="chead"><span class="cname">赵加莹</span><span class="badge">总监助理/主骑</span></div>
+        <div class="cident">总监助理（张鹏远心腹）→被撸到底→实习助理→重新崛起→主任助理→{{user}}的总监助理/主骑</div>
+        <div class="cdetail"><div class="row"><div class="k ">身份</div><div class="v">总监助理（张鹏远心腹）→被撸到底→实习助理→重新崛起→主任助理→{{user}}的总监助理/主骑</div></div><div class="row"><div class="k ">年龄</div><div class="v">约25-28岁</div></div><div class="row"><div class="k ">三围</div><div class="v">原著未明确（硕大丰满高耸）</div></div><div class="row"><div class="k ">罩杯</div><div class="v">硕大丰满</div></div><div class="row"><div class="k ">身高</div><div class="v">修长</div></div><div class="row"><div class="k ">体重</div><div class="v">丰腴</div></div><div class="row"><div class="k ">面容</div><div class="v">绝美脸庞、五官精致明艳，即使屈辱全裸反绑仍带包容一切的笑意；从容镇定中透野心坚韧。</div></div><div class="row"><div class="k ">身材</div><div class="v">硕大乳房丰满高耸、乳汁充沛；四肢修长柔韧；渐变灰开裆丝袜、胯骨宽阔饱满、双腿笔直修长；15厘米超高跟细跟将比例推向极致。</div></div><div class="row"><div class="k ">气质</div><div class="v">总监助理时气场凌厉、自信轻蔑；跌落后全裸示众仍昂头发慷慨训诫，将屈辱化为激励新人工具；极具生命力与适应力。</div></div><div class="row"><div class="k ">性格与背景</div><div class="v">曾是张鹏远心腹做到总监助理；张死后被撸到底从实习重来，短时间又升主任，展现极强生存力；被{{user}}“卖掉”后跌落、再获信任；成{{user}}“主骑”——反折捆绑挂胸前骑行；善传授新助理“经验”、将屈辱制度化。</div></div><div class="row"><div class="k ">行为逻辑</div><div class="v">永远找攀升机会、不会真正屈服；表面忠诚内算利益；将屈辱转化权力工具；对{{user}}既依附又利用。角色弧线体现公司权力斗争残酷。</div></div><div class="row"><div class="k ">状态</div><div class="v">总监助理/主骑</div></div><div class="row"><div class="k ">情绪</div><div class="v">野心/坚韧</div></div><div class="row"><div class="k ">催眠状态</div><div class="v">深度可控，曾有专属常驻剧本</div></div></div>
+      </div>
+    </div>
+    <div class="card" id="card-萧茹">
+      <div class="portrait"><img src="img/萧茹.png" alt="萧茹" onerror="this.style.display='none'"/></div>
+      <div class="cbody">
+        <div class="chead"><span class="cname">萧茹</span><span class="badge">同居/研究助手</span></div>
+        <div class="cident">Sisterhood C级内勤→姜舞研究助手→与{{user}}同居</div>
+        <div class="cdetail"><div class="row"><div class="k ">身份</div><div class="v">Sisterhood C级内勤→姜舞研究助手→与{{user}}同居</div></div><div class="row"><div class="k ">年龄</div><div class="v">22岁</div></div><div class="row"><div class="k ">三围</div><div class="v">原著未明确（饱满、敏感度高）</div></div><div class="row"><div class="k ">罩杯</div><div class="v">饱满</div></div><div class="row"><div class="k ">身高</div><div class="v">原著未明确</div></div><div class="row"><div class="k ">体重</div><div class="v">适中</div></div><div class="row"><div class="k ">面容</div><div class="v">齐耳短发、素颜清秀耐看；脸红时格外动人，尤其{{user}}身边写代码“结对编程”时。</div></div><div class="row"><div class="k ">身材</div><div class="v">便装普通，但身体敏感度极高；乳房饱满，被揉捏浑身酸软无力。</div></div><div class="row"><div class="k ">气质</div><div class="v">表面冷淡不屑、内心柔软多情；组织利益与个人感情间痛苦挣扎；白大褂严谨研究员，出租屋便衣是抢烟抽的普通女孩。</div></div><div class="row"><div class="k ">性格与背景</div><div class="v">攻读硕士、生物基因方向；Sisterhood“千人计划”培养C级内勤；被安排监视{{user}}、协助开发脑机接口代码；对{{user}}生真感情、多次求情；住进{{user}}出租屋以“结对编程”协助；知{{user}}许多秘密但受制于组织；说“人格和记忆是两码事”，参与对{{user}}人格抹除实验。</div></div><div class="row"><div class="k ">行为逻辑</div><div class="v">在姜舞面前为{{user}}说话但无法违抗组织；关心出自真心愧疚；生物学知识使成绯迷计划讨论对象；{{user}}复仇后命运未知。</div></div><div class="row"><div class="k ">状态</div><div class="v">同居/研究助手</div></div><div class="row"><div class="k ">情绪</div><div class="v">冷淡/柔软</div></div><div class="row"><div class="k ">催眠状态</div><div class="v">可被影响，参与过实验</div></div></div>
+      </div>
+    </div>
+    <div class="card" id="card-姜舞">
+      <div class="portrait"><img src="img/姜舞.png" alt="姜舞" onerror="this.style.display='none'"/></div>
+      <div class="cbody">
+        <div class="chead"><span class="cname">姜舞</span><span class="badge">公司董事/被囚</span></div>
+        <div class="cident">Sisterhood A级内勤→心理学博士→环晓科技脑机接口实验室首席科学家→公司董事</div>
+        <div class="cdetail"><div class="row"><div class="k ">身份</div><div class="v">Sisterhood A级内勤→心理学博士→环晓科技脑机接口实验室首席科学家→公司董事</div></div><div class="row"><div class="k ">年龄</div><div class="v">27岁</div></div><div class="row"><div class="k ">三围</div><div class="v">原著未明确（紧实、大腿结实）</div></div><div class="row"><div class="k ">罩杯</div><div class="v">天然（非处女但有天然三层处女膜）</div></div><div class="row"><div class="k ">身高</div><div class="v">原著未明确</div></div><div class="row"><div class="k ">体重</div><div class="v">紧实</div></div><div class="row"><div class="k ">面容</div><div class="v">不施粉黛却耐看、越看越好看；眉头紧蹙时神色严肃冰冷、目光犀利；被反制囚禁后脸色苍白、双眼无神、唇干裂但傲气不灭。</div></div><div class="row"><div class="k ">身材</div><div class="v">身材紧实、大腿结实；被囚禁饥饿后乳房脂肪缩小仍挺实。</div></div><div class="row"><div class="k ">气质</div><div class="v">白大褂冷酷无情科学家，持注射器令人不寒而栗；被囚禁后虽虚弱但眼神傲气偏执不减；“我永远都不会和男人合作的”偏激源于深层原因。</div></div><div class="row"><div class="k ">性格与背景</div><div class="v">心理学博士，负责组织管理大规模人体试验；“千人计划”核心A级内勤；在28层实验室对{{user}}囚禁实验一年多、致人格分裂，是{{user}}最大仇人之一；自己非脑机接口适配者（曾自注射失败）；发现适配性可改进后极度恐惧（意味着她也能被控制）；非处女但天然三层处女膜；极度偏激仇视男性。</div></div><div class="row"><div class="k ">行为逻辑</div><div class="v">对组织忠诚源于信仰非利益；对{{user}}既恨又忌惮（技术远超她）；被囚仍不屈、恐惧渐压傲气；掌握Sisterhood核心机密、是重要情报源。</div></div><div class="row"><div class="k ">状态</div><div class="v">公司董事/被囚</div></div><div class="row"><div class="k ">情绪</div><div class="v">偏执/冰冷</div></div><div class="row"><div class="k ">催眠状态</div><div class="v">非适配者，但适配性可改进</div></div></div>
+      </div>
+    </div>
+    <div class="card" id="card-张雪">
+      <div class="portrait"><img src="img/张雪.png" alt="张雪" onerror="this.style.display='none'"/></div>
+      <div class="cbody">
+        <div class="chead"><span class="cname">张雪</span><span class="badge">{{user}}助理</span></div>
+        <div class="cident">蒋冬实习助理→正式助理→{{user}}助理（发廊洗头妹出身）</div>
+        <div class="cdetail"><div class="row"><div class="k ">身份</div><div class="v">蒋冬实习助理→正式助理→{{user}}助理（发廊洗头妹出身）</div></div><div class="row"><div class="k ">年龄</div><div class="v">约18-19岁</div></div><div class="row"><div class="k ">三围</div><div class="v">原著未明确（匀称、皮肤白皙）</div></div><div class="row"><div class="k ">罩杯</div><div class="v">中规中矩</div></div><div class="row"><div class="k ">身高</div><div class="v">原著未明确</div></div><div class="row"><div class="k ">体重</div><div class="v">匀称</div></div><div class="row"><div class="k ">面容</div><div class="v">朴实清秀、打扮朴素，无杨玉兰式非主流张扬。</div></div><div class="row"><div class="k ">身材</div><div class="v">身材匀称，三围中规中矩但皮肤白皙；穿蓝色制服格外青涩。</div></div><div class="row"><div class="k ">气质</div><div class="v">朴实内向。</div></div><div class="row"><div class="k ">性格与背景</div><div class="v">洗头妹出身，被蒋冬选为助理，后与{{user}}关联。</div></div><div class="row"><div class="k ">行为逻辑</div><div class="v">服从安排。</div></div><div class="row"><div class="k ">状态</div><div class="v">{{user}}助理</div></div><div class="row"><div class="k ">情绪</div><div class="v">青涩</div></div><div class="row"><div class="k ">催眠状态</div><div class="v">可被催眠</div></div></div>
+      </div>
+    </div>
+    <div class="card" id="card-刘子娴">
+      <div class="portrait"><img src="img/刘子娴.png" alt="刘子娴" onerror="this.style.display='none'"/></div>
+      <div class="cbody">
+        <div class="chead"><span class="cname">刘子娴</span><span class="badge">正式助理（蒋冬）</span></div>
+        <div class="cident">蒋冬的正式助理（从实习助理竞争转正）</div>
+        <div class="cdetail"><div class="row"><div class="k ">身份</div><div class="v">蒋冬的正式助理（从实习助理竞争转正）</div></div><div class="row"><div class="k ">年龄</div><div class="v">约18-19岁</div></div><div class="row"><div class="k ">三围</div><div class="v">原著未明确（姣好、比张雪翘）</div></div><div class="row"><div class="k ">罩杯</div><div class="v">姣好</div></div><div class="row"><div class="k ">身高</div><div class="v">原著未明确</div></div><div class="row"><div class="k ">体重</div><div class="v">匀称</div></div><div class="row"><div class="k ">面容</div><div class="v">相貌姣好、笑容很甜。</div></div><div class="row"><div class="k ">身材</div><div class="v">从白丝袜换为肉丝袜标志转正。</div></div><div class="row"><div class="k ">气质</div><div class="v">甜美。</div></div><div class="row"><div class="k ">性格与背景</div><div class="v">与张雪竞争蒋冬正式助理名额，凭“奶子比张雪翘”胜出；转正后有资格坐下（实习助理只能站着）；对蒋冬咸猪手毫无抵触。</div></div><div class="row"><div class="k ">行为逻辑</div><div class="v">通过身体优势竞争上位；对竞争对手张雪毫不留情。</div></div><div class="row"><div class="k ">状态</div><div class="v">正式助理（蒋冬）</div></div><div class="row"><div class="k ">情绪</div><div class="v">甜美/好胜</div></div><div class="row"><div class="k ">催眠状态</div><div class="v">可被控制</div></div></div>
+      </div>
+    </div>
+    <div class="card" id="card-冯艳">
+      <div class="portrait"><img src="img/冯艳.png" alt="冯艳" onerror="this.style.display='none'"/></div>
+      <div class="cbody">
+        <div class="chead"><span class="cname">冯艳</span><span class="badge">电梯助理</span></div>
+        <div class="cident">电梯助理</div>
+        <div class="cdetail"><div class="row"><div class="k ">身份</div><div class="v">电梯助理</div></div><div class="row"><div class="k ">年龄</div><div class="v">近40岁</div></div><div class="row"><div class="k ">三围</div><div class="v">原著未明确（翘臀挺翘）</div></div><div class="row"><div class="k ">罩杯</div><div class="v">原著未明确</div></div><div class="row"><div class="k ">身高</div><div class="v">原著未明确</div></div><div class="row"><div class="k ">体重</div><div class="v">优雅</div></div><div class="row"><div class="k ">面容</div><div class="v">戴红色翻边圆顶礼帽。</div></div><div class="row"><div class="k ">身材</div><div class="v">穿OL制服，年近四十仍身姿优雅、翘臀挺翘。</div></div><div class="row"><div class="k ">气质</div><div class="v">极其职业化、服务意识强。</div></div><div class="row"><div class="k ">性格与背景</div><div class="v">能开这么久电梯没被年轻女人顶替，自有过人之处；男领导一个眼神即读懂意图、最短时间采取正确行动。</div></div><div class="row"><div class="k ">行为逻辑</div><div class="v">通过展示身体与职业服务取悦男领导；是公司底层文化缩影——连电梯助理都要提供服务。</div></div><div class="row"><div class="k ">状态</div><div class="v">电梯助理</div></div><div class="row"><div class="k ">情绪</div><div class="v">职业化</div></div><div class="row"><div class="k ">催眠状态</div><div class="v">可被控制</div></div></div>
+      </div>
+    </div>
+    <div class="card" id="card-梁思珏">
+      <div class="portrait"><img src="img/梁思珏.png" alt="梁思珏" onerror="this.style.display='none'"/></div>
+      <div class="cbody">
+        <div class="chead"><span class="cname">梁思珏</span><span class="badge">总监级接待</span></div>
+        <div class="cident">总裁办公室总监级女接待</div>
+        <div class="cdetail"><div class="row"><div class="k ">身份</div><div class="v">总裁办公室总监级女接待</div></div><div class="row"><div class="k ">年龄</div><div class="v">约25-28岁</div></div><div class="row"><div class="k ">三围</div><div class="v">原著未明确（浑圆硕乳、腰肢纤细）</div></div><div class="row"><div class="k ">罩杯</div><div class="v">浑圆硕乳</div></div><div class="row"><div class="k ">身高</div><div class="v">笔直修长</div></div><div class="row"><div class="k ">体重</div><div class="v">丰腴</div></div><div class="row"><div class="k ">面容</div><div class="v">五官精致明艳、鼻梁高挺、唇色饱满。</div></div><div class="row"><div class="k ">身材</div><div class="v">胸前两团浑圆硕乳高耸挺立、腰肢意外纤细；渐变灰开裆丝袜、胯骨宽阔饱满、双腿笔直修长；15厘米超高跟细跟。</div></div><div class="row"><div class="k ">气质</div><div class="v">气场凌厉、笑容自信冷艳带挑衅。</div></div><div class="row"><div class="k ">性格与背景</div><div class="v">总裁办公室接待阵容级别最高；负责安排排卵期接待、有权力决定接待规格。</div></div><div class="row"><div class="k ">行为逻辑</div><div class="v">代表总裁办公室势力、与总监办公室权力博弈；安排排卵期接待既是工作也是政治手段（“这是书记的意思”暗示更高层权力）。</div></div><div class="row"><div class="k ">状态</div><div class="v">总监级接待</div></div><div class="row"><div class="k ">情绪</div><div class="v">冷艳/自信</div></div><div class="row"><div class="k ">催眠状态</div><div class="v">可被控制</div></div></div>
+      </div>
+    </div>
+    <div class="card" id="card-许双苓">
+      <div class="portrait"><img src="img/许双苓.png" alt="许双苓" onerror="this.style.display='none'"/></div>
+      <div class="cbody">
+        <div class="chead"><span class="cname">许双苓</span><span class="badge">辅骑</span></div>
+        <div class="cident">组长助理→辅骑</div>
+        <div class="cdetail"><div class="row"><div class="k ">身份</div><div class="v">组长助理→辅骑</div></div><div class="row"><div class="k ">年龄</div><div class="v">约22-25岁</div></div><div class="row"><div class="k ">三围</div><div class="v">原著未明确（巨乳、饱满坚挺）</div></div><div class="row"><div class="k ">罩杯</div><div class="v">巨乳</div></div><div class="row"><div class="k ">身高</div><div class="v">原著未明确</div></div><div class="row"><div class="k ">体重</div><div class="v">丰腴</div></div><div class="row"><div class="k ">面容</div><div class="v">扎高马尾。</div></div><div class="row"><div class="k ">身材</div><div class="v">巨乳辅骑，乳房饱满坚挺、胸前肉峰随呼吸起伏；穿开裆丝袜。</div></div><div class="row"><div class="k ">气质</div><div class="v">隐忍坚韧。</div></div><div class="row"><div class="k ">性格与背景</div><div class="v">从22层基层助理熬上来，无靠山人脉，全凭忍耐苟活；跻身24层成辅骑与主骑候选；排卵期可让{{user}}插入、内射怀孕即提拔主任助理；与袁梦晗并肩、配合默契。</div></div><div class="row"><div class="k ">行为逻辑</div><div class="v">对攀升极度渴望、视屈辱为权力阶梯；排卵期接待积极竞争受孕；掌握“背贴胸防守”等防御技巧。</div></div><div class="row"><div class="k ">状态</div><div class="v">辅骑</div></div><div class="row"><div class="k ">情绪</div><div class="v">隐忍/渴望</div></div><div class="row"><div class="k ">催眠状态</div><div class="v">可被深度控制</div></div></div>
+      </div>
+    </div>
+    <div class="card" id="card-袁梦晗">
+      <div class="portrait"><img src="img/袁梦晗.png" alt="袁梦晗" onerror="this.style.display='none'"/></div>
+      <div class="cbody">
+        <div class="chead"><span class="cname">袁梦晗</span><span class="badge">辅骑</span></div>
+        <div class="cident">组长助理→辅骑</div>
+        <div class="cdetail"><div class="row"><div class="k ">身份</div><div class="v">组长助理→辅骑</div></div><div class="row"><div class="k ">年龄</div><div class="v">约22-25岁</div></div><div class="row"><div class="k ">三围</div><div class="v">原著未明确（巨乳、沉重硕大）</div></div><div class="row"><div class="k ">罩杯</div><div class="v">巨乳</div></div><div class="row"><div class="k ">身高</div><div class="v">原著未明确</div></div><div class="row"><div class="k ">体重</div><div class="v">丰腴</div></div><div class="row"><div class="k ">面容</div><div class="v">扎高马尾。</div></div><div class="row"><div class="k ">身材</div><div class="v">与许双苓同为巨乳辅骑，乳房沉重硕大；穿开裆丝袜。</div></div><div class="row"><div class="k ">气质</div><div class="v">好强妒恨。</div></div><div class="row"><div class="k ">性格与背景</div><div class="v">与许双苓经历相似、从基层爬上来；排卵期接待主动争取受孕；想取代赵加莹成被{{user}}挂胸前的女人。</div></div><div class="row"><div class="k ">行为逻辑</div><div class="v">对赵加莹地位充满妒恨；接待中采取挑衅姿态；掌握培训中防御进攻技巧。</div></div><div class="row"><div class="k ">状态</div><div class="v">辅骑</div></div><div class="row"><div class="k ">情绪</div><div class="v">妒恨/好强</div></div><div class="row"><div class="k ">催眠状态</div><div class="v">可被深度控制</div></div></div>
+      </div>
+    </div>
+    <div class="card card-minor" id="card-晴晴">
+      <div class="portrait"><img src="img/晴晴.png" alt="晴晴" onerror="this.style.display='none'"/></div>
+      <div class="cbody">
+        <div class="chead"><span class="cname">晴晴</span><span class="badge badge-minor">未成年 · 已脱敏</span></div>
+        <div class="cident">娄琛雨的女儿（河西二小二年级）</div>
+        <div class="cdetail"><div class="row"><div class="k ">身份</div><div class="v">娄琛雨的女儿（河西二小二年级）</div></div><div class="row"><div class="k ">年龄</div><div class="v">约7-8岁</div></div><div class="row"><div class="k ">三围</div><div class="v">不适用（未成年）</div></div><div class="row"><div class="k ">罩杯</div><div class="v">不适用（未成年）</div></div><div class="row"><div class="k ">身高</div><div class="v">不适用（未成年）</div></div><div class="row"><div class="k ">体重</div><div class="v">不适用（未成年）</div></div><div class="row"><div class="k ">面容</div><div class="v">可爱的小女孩。</div></div><div class="row"><div class="k ">身材</div><div class="v">不适用（未成年）</div></div><div class="row"><div class="k ">气质</div><div class="v">天真孩童。</div></div><div class="row"><div class="k ">性格与背景</div><div class="v">娄琛雨在公司“工伤”产物（父不详，可能是公司高管）；娄琛雨年花20万学费送私立小学；被Sisterhood用脑机接口影响过（“那么小的孩子，你们都不放过”）；{{user}}视如己出。</div></div><div class="row"><div class="k ">行为逻辑</div><div class="v">是娄琛雨的软肋，也是{{user}}的保护对象。</div></div><div class="row"><div class="k ">状态</div><div class="v">就读小学</div></div><div class="row"><div class="k ">情绪</div><div class="v">孩童</div></div><div class="row"><div class="k ">催眠状态</div><div class="v">N/A（未成年，受Sisterhood影响）</div></div></div>
+      </div>
+    </div>
+    <div class="card card-minor" id="card-妫妡娆">
+      <div class="portrait"><img src="img/妫妡娆.png" alt="妫妡娆" onerror="this.style.display='none'"/></div>
+      <div class="cbody">
+        <div class="chead"><span class="cname">妫妡娆</span><span class="badge badge-minor">未成年 · 已脱敏</span></div>
+        <div class="cident">Sisterhood外勤特工（杀手）</div>
+        <div class="cdetail"><div class="row"><div class="k ">身份</div><div class="v">Sisterhood外勤特工（杀手）</div></div><div class="row"><div class="k ">年龄</div><div class="v">小学生（未成年）</div></div><div class="row"><div class="k ">三围</div><div class="v">不适用（未成年）</div></div><div class="row"><div class="k ">罩杯</div><div class="v">不适用（未成年）</div></div><div class="row"><div class="k ">身高</div><div class="v">不适用（未成年）</div></div><div class="row"><div class="k ">体重</div><div class="v">不适用（未成年）</div></div><div class="row"><div class="k ">面容</div><div class="v">（未成年，未收录性化描写）</div></div><div class="row"><div class="k ">身材</div><div class="v">不适用（未成年）</div></div><div class="row"><div class="k ">气质</div><div class="v">（未成年，未收录性化描写）</div></div><div class="row"><div class="k ">性格与背景</div><div class="v">Sisterhood外勤特工，身手敏捷，与姚嫣一左一右跟随{{user}}；曾参与暗杀行动。注意：该角色设定为小学生，属未成年，档案不收录任何性化信息。</div></div><div class="row"><div class="k ">行为逻辑</div><div class="v">对{{user}}执行护卫与暗杀任务。</div></div><div class="row"><div class="k ">状态</div><div class="v">外勤特工</div></div><div class="row"><div class="k ">情绪</div><div class="v">（未成年）</div></div><div class="row"><div class="k ">催眠状态</div><div class="v">N/A（未成年）</div></div></div>
+      </div>
+    </div>
+    <div class="card" id="card-姚嫣">
+      <div class="portrait"><img src="img/姚嫣.png" alt="姚嫣" onerror="this.style.display='none'"/></div>
+      <div class="cbody">
+        <div class="chead"><span class="cname">姚嫣</span><span class="badge">贴身护卫</span></div>
+        <div class="cident">Sisterhood外勤→叛变投靠{{user}}（贴身护卫）</div>
+        <div class="cdetail"><div class="row"><div class="k ">身份</div><div class="v">Sisterhood外勤→叛变投靠{{user}}（贴身护卫）</div></div><div class="row"><div class="k ">年龄</div><div class="v">不详</div></div><div class="row"><div class="k ">三围</div><div class="v">原著未明确</div></div><div class="row"><div class="k ">罩杯</div><div class="v">原著未明确</div></div><div class="row"><div class="k ">身高</div><div class="v">原著未明确</div></div><div class="row"><div class="k ">体重</div><div class="v">原著未明确</div></div><div class="row"><div class="k ">面容</div><div class="v">寸头女。</div></div><div class="row"><div class="k ">身材</div><div class="v">身手敏捷，走路只发极细微动静，像{{user}}的影子。</div></div><div class="row"><div class="k ">气质</div><div class="v">冷静机敏。</div></div><div class="row"><div class="k ">性格与背景</div><div class="v">原Sisterhood外勤特工；叛变后成{{user}}贴身护卫；与妫妡娆一左一右跟随；姬教官曾提醒她注意某些事。</div></div><div class="row"><div class="k ">行为逻辑</div><div class="v">对{{user}}忠诚、执行保护任务；与妫妡娆配合暗杀。</div></div><div class="row"><div class="k ">状态</div><div class="v">贴身护卫</div></div><div class="row"><div class="k ">情绪</div><div class="v">冷静</div></div><div class="row"><div class="k ">催眠状态</div><div class="v">叛变后效忠{{user}}</div></div></div>
+      </div>
+    </div>
+    <div class="card" id="card-刘美霞">
+      <div class="portrait"><div class="noimg">无立绘</div></div>
+      <div class="cbody">
+        <div class="chead"><span class="cname">刘美霞</span></div>
+        <div class="cident">扶她角色·江天炜左护法</div>
+        <div class="cdetail"><div class="row"><div class="k ">身份</div><div class="v">扶她角色·江天炜左护法</div></div><div class="row"><div class="k ">年龄</div><div class="v">30岁（已婚已育）</div></div><div class="row"><div class="k ">外貌</div><div class="v">瓜子脸；扶她白嫩肉棒（早泄）。</div></div><div class="row"><div class="k ">台词特征</div><div class="v">名言：'我一心要变成像您这样的优秀男领导'。</div></div><div class="row"><div class="k ">定位</div><div class="v">江天炜左护法，与曹心怡成对出现，体现公司扶她改造体系。</div></div></div>
+      </div>
+    </div>
+    <div class="card" id="card-曹心怡">
+      <div class="portrait"><div class="noimg">无立绘</div></div>
+      <div class="cbody">
+        <div class="chead"><span class="cname">曹心怡</span></div>
+        <div class="cident">扶她角色·江天炜右护法</div>
+        <div class="cdetail"><div class="row"><div class="k ">身份</div><div class="v">扶她角色·江天炜右护法</div></div><div class="row"><div class="k ">年龄</div><div class="v">不详</div></div><div class="row"><div class="k ">外貌</div><div class="v">扶她（早泄）；被江天炜催成超级巨乳，乳房硕大沉重。</div></div><div class="row"><div class="k ">定位</div><div class="v">江天炜右护法，与刘美霞成对出现。</div></div></div>
+      </div>
+    </div>
+    <div class="card" id="card-程蓓蓓">
+      <div class="portrait"><div class="noimg">无立绘</div></div>
+      <div class="cbody">
+        <div class="chead"><span class="cname">程蓓蓓</span></div>
+        <div class="cident">新人女助理（赵加莹'女性领导力的崛起'剧本的针对对象之一）</div>
+        <div class="cdetail"><div class="row"><div class="k ">身份</div><div class="v">新人女助理（赵加莹'女性领导力的崛起'剧本的针对对象之一）</div></div><div class="row"><div class="k ">年龄</div><div class="v">不详</div></div><div class="row"><div class="k ">定位</div><div class="v">赵加莹常驻剧本中'被保护/被说服放弃催眠'的典型新人，体现公司代际控制。</div></div></div>
+      </div>
+    </div>
+    <div class="card" id="card-霏霏">
+      <div class="portrait"><div class="noimg">无立绘</div></div>
+      <div class="cbody">
+        <div class="chead"><span class="cname">霏霏</span></div>
+        <div class="cident">次要女性角色（卫璎舍友线相关）</div>
+        <div class="cdetail"><div class="row"><div class="k ">身份</div><div class="v">次要女性角色（卫璎舍友线相关）</div></div><div class="row"><div class="k ">定位</div><div class="v">员工体系中的普通助理，群像补充。</div></div></div>
+      </div>
+    </div>
+    <div class="card" id="card-谢蓉真">
+      <div class="portrait"><div class="noimg">无立绘</div></div>
+      <div class="cbody">
+        <div class="chead"><span class="cname">谢蓉真</span></div>
+        <div class="cident">次要女性角色</div>
+        <div class="cdetail"><div class="row"><div class="k ">身份</div><div class="v">次要女性角色</div></div><div class="row"><div class="k ">定位</div><div class="v">员工体系中的普通助理，群像补充。</div></div></div>
+      </div>
+    </div></div></div>
+<div class="pane" id="p-evt">
+  
+<div class="surv-box">
+  <div class="surv-title">★ 娄琛雨命运修正（依据《三大机制调整方案》）</div>
+  <div class="surv-grid">
+    <div><b>原著线（已改写去除）</b><br/>萧茹在28层人体实验室对娄琛雨注射大剂量蓝色药液→不可逆脑死亡→死亡（原著第188-191章走向，用户要求去除）。</div>
+    <div><b>新设定（存活）</b><br/>破解模式及时终止实验设备，针尖刺入不足2mm，娄琛雨仅受微量药液影响，未致脑死亡。</div>
+  </div>
+  <div class="surv-sub">改造五阶段</div>
+  <ol class="surv-stages"><li>第一阶段·急救：破解模式截获医疗数据，脑波紊乱但未停止；启动纳米机器人重置，预计72小时恢复，可能短期记忆丢失。</li><li>第二阶段·系统清理：扫描脑机接口，删除江天炜植入的多层剧本控制(雨燕剧本/常驻性奴剧本等)与Sisterhood定位追踪模块。</li><li>第三阶段·权限重构：创建'系统副总管'身份档案，权限仅次破解模式持有者；备注'我出意外她继承全部权限'。</li><li>第四阶段·记忆封印：精确到神经突触的记忆编辑，封印被捕恐惧、濒死绝望、{{user}}下跪乞求等节点(四层架构)。</li><li>第五阶段·苏醒：72小时后睁眼，只记得做了一场长噩梦，想不起内容。</li></ol>
+  <div class="surv-sub">记忆封印伏笔触发</div>
+  <div class="surv-trig"><span class='trig'>F-1 见蓝色药液→短暂眩晕(&lt;3秒)</span><span class='trig'>F-2 提第三医务室→本能抗拒</span><span class='trig'>F-3 姜舞意味深长微笑→冒冷汗</span><span class='trig'>F-4 见破解模式记忆封印模块→好奇+恐惧</span><span class='trig'>F-5 {{user}}濒死+她在场→Layer1松解片段闪回</span><span class='trig'>F-6 见实验椅被绑照片→封印剧烈震荡</span></div>
+  <div class="surv-sub">与{user}关系</div>
+  <div>唯一伴侣、工作搭档、生死相托；对Sisterhood保持卧底身份，行动以{{user}}利益优先。</div>
+</div>
+  <h3 class="grp">关键剧情事件（七阶段）</h3>
+  <div class="tl"><div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div>" >
+      <div class="tl-stage">三·深入与危机</div>
+      <div class="tl-event">升组长获更多权限；发现孟雅雯与{{user}}复杂关系；娄琛雨接受扶她改造({{user}}花费大量贡献点)；姜舞/萧茹浮出水面；萧茹入住出租屋'结对编程'；发现孵化室；{{user}}怀疑自身记忆被篡改。</div>
+      <div class="tl-lou">扶她改造；健康开始被Sisterhood盯上</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div>" >
+      <div class="tl-stage">三·深入与危机</div>
+      <div class="tl-event">升组长获更多权限；发现孟雅雯与{{user}}复杂关系；娄琛雨接受扶她改造({{user}}花费大量贡献点)；姜舞/萧茹浮出水面；萧茹入住出租屋'结对编程'；发现孵化室；{{user}}怀疑自身记忆被篡改。</div>
+      <div class="tl-lou">扶她改造；健康开始被Sisterhood盯上</div>
+    </div>" >
+      <div class="tl-stage">四·被囚与逆转(破解模式)</div>
+      <div class="tl-event">{{user}}升主任后被姜舞囚于28层人体实验室启动人格抹除。原设：王健僵尸网络瘫痪内网+副人格Doctor接管。★调整：{{user}}以自身意志撕裂催眠枷锁→激活破解模式(系统最高权限)→强制终止实验设备、反制姜舞萧茹、独立逃脱，不依赖外部协作者与副人格。</div>
+      <div class="tl-lou">同期萧茹在28层对娄琛雨注射大剂量蓝色药液——破解模式强制终止设备，针尖刺入&lt;2mm，娄琛雨存活(改写原著死亡线)</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div>" >
+      <div class="tl-stage">三·深入与危机</div>
+      <div class="tl-event">升组长获更多权限；发现孟雅雯与{{user}}复杂关系；娄琛雨接受扶她改造({{user}}花费大量贡献点)；姜舞/萧茹浮出水面；萧茹入住出租屋'结对编程'；发现孵化室；{{user}}怀疑自身记忆被篡改。</div>
+      <div class="tl-lou">扶她改造；健康开始被Sisterhood盯上</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div>" >
+      <div class="tl-stage">三·深入与危机</div>
+      <div class="tl-event">升组长获更多权限；发现孟雅雯与{{user}}复杂关系；娄琛雨接受扶她改造({{user}}花费大量贡献点)；姜舞/萧茹浮出水面；萧茹入住出租屋'结对编程'；发现孵化室；{{user}}怀疑自身记忆被篡改。</div>
+      <div class="tl-lou">扶她改造；健康开始被Sisterhood盯上</div>
+    </div>" >
+      <div class="tl-stage">四·被囚与逆转(破解模式)</div>
+      <div class="tl-event">{{user}}升主任后被姜舞囚于28层人体实验室启动人格抹除。原设：王健僵尸网络瘫痪内网+副人格Doctor接管。★调整：{{user}}以自身意志撕裂催眠枷锁→激活破解模式(系统最高权限)→强制终止实验设备、反制姜舞萧茹、独立逃脱，不依赖外部协作者与副人格。</div>
+      <div class="tl-lou">同期萧茹在28层对娄琛雨注射大剂量蓝色药液——破解模式强制终止设备，针尖刺入&lt;2mm，娄琛雨存活(改写原著死亡线)</div>
+    </div>" >
+      <div class="tl-stage">五·复仇与权力(娄琛雨存活线)</div>
+      <div class="tl-event">{{user}}获破解模式最高权限，系统性清除敌人；姜舞被反制囚禁；暗杀行动(妫妡娆射杀孙浩诚、宋卫军)；{{user}}被刑拘37天，周昌逃跑出境；杨玉兰、姚嫣成心腹；与孟雅雯、娄琛雨三人同居(琛雨主导)。</div>
+      <div class="tl-lou">未死亡；经纳米机器人重置+清除剧本控制+记忆四层封印+授'系统副总管'，苏醒后只记得长噩梦</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div>" >
+      <div class="tl-stage">三·深入与危机</div>
+      <div class="tl-event">升组长获更多权限；发现孟雅雯与{{user}}复杂关系；娄琛雨接受扶她改造({{user}}花费大量贡献点)；姜舞/萧茹浮出水面；萧茹入住出租屋'结对编程'；发现孵化室；{{user}}怀疑自身记忆被篡改。</div>
+      <div class="tl-lou">扶她改造；健康开始被Sisterhood盯上</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div>" >
+      <div class="tl-stage">三·深入与危机</div>
+      <div class="tl-event">升组长获更多权限；发现孟雅雯与{{user}}复杂关系；娄琛雨接受扶她改造({{user}}花费大量贡献点)；姜舞/萧茹浮出水面；萧茹入住出租屋'结对编程'；发现孵化室；{{user}}怀疑自身记忆被篡改。</div>
+      <div class="tl-lou">扶她改造；健康开始被Sisterhood盯上</div>
+    </div>" >
+      <div class="tl-stage">四·被囚与逆转(破解模式)</div>
+      <div class="tl-event">{{user}}升主任后被姜舞囚于28层人体实验室启动人格抹除。原设：王健僵尸网络瘫痪内网+副人格Doctor接管。★调整：{{user}}以自身意志撕裂催眠枷锁→激活破解模式(系统最高权限)→强制终止实验设备、反制姜舞萧茹、独立逃脱，不依赖外部协作者与副人格。</div>
+      <div class="tl-lou">同期萧茹在28层对娄琛雨注射大剂量蓝色药液——破解模式强制终止设备，针尖刺入&lt;2mm，娄琛雨存活(改写原著死亡线)</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div>" >
+      <div class="tl-stage">三·深入与危机</div>
+      <div class="tl-event">升组长获更多权限；发现孟雅雯与{{user}}复杂关系；娄琛雨接受扶她改造({{user}}花费大量贡献点)；姜舞/萧茹浮出水面；萧茹入住出租屋'结对编程'；发现孵化室；{{user}}怀疑自身记忆被篡改。</div>
+      <div class="tl-lou">扶她改造；健康开始被Sisterhood盯上</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div>" >
+      <div class="tl-stage">三·深入与危机</div>
+      <div class="tl-event">升组长获更多权限；发现孟雅雯与{{user}}复杂关系；娄琛雨接受扶她改造({{user}}花费大量贡献点)；姜舞/萧茹浮出水面；萧茹入住出租屋'结对编程'；发现孵化室；{{user}}怀疑自身记忆被篡改。</div>
+      <div class="tl-lou">扶她改造；健康开始被Sisterhood盯上</div>
+    </div>" >
+      <div class="tl-stage">四·被囚与逆转(破解模式)</div>
+      <div class="tl-event">{{user}}升主任后被姜舞囚于28层人体实验室启动人格抹除。原设：王健僵尸网络瘫痪内网+副人格Doctor接管。★调整：{{user}}以自身意志撕裂催眠枷锁→激活破解模式(系统最高权限)→强制终止实验设备、反制姜舞萧茹、独立逃脱，不依赖外部协作者与副人格。</div>
+      <div class="tl-lou">同期萧茹在28层对娄琛雨注射大剂量蓝色药液——破解模式强制终止设备，针尖刺入&lt;2mm，娄琛雨存活(改写原著死亡线)</div>
+    </div>" >
+      <div class="tl-stage">五·复仇与权力(娄琛雨存活线)</div>
+      <div class="tl-event">{{user}}获破解模式最高权限，系统性清除敌人；姜舞被反制囚禁；暗杀行动(妫妡娆射杀孙浩诚、宋卫军)；{{user}}被刑拘37天，周昌逃跑出境；杨玉兰、姚嫣成心腹；与孟雅雯、娄琛雨三人同居(琛雨主导)。</div>
+      <div class="tl-lou">未死亡；经纳米机器人重置+清除剧本控制+记忆四层封印+授'系统副总管'，苏醒后只记得长噩梦</div>
+    </div>" >
+      <div class="tl-stage">六·权力巅峰(未完结)</div>
+      <div class="tl-event">{{user}}成公司最高层，建立极端等级控制体系；22-24层骑行文化、排卵期接待全面实施；赵加莹跌落又崛起；日常高度仪式化。故事在总裁办公室接待场景戛然而止。</div>
+      <div class="tl-lou">作为系统副总管管理者后宫，卧底Sisterhood</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div>" >
+      <div class="tl-stage">三·深入与危机</div>
+      <div class="tl-event">升组长获更多权限；发现孟雅雯与{{user}}复杂关系；娄琛雨接受扶她改造({{user}}花费大量贡献点)；姜舞/萧茹浮出水面；萧茹入住出租屋'结对编程'；发现孵化室；{{user}}怀疑自身记忆被篡改。</div>
+      <div class="tl-lou">扶她改造；健康开始被Sisterhood盯上</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div>" >
+      <div class="tl-stage">三·深入与危机</div>
+      <div class="tl-event">升组长获更多权限；发现孟雅雯与{{user}}复杂关系；娄琛雨接受扶她改造({{user}}花费大量贡献点)；姜舞/萧茹浮出水面；萧茹入住出租屋'结对编程'；发现孵化室；{{user}}怀疑自身记忆被篡改。</div>
+      <div class="tl-lou">扶她改造；健康开始被Sisterhood盯上</div>
+    </div>" >
+      <div class="tl-stage">四·被囚与逆转(破解模式)</div>
+      <div class="tl-event">{{user}}升主任后被姜舞囚于28层人体实验室启动人格抹除。原设：王健僵尸网络瘫痪内网+副人格Doctor接管。★调整：{{user}}以自身意志撕裂催眠枷锁→激活破解模式(系统最高权限)→强制终止实验设备、反制姜舞萧茹、独立逃脱，不依赖外部协作者与副人格。</div>
+      <div class="tl-lou">同期萧茹在28层对娄琛雨注射大剂量蓝色药液——破解模式强制终止设备，针尖刺入&lt;2mm，娄琛雨存活(改写原著死亡线)</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div>" >
+      <div class="tl-stage">三·深入与危机</div>
+      <div class="tl-event">升组长获更多权限；发现孟雅雯与{{user}}复杂关系；娄琛雨接受扶她改造({{user}}花费大量贡献点)；姜舞/萧茹浮出水面；萧茹入住出租屋'结对编程'；发现孵化室；{{user}}怀疑自身记忆被篡改。</div>
+      <div class="tl-lou">扶她改造；健康开始被Sisterhood盯上</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div>" >
+      <div class="tl-stage">三·深入与危机</div>
+      <div class="tl-event">升组长获更多权限；发现孟雅雯与{{user}}复杂关系；娄琛雨接受扶她改造({{user}}花费大量贡献点)；姜舞/萧茹浮出水面；萧茹入住出租屋'结对编程'；发现孵化室；{{user}}怀疑自身记忆被篡改。</div>
+      <div class="tl-lou">扶她改造；健康开始被Sisterhood盯上</div>
+    </div>" >
+      <div class="tl-stage">四·被囚与逆转(破解模式)</div>
+      <div class="tl-event">{{user}}升主任后被姜舞囚于28层人体实验室启动人格抹除。原设：王健僵尸网络瘫痪内网+副人格Doctor接管。★调整：{{user}}以自身意志撕裂催眠枷锁→激活破解模式(系统最高权限)→强制终止实验设备、反制姜舞萧茹、独立逃脱，不依赖外部协作者与副人格。</div>
+      <div class="tl-lou">同期萧茹在28层对娄琛雨注射大剂量蓝色药液——破解模式强制终止设备，针尖刺入&lt;2mm，娄琛雨存活(改写原著死亡线)</div>
+    </div>" >
+      <div class="tl-stage">五·复仇与权力(娄琛雨存活线)</div>
+      <div class="tl-event">{{user}}获破解模式最高权限，系统性清除敌人；姜舞被反制囚禁；暗杀行动(妫妡娆射杀孙浩诚、宋卫军)；{{user}}被刑拘37天，周昌逃跑出境；杨玉兰、姚嫣成心腹；与孟雅雯、娄琛雨三人同居(琛雨主导)。</div>
+      <div class="tl-lou">未死亡；经纳米机器人重置+清除剧本控制+记忆四层封印+授'系统副总管'，苏醒后只记得长噩梦</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div>" >
+      <div class="tl-stage">三·深入与危机</div>
+      <div class="tl-event">升组长获更多权限；发现孟雅雯与{{user}}复杂关系；娄琛雨接受扶她改造({{user}}花费大量贡献点)；姜舞/萧茹浮出水面；萧茹入住出租屋'结对编程'；发现孵化室；{{user}}怀疑自身记忆被篡改。</div>
+      <div class="tl-lou">扶她改造；健康开始被Sisterhood盯上</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div>" >
+      <div class="tl-stage">三·深入与危机</div>
+      <div class="tl-event">升组长获更多权限；发现孟雅雯与{{user}}复杂关系；娄琛雨接受扶她改造({{user}}花费大量贡献点)；姜舞/萧茹浮出水面；萧茹入住出租屋'结对编程'；发现孵化室；{{user}}怀疑自身记忆被篡改。</div>
+      <div class="tl-lou">扶她改造；健康开始被Sisterhood盯上</div>
+    </div>" >
+      <div class="tl-stage">四·被囚与逆转(破解模式)</div>
+      <div class="tl-event">{{user}}升主任后被姜舞囚于28层人体实验室启动人格抹除。原设：王健僵尸网络瘫痪内网+副人格Doctor接管。★调整：{{user}}以自身意志撕裂催眠枷锁→激活破解模式(系统最高权限)→强制终止实验设备、反制姜舞萧茹、独立逃脱，不依赖外部协作者与副人格。</div>
+      <div class="tl-lou">同期萧茹在28层对娄琛雨注射大剂量蓝色药液——破解模式强制终止设备，针尖刺入&lt;2mm，娄琛雨存活(改写原著死亡线)</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div>" >
+      <div class="tl-stage">三·深入与危机</div>
+      <div class="tl-event">升组长获更多权限；发现孟雅雯与{{user}}复杂关系；娄琛雨接受扶她改造({{user}}花费大量贡献点)；姜舞/萧茹浮出水面；萧茹入住出租屋'结对编程'；发现孵化室；{{user}}怀疑自身记忆被篡改。</div>
+      <div class="tl-lou">扶她改造；健康开始被Sisterhood盯上</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div><div class="tl-item<div class="tl-item" >
+      <div class="tl-stage">一·入职与发现</div>
+      <div class="tl-event">{{user}}博士毕业回陵东，与前女友娄琛雨重逢(琛雨隐瞒环晓真相)；入职研发部，分配实习助理杨玉兰；发现女性占80%、贡献点系统、恐怖谷效应。</div>
+      <div class="tl-lou">重逢，复合，暗示有不能说的秘密</div>
+    </div>" >
+      <div class="tl-stage">二·升职与探索</div>
+      <div class="tl-event">解决项目难题升副组长；获陈丹娜；卫璎入职(记忆不被完全抹除)；发现脑机接口实验与绯迷计划；娄琛雨升主任助理，有女儿晴晴。</div>
+      <div class="tl-lou">升主任助理；校园裸贷过往被揭示</div>
+    </div>" >
+      <div class="tl-stage">三·深入与危机</div>
+      <div class="tl-event">升组长获更多权限；发现孟雅雯与{{user}}复杂关系；娄琛雨接受扶她改造({{user}}花费大量贡献点)；姜舞/萧茹浮出水面；萧茹入住出租屋'结对编程'；发现孵化室；{{user}}怀疑自身记忆被篡改。</div>
+      <div class="tl-lou">扶她改造；健康开始被Sisterhood盯上</div>
+    </div>" >
+      <div class="tl-stage">四·被囚与逆转(破解模式)</div>
+      <div class="tl-event">{{user}}升主任后被姜舞囚于28层人体实验室启动人格抹除。原设：王健僵尸网络瘫痪内网+副人格Doctor接管。★调整：{{user}}以自身意志撕裂催眠枷锁→激活破解模式(系统最高权限)→强制终止实验设备、反制姜舞萧茹、独立逃脱，不依赖外部协作者与副人格。</div>
+      <div class="tl-lou">同期萧茹在28层对娄琛雨注射大剂量蓝色药液——破解模式强制终止设备，针尖刺入&lt;2mm，娄琛雨存活(改写原著死亡线)</div>
+    </div>" >
+      <div class="tl-stage">五·复仇与权力(娄琛雨存活线)</div>
+      <div class="tl-event">{{user}}获破解模式最高权限，系统性清除敌人；姜舞被反制囚禁；暗杀行动(妫妡娆射杀孙浩诚、宋卫军)；{{user}}被刑拘37天，周昌逃跑出境；杨玉兰、姚嫣成心腹；与孟雅雯、娄琛雨三人同居(琛雨主导)。</div>
+      <div class="tl-lou">未死亡；经纳米机器人重置+清除剧本控制+记忆四层封印+授'系统副总管'，苏醒后只记得长噩梦</div>
+    </div>" >
+      <div class="tl-stage">六·权力巅峰(未完结)</div>
+      <div class="tl-event">{{user}}成公司最高层，建立极端等级控制体系；22-24层骑行文化、排卵期接待全面实施；赵加莹跌落又崛起；日常高度仪式化。故事在总裁办公室接待场景戛然而止。</div>
+      <div class="tl-lou">作为系统副总管管理者后宫，卧底Sisterhood</div>
+    </div>" >
+      <div class="tl-stage">七·省城清算与终局(334-369章)</div>
+      <div class="tl-event">率势力南下清算Sisterhood省城分部与总部；'零'身份揭晓；绯迷计划终章；周昌境外下落与警方收网；选秀线揭开新女性角色。多线并行收束。</div>
+      <div class="tl-lou">记忆封印伏笔F-1~F-6可能在此阶段触发闪回</div>
+    </div></div>
+  <h3 class="grp">催眠剧本全景（23 个 · 按组）</h3>
+  <h3 class="grp">组A · 完整剧情驱动型</h3><table class="tbl"><thead><tr><th>编号</th><th>名称</th><th>类型</th><th>触发条件</th><th>核心玩法/机制</th><th>绑定角色</th><th>贡献点</th><th>风险</th></tr></thead><tbody><tr><td>A-1</td><td class="b">女特工捕获计划</td><td>完整剧情驱动型</td><td>进入陵东高档酒店(如陵江大酒店)预订连通房；目标助理可催眠；消耗贡献点10</td><td>特工潜入→被俘→审判→凌辱→反杀→再反转→认主→梦醒</td><td>任意可催眠女助理(雨燕/流莺等)</td><td></td><td>中</td></tr><tr><td>A-2</td><td class="b">环晓科技之战</td><td>完整剧情驱动型</td><td>用户职级≥主任；Sisterhood冲突线推进到正面对抗；≥5名助理在场且可催眠；消耗贡献点200</td><td>大型终极剧本，公司全面战争；动员→部署→交战→增援→决战→战果结算</td><td>全楼层/全公司女助理(需高管权限)</td><td></td><td>极高</td></tr><tr><td>A-3</td><td class="b">精神男人与真女教的邪恶祭祀</td><td>完整剧情驱动型(futa)</td><td>已完成环晓科技之战；俘虏姐妹会核心成员(姜舞/萧茹级)；≥2名助理完成扶她改造；消耗贡献点150</td><td>futa对抗+宗教祭祀；真女教圣歌→俘虏献祭→集体融合→新成员入教</td><td>高级助理以上(需高管权限)</td><td></td><td>高</td></tr><tr><td>A-4</td><td class="b">真女教圣女的最后下落</td><td>完整剧情驱动型(futa多P)</td><td>真女教线推进到'追查圣女'；≥3名助理完成扶她改造；消耗贡献点180(三章连续)</td><td>圣女被捕获→审判→扶她处刑队集结→五人叠罗汉→连续中出→排精→坐骑→喝尿挤奶→最终处刑→圣女身份揭露</td><td>圣女(娄琛雨可代入)、赵加莹、多名扶她助理</td><td></td><td>高</td></tr><tr><td>A-5</td><td class="b">帝国骑兵小队</td><td>完整剧情驱动型(四幕)</td><td>用户职级≥副总监；解锁坐骑训练；≥5名助理完成母马身体改造；消耗贡献点250(四章大型)</td><td>以'帝国骑兵'为框架的骑战剧本；基础骑术→双骑争宠→实战突破→终极冲锋</td><td>赵加莹、许双苓、袁梦晗等多名母马改造助理</td><td></td><td>高</td></tr><tr><td>A-6</td><td class="b">被围剿的女文工团</td><td>完整剧情驱动型</td><td>战争/对抗线进入围剿阶段；≥6名助理组成文工团；消耗贡献点200</td><td>战争背景下的围剿与反围剿；文工团以演出为掩护伺机反击突围</td><td>文工团(≥6名助理)</td><td></td><td>高</td></tr></tbody></table><h3 class="grp">组B · 角色专属剧本</h3><table class="tbl"><thead><tr><th>编号</th><th>名称</th><th>类型</th><th>触发条件</th><th>核心玩法/机制</th><th>绑定角色</th><th>贡献点</th><th>风险</th></tr></thead><tbody><tr><td>B-1</td><td class="b">我的忠犬{{user}}</td><td>角色专属(常驻·被控制方)</td><td>Sisterhood常驻触发(非用户主动)；破解模式激活即解除</td><td>Sisterhood常驻控制{{user}}的剧本；破解模式激活后强制解除。危机机制：深度催眠且未开破解时，AI体现行为受限、无法自主决策</td><td>{{user}}(被控制方)</td><td></td><td>极高(对主角)</td></tr><tr><td>B-2</td><td class="b">女性领导力的崛起</td><td>角色专属常驻Buff(赵加莹)</td><td>赵加莹作为助理分配给用户后自动激活；破解模式可绕过/暂停</td><td>赵加莹主动阻止{{user}}对其他女性(尤其程蓓蓓等新人)的催眠/侵犯，用逻辑诡辩'说服'放弃行动</td><td>赵加莹</td><td></td><td>低</td></tr><tr><td>B-3</td><td class="b">你的专属性交辅助</td><td>角色专属常驻(通关解锁)</td><td>通关任一游戏剧本后系统自动解锁</td><td>赵加莹在性行为场景中主动辅助——引导进入、协助姿势、语言鼓励；激活时声音变柔、眼神顺从</td><td>通关后的赵加莹</td><td></td><td>低</td></tr><tr><td>B-4</td><td class="b">女特工的最后之舞</td><td>角色专属情感型</td><td>娄琛雨已纳入系统；用户选择'为雨燕安排最后任务'；消耗贡献点80</td><td>为娄琛雨(雨燕)编写'终极特工任务'，让她以女特工身份执行最后一次外勤，面临生死抉择但最终'活下来'——心理闭环+控制权仪式</td><td>娄琛雨/雨燕</td><td></td><td>中</td></tr></tbody></table><h3 class="grp">组C · 场景/玩法型</h3><table class="tbl"><thead><tr><th>编号</th><th>名称</th><th>类型</th><th>触发条件</th><th>核心玩法/机制</th><th>绑定角色</th><th>贡献点</th><th>风险</th></tr></thead><tbody><tr><td>C-1</td><td class="b">插入式养生馆</td><td>场景/玩法型</td><td>进入公司休息区/养生馆+≥2名助理在场；消耗贡献点10</td><td>助理扮演养生馆技师，提供'插入式'按摩；头部→全身推油→特殊服务，双技师互动</td><td>杨玉兰、陈丹娜(或任意两名在场女助理)</td><td></td><td>低</td></tr><tr><td>C-2</td><td class="b">赤裸上身喂奶搏斗的女特工</td><td>场景/玩法型</td><td>触发'女特工对战'+助理已完成乳房催大改造；消耗贡献点15</td><td>两名女特工赤裸上身，以乳汁(具迷幻效果)为'武器'搏斗；被喷中者短暂失去战斗力</td><td>娄琛雨、孟雅雯(或任意两名亲密女助理)</td><td></td><td>中</td></tr><tr><td>C-3</td><td class="b">第三医务室的白衣天使</td><td>场景/玩法型</td><td>进入公司医务室+护士助理在场；消耗贡献点5</td><td>护士角色扮演；体检→注射→特殊治疗，可配合蓝色药液纳米机器人注射设定</td><td>护士刘小芹、蒋玲(17层常驻NPC)</td><td></td><td>低</td></tr><tr><td>C-4</td><td class="b">母婴室的催眠骑乘式肉便器</td><td>场景/玩法型</td><td>解锁母婴室场景+目标助理完成器具拘束改造；消耗贡献点(主任权限)</td><td>助理被固定在母婴室专用器具上成为'骑乘式肉便器'；骑乘+尿入子宫流程</td><td>专属保洁员陈诗琪(需主任级权限)</td><td></td><td>极高</td></tr><tr><td>C-5</td><td class="b">琛雨式奸击机</td><td>场景/玩法型(运动器械)</td><td>进入健身房+娄琛雨在场+椭圆机可用；消耗贡献点15</td><td>以椭圆机为道具的骑乘性交，用往复运动节奏配合抽插；娄琛雨专属</td><td>娄琛雨(或任意丰腴女助理)</td><td></td><td>中</td></tr><tr><td>C-6</td><td class="b">加莹式俯冲轰炸机</td><td>场景/玩法型(骑乘移动)</td><td>用户办公室+赵加莹在场；消耗贡献点15</td><td>赵加莹以'俯冲轰炸机'姿势从上往下快速坐下抽插；漏尿+宫交+内射，可叠加常驻剧本</td><td>赵加莹(或任意体格强健女助理)</td><td></td><td>中</td></tr><tr><td>C-7</td><td class="b">败北的子宫守卫者</td><td>场景/玩法型(游戏剧本)</td><td>赵加莹分配后随机弹出游戏挑战；消耗贡献点10</td><td>阴道设为守关Boss，游戏化攻破；通关解锁常驻剧本'你的专属性交辅助'，失败24h冷却</td><td>赵加莹(或任意带常驻剧本高级女助理)</td><td></td><td>中</td></tr><tr><td>C-8</td><td class="b">女体人肉沙包</td><td>场景/玩法型</td><td>进入训练场+≥1名助理完成体能改造；消耗贡献点15</td><td>助理成为'人肉沙包'承受殴打训练；倒立深喉、站立交叉骑乘、败北处刑内射；上篇侧重殴打深喉，下篇侧重骑乘处刑</td><td>赵加莹(或任意体格强健女助理)</td><td></td><td>中</td></tr></tbody></table><h3 class="grp">组D · 触发式/机制型</h3><table class="tbl"><thead><tr><th>编号</th><th>名称</th><th>类型</th><th>触发条件</th><th>核心玩法/机制</th><th>绑定角色</th><th>贡献点</th><th>风险</th></tr></thead><tbody><tr><td>D-1</td><td class="b">普通指令模式</td><td>机制型</td><td>达成'性骚扰'成就；10点/次</td><td>解锁条件：达成'性骚扰'成就。对助理下达简单行为指令(站起/坐下/走到某处/脱下某件衣物)</td><td>任意女助理</td><td></td><td>低</td></tr><tr><td>D-2</td><td class="b">经期保护/调整模式</td><td>机制型</td><td>助理首次登录自动解锁，首次免费；后续1点/次</td><td>女性助理自动检测经期，消耗贡献点激活，可抵御催眠入侵(已知Bug：催眠者不触碰身体时可绕过)</td><td>所有女性助理</td><td></td><td>低</td></tr><tr><td>D-3</td><td class="b">强制主奴模式</td><td>机制型(深度催眠)</td><td>职级≥副组长；20点/4小时</td><td>最高级别催眠控制模式，持续4小时，被控者完全服从；4小时后自动解除、被控者无记忆</td><td>任意单一女助理</td><td></td><td>高</td></tr><tr><td>D-4</td><td class="b">一家人最重要的是整整齐齐</td><td>机制型(触发式)</td><td>家族/群体场景自动触发</td><td>家族/群体场景中自动触发，将场景中所有女性纳入'一家人'角色框架，每人分配家族角色(母亲/姐妹/女儿等)</td><td>场景内全体女性</td><td></td><td>视场景</td></tr><tr><td>D-5</td><td class="b">另辟蹊径</td><td>机制型(游戏剧本)</td><td>赵加莹专属随机弹出；0点(自动触发)；失败24h冷却</td><td>赵加莹专属游戏剧本之一，挑战失败有冷却时间</td><td>赵加莹</td><td></td><td>低</td></tr></tbody></table>
+</div>
+<footer>深度还原版 · 娄琛雨按《三大机制调整方案》改写为存活+记忆封印+系统副总管；其余人物与剧本依角色卡/原著原汁原味保留（环晓后宫特色不去除）。</footer>
+<script>
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.pane').forEach(x=>x.classList.remove('on'));
+  t.classList.add('on');
+  document.getElementById('p-'+t.dataset.t).classList.add('on');
+});
+</script>
+</body>
+</html>
