@@ -60,7 +60,14 @@
   /* ===== 2. 工具 ===== */
   function log() { try { console.log('%c[资源加载器]', 'color:#7fd1ff', ...arguments); } catch (e) {} }
   function warn() { try { console.warn('%c[资源加载器]', 'color:#ffb454', ...arguments); } catch (e) {} }
-  function resolve(rel) { return HX_CDN_BASE + '/' + String(rel).replace(/^\/+/, ''); }
+  // resolve: 拼接 CDN_BASE 与相对路径, 对中文文件名做 URL 编码
+  function resolve(rel) {
+    const r = String(rel).replace(/^\/+/, '');
+    const encoded = r.split('/').map(function (seg) {
+      try { return encodeURIComponent(decodeURIComponent(seg)); } catch (e) { return encodeURIComponent(seg); }
+    }).join('/');
+    return HX_CDN_BASE + '/' + encoded;
+  }
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 
