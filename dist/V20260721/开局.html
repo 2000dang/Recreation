@@ -155,7 +155,6 @@
     <div class="steps">
         <div class="step-dot active" id="dot-1">① 身份信息</div>
         <div class="step-dot" id="dot-2">② 资产权限</div>
-        <div class="step-dot" id="dot-3">③ 初始助理</div>
     </div>
 
     <!-- Step 1 -->
@@ -171,15 +170,17 @@
         <div class="field">
             <label>职级</label>
             <select id="f-rank">
-                <option>实习生</option>
-                <option>初级专员</option>
-                <option>中级专员</option>
-                <option>高级专员</option>
-                <option>主管</option>
-                <option>副组长</option>
-                <option selected>组长</option>
-                <option>副总监</option>
-                <option>总监</option>
+                <option>实习工程师</option>
+                <option selected>助理工程师</option>
+                <option>工程师</option>
+                <option>高级工程师</option>
+                <option>资深工程师</option>
+                <option>技术专家</option>
+                <option>高级技术专家</option>
+                <option>首席专家</option>
+                <option>技术总监</option>
+                <option>副总裁</option>
+                <option>总裁</option>
             </select>
             <div class="hint">职位越高，催眠权限等级与可调用资源越强。</div>
         </div>
@@ -203,57 +204,22 @@
         <div class="field">
             <label>催眠权限等级</label>
             <select id="f-perm">
-                <option value="1">Lv.1 正式员工</option>
-                <option value="2">Lv.2 副组长</option>
-                <option value="3">Lv.3 组长</option>
-                <option value="4">Lv.4 副总监</option>
-                <option value="5">Lv.5 总监</option>
+                <option value="1">Lv.1 助理工程师</option>
+                <option value="2">Lv.2 工程师</option>
+                <option value="3">Lv.3 高级工程师</option>
+                <option value="4">Lv.4 资深工程师</option>
+                <option value="5">Lv.5 技术专家</option>
+                <option value="6">Lv.6 高级技术专家</option>
+                <option value="7">Lv.7 首席专家</option>
+                <option value="8">Lv.8 技术总监</option>
+                <option value="9">Lv.9 副总裁</option>
+                <option value="10">Lv.10 总裁</option>
             </select>
-        </div>
-        <div class="field">
-            <label>破解模式</label>
-            <select id="f-crack">
-                <option value="关闭" selected>关闭（常规流程）</option>
-                <option value="绝对权限">绝对权限（忽略贡献点/冷却/权限）</option>
-            </select>
+            <div class="hint">对应职级: 1-10 依次映射. 开启破解模式后由悬浮窗临时提升到 10.</div>
         </div>
         <div class="err" id="err-2"></div>
         <div class="nav">
             <button class="wiz ghost" onclick="setStep(1)">上一步</button>
-            <button class="wiz primary" onclick="next(3)">下一步</button>
-        </div>
-    </div>
-
-    <!-- Step 3 -->
-    <div class="panel" id="panel-3">
-        <div class="field">
-            <label>初始助理：杨玉兰（实习助理，18岁）</label>
-            <div class="hint">实习助理已默认在场；可微调初始状态。</div>
-        </div>
-        <div class="field">
-            <label>情绪</label>
-            <input id="f-yll-mood" type="text" value="不耐烦" />
-        </div>
-        <div class="field">
-            <label>三围</label>
-            <input id="f-yll-bw" type="text" value="85/60/88" />
-        </div>
-        <div class="field">
-            <label>罩杯</label>
-            <input id="f-yll-cup" type="text" value="D" />
-        </div>
-        <div class="field">
-            <label>催眠状态</label>
-            <select id="f-yll-hyp">
-                <option selected>未被催眠</option>
-                <option>心无旁骛</option>
-                <option>普通指令</option>
-                <option>强制主奴</option>
-            </select>
-        </div>
-        <div class="err" id="err-3"></div>
-        <div class="nav">
-            <button class="wiz ghost" onclick="setStep(2)">上一步</button>
             <button class="wiz primary" onclick="descend()">完成建档 · 进入剧情</button>
         </div>
         <button class="skip" onclick="skipDescend()">跳过建档，直接降临环晓科技</button>
@@ -276,7 +242,7 @@
     }
 
     window.setStep = function (n) {
-        for (var i = 1; i <= 3; i++) {
+        for (var i = 1; i <= 2; i++) {
             var p = $('panel-' + i); if (p) p.classList.toggle('active', i === n);
             var d = $('dot-' + i); if (d) d.classList.toggle('active', i === n);
         }
@@ -295,14 +261,7 @@
             rank: $('f-rank').value,
             credit: Math.max(0, Number($('f-credit').value) || 0),
             money: Math.max(0, Number($('f-money').value) || 0),
-            perm: Number($('f-perm').value) || 1,
-            crackMode: $('f-crack').value,
-            yll: {
-                mood: $('f-yll-mood').value.trim() || '不耐烦',
-                bw: $('f-yll-bw').value.trim() || '85/60/88',
-                cup: $('f-yll-cup').value.trim() || 'D',
-                hyp: $('f-yll-hyp').value
-            }
+            perm: Number($('f-perm').value) || 1
         };
     }
 
@@ -314,7 +273,7 @@
                 if (win.Mvu && typeof win.Mvu.updateVariable === 'function') {
                     win.Mvu.updateVariable('主角状态', {
                         工号: d.empId, 职级: d.rank, 贡献点: d.credit,
-                        '个人金钱': d.money, '破解模式': d.crackMode !== '关闭',
+                        '个人金钱': d.money,
                         '催眠权限等级': d.perm
                     });
                     return true;
@@ -331,22 +290,6 @@
             win._.set(ps, '贡献点', d.credit);
             win._.set(ps, '个人金钱', d.money);
             win._.set(ps, '催眠权限等级', d.perm);
-            win._.set(ps, '破解模式', d.crackMode !== '关闭');
-
-            if (!cloned.stat_data['助理管理']) cloned.stat_data['助理管理'] = {};
-            if (!cloned.stat_data['助理管理']['实习助理']) cloned.stat_data['助理管理']['实习助理'] = {};
-            var rec = cloned.stat_data['助理管理']['实习助理'];
-            if (!rec['杨玉兰']) rec['杨玉兰'] = {};
-            var a = rec['杨玉兰'];
-            win._.set(a, '类型', '实习助理');
-            win._.set(a, '在场', true);
-            win._.set(a, '状态', '正常');
-            win._.set(a, '情绪', d.yll.mood);
-            win._.set(a, '催眠状态', d.yll.hyp);
-            win._.set(a, '三围', d.yll.bw);
-            win._.set(a, '罩杯', d.yll.cup);
-            win._.set(a, '改造状态', '无');
-            win._.set(a, '归属', '{{user}}的助理');
 
             win.Mvu.replaceMvuData(cloned, { type: 'message', message_id: 'latest' });
             try { win.Mvu.replaceMvuData(cloned, { type: 'chat' }); } catch (e2) {}
@@ -392,22 +335,35 @@
         parts.push('【角色建档完成】');
         parts.push('姓名：' + d.name + '　工号：' + d.empId + '　职级：' + d.rank);
         parts.push('催眠权限等级：Lv.' + d.perm + '　贡献点：' + d.credit + '　个人资金：¥' + d.money);
-        parts.push('破解模式：' + (d.crackMode === '关闭' ? '普通模式' : '绝对权限'));
-        parts.push('初始助理：杨玉兰（' + d.yll.mood + ' / 三围 ' + d.yll.bw + ' / 罩杯 ' + d.yll.cup + ' / 催眠·' + d.yll.hyp + '）');
         parts.push('');
         parts.push('【系统指令】');
-        parts.push('你是角色卡「催眠助理·环晓科技」的叙事引擎。请基于以上建档数据，生成一段沉浸式开局场景：');
-        parts.push('1. 环境描写：' + d.name + ' 以研发部新入职博士的身份，于清晨走入环晓科技大厦——一座融合脑机接口与催眠科技的超级企业总部。第一人称视角，刻画大堂的赛博质感、专属终端弹出的员工界面、擦肩而过的工作人员微表情。');
-        parts.push('2. 角色引入：自然引出 1-2 名女性员工 / 助理（杨玉兰、卫璎、娄琛雨等角色池）与主角的首次互动。据职级(' + d.rank + ')呈现合理的职场层级关系。');
-        parts.push('3. 系统展示：通过员工终端界面，简要展示贡献点系统、催眠权限评级的存在——但不要一次性堆砌数据，让主角在剧情中"发现"自己的权限与资源。');
-        if (d.crackMode !== '关闭') {
-            parts.push('4. 暗线铺垫：绝对权限模式已激活。在场景中植入 1-2 处微妙异常细节（如系统日志闪现、防火墙警报静默、某位 NPC 眼神中带着不同寻常的"认识"），暗示公司表层运作之下存在更深的秘密。');
-        } else {
-            parts.push('4. 暗线铺垫：在场景中植入 1-2 处微妙异常细节（如走廊尽头门禁系统一声异常蜂鸣、电梯镜面中出现不该存在的倒影），暗示公司表层运作之下存在更深的秘密。');
-        }
-        parts.push('5. 基调：科幻职场悬疑。保持专业冷静的科技公司氛围，对话自然有张力。');
-        parts.push('6. 叙事准则：直接以场景描写开始，无需寒暄。绝对禁止任何色情或露骨性描写。将建档信息融合到开场叙事中，而非机械罗列。');
-        parts.push('7. 变量接入：角色档案已写入 MVU 系统，请基于职级与权限自然体现在叙事中。');
+        parts.push('你是角色卡「催眠助理·环晓科技」的叙事引擎。请承接以下已写好的开局段落（{{user}}的行动），继续往下演绎杨玉兰出场后的反应，沉浸式展开剧情：');
+        parts.push('1. 沿用下方开局段落的氛围、节奏、视角（第一人称{{user}}视角），自然接续，不要复述。');
+        parts.push('2. 据职级(' + d.rank + ')与催眠权限(Lv.' + d.perm + ')合理体现杨玉兰等 NPC 对主角的态度层级。');
+        parts.push('3. 暗线铺垫：在场景中植入 1-2 处微妙异常细节（如走廊尽头门禁系统一声异常蜂鸣、电梯镜面中出现不该存在的倒影），暗示公司表层运作之下存在更深的秘密。');
+        parts.push('4. 基调：科幻职场悬疑。保持专业冷静的科技公司氛围，对话自然有张力。');
+        parts.push('5. 叙事准则：直接以杨玉兰的回应接续场景。绝对禁止任何色情或露骨性描写。');
+        parts.push('6. 变量接入：角色档案已写入 MVU 系统，请基于职级与权限自然体现在叙事中。');
+        parts.push('7. 不要在回复开头复述{{user}}的输入或重新描写开局段。');
+        parts.push('');
+        parts.push('【开局段落（请承接演绎）】');
+        parts.push('{{user}}推开环晓科技总部大厦的旋转门，一股混合着高级空调和淡香的气息扑面而来。');
+        parts.push('');
+        parts.push('大厅宽敞气派，大理石地面映着天花板环形灯带的柔光。前台几位穿着统一蓝色职业套装的年轻女性正在忙碌，她们的妆容精致，姿态优雅，丝袜包裹的长腿在高跟鞋中若隐若现。');
+        parts.push('');
+        parts.push('你拿着入职通知书走到前台，一位梳着低马尾的前台小姐微笑着接过你的文件：「{{user}}博士？欢迎来到环晓科技。研发部在八层，您的工号和门禁卡已经准备好了。」');
+        parts.push('');
+        parts.push('她递过来一张印着公司logo的工牌，指尖不经意地划过你的手背，触感微凉而柔软。');
+        parts.push('');
+        parts.push('电梯到了八层，门一开，走廊里几乎清一色是穿着OL制服、踩着高跟鞋的女性员工。她们手持平板电脑，三三两两地走过，偶尔投来好奇的目光——在这个楼层看到男性员工，似乎是一件稀罕事。');
+        parts.push('');
+        parts.push('你找到了自己的办公室，推门进去。离门口不远的地方，一个年轻女孩正翘着二郎腿坐在那里修指甲。她头发挑染成红的粉的绿的蓝的，烫着波浪卷披在肩上，眼影画得很浓，脖子上像狗一样戴了个皮质脖圈，一边耳朵挂着硕大的耳环。本来长得蛮好看的小姑娘，非得打扮成这副模样。');
+        parts.push('');
+        parts.push('她懒洋洋地瞅了你一眼，有气无力地打了个招呼：「早。——你就是我新上司？{{user}}博士？」');
+        parts.push('');
+        parts.push('她站起身来，低头整理了一下包臀裙的裙摆。虽然这姑娘的打扮让你直摇头，但不可否认的是——她的身材确实好得离谱，那包臀裙下挺翘的弧度，让你不由得多看了两眼。');
+        parts.push('');
+        parts.push('「我叫杨玉兰，你的实习助理。公司规定，你在办公室的时候我得一直站着，背对你，不许回头。」她撇了撇嘴，「所以你最好别干太恶心的事。」');
         return parts.join('\n');
     }
 
@@ -420,9 +376,8 @@
 
     window.skipDescend = function () {
         var d = {
-            name: '零', empId: 'HX-0001', rank: '组长', credit: 5, money: 5000,
-            perm: 3, crackMode: '关闭',
-            yll: { mood: '不耐烦', bw: '85/60/88', cup: 'D', hyp: '未被催眠' }
+            name: '零', empId: 'HX-0001', rank: '助理工程师', credit: 5, money: 5000,
+            perm: 1
         };
         syncMVU(d);
         sendToTavern(buildPrompt(d));
