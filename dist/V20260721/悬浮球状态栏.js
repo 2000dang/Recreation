@@ -136,6 +136,8 @@
       sd.__hx_hack_mode = next;
     }); } catch(e){}
   }
+  function getTheme() { try { return localStorage.getItem(HX_CONFIG.theme) || 'dark'; } catch(e){} return 'dark'; }
+  function setTheme(t) { try { localStorage.setItem(HX_CONFIG.theme, t); } catch(e){} }
   var pendingEdits = {};
   function stageEdit(path, val, type) { if (!path) return; pendingEdits[path] = { val: val, type: type || 'text' }; }
 
@@ -228,7 +230,22 @@
 + '.hx-ed-wrap:hover .hx-ed-ico { opacity:1; }'
 + '.hx-edit-input { background:rgba(0,0,0,0.4); border:1px solid rgba(155,109,255,0.5); color:#fff; padding:2px 6px;'
 + '  border-radius:4px; font-size:13px; width:100%; box-sizing:border-box; }'
-+ '@keyframes hxPulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }';
++ '@keyframes hxPulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }'
++ '\n/* 白天主题 */'
++ '#hx-stat-panel.light { background: rgba(245,242,255,0.97); color: #2d1f4a; border-color: rgba(120,80,200,0.35); }'
++ '#hx-stat-panel.light .hx-k { color: #6b5b8a; }'
++ '#hx-stat-panel.light .hx-v { color: #1a1035; }'
++ '#hx-stat-panel.light .hx-row:hover { background: rgba(120,80,200,0.06); }'
++ '#hx-stat-panel.light .hx-topbar { background: rgba(120,80,200,0.06); border-bottom-color: rgba(120,80,200,0.2); }'
++ '#hx-stat-panel.light .hx-tl-title { color: #3d2070; }'
++ '#hx-stat-panel.light .hx-tab-rail { background: rgba(120,80,200,0.03); border-bottom-color: rgba(120,80,200,0.15); }'
++ '#hx-stat-panel.light .hx-tab-btn { background: rgba(120,80,200,0.08); color: #6b5b8a; }'
++ '#hx-stat-panel.light .hx-tab-btn.active { background: rgba(120,80,200,0.3); color: #2d1f4a; }'
++ '#hx-stat-panel.light .hx-icon-btn { background: rgba(120,80,200,0.1); color: #6b5b8a; }'
++ '#hx-stat-panel.light .hx-hack-tip { background: rgba(255,170,80,0.08); }'
++ '#hx-stat-panel.light .hx-sub .hx-k { color: #8b7ba5; }'
++ '#hx-stat-panel.light .hx-empty { color: #8b7ba5; }'
++ '#hx-stat-panel.light .hx-modal-box { background: rgba(245,242,255,0.98); border-color: rgba(120,80,200,0.3); }';
   }
 
   function initHxCss() {
@@ -367,6 +384,12 @@
     $panel.off('click.hxHack').on('click.hxHack', '.hx-hack-toggle', function(e) {
       e.stopPropagation();
       setHackMode(!getHackMode());
+      renderAll();
+    });
+    // 主题切换
+    $panel.off('click.hxTheme').on('click.hxTheme', '.hx-theme-btn', function() {
+      var next = getTheme() === 'dark' ? 'light' : 'dark';
+      setTheme(next);
       renderAll();
     });
     // Tab 切换
@@ -525,23 +548,23 @@
       $panel.html('<div class="hx-topbar"><div class="hx-tl-info"><div class="hx-tl-title">终端未响应</div></div><div class="hx-tl-actions"><div class="hx-icon-btn refresh" title="刷新数据">🔄</div><div class="hx-icon-btn close" title="关闭">✕</div></div></div><div class="hx-empty"><div style="font-size:36px;opacity:0.6;animation:hxPulse 2s infinite;">📡</div><div style="margin-top:10px;">变量尚未初始化...</div></div>');
       return;
     }
-    // 提取 chat title
-    var chatTitle = '';
-    try {
-      var ctx = (GS_PARENT.SillyTavern && typeof GS_PARENT.SillyTavern.getContext === 'function') ? GS_PARENT.SillyTavern.getContext() : null;
-      if (ctx && ctx.chatId) {
-        chatTitle = ctx.chatId.length > 30 ? ctx.chatId.substring(0, 27) + '...' : ctx.chatId;
-      }
-    } catch(e){}
+    // 当前时间
+    var now = new Date();
+    var dateStr = now.getFullYear() + '-' +
+      ('0'+(now.getMonth()+1)).slice(-2) + '-' +
+      ('0'+now.getDate()).slice(-2) + ' ' +
+      ('0'+now.getHours()).slice(-2) + ':' +
+      ('0'+now.getMinutes()).slice(-2);
     var editMode = isEditMode();
     var hackOn = getHackMode();
     var curTab = getCurrentTab();
     var html = '';
     // 顶栏
     html += '<div class="hx-topbar">';
-    html += '<div class="hx-tl-info"><div class="hx-tl-title">🌙 '+(chatTitle || '环晓科技·状态栏')+'</div></div>';
+    html += '<div class="hx-tl-info"><div class="hx-tl-title">🌙 '+dateStr+'</div></div>';
     html += '<div class="hx-tl-actions">';
     html += '<div class="hx-hack-toggle'+(hackOn?' on':'')+'"><span class="hx-hack-badge">🔓</span></div>';
+    html += '<div class="hx-icon-btn hx-theme-btn" title="切换主题(暗/亮)">'+(getTheme()==='light'?'☀️':'🌙')+'</div>';
     html += '<div class="hx-icon-btn refresh" title="刷新数据">🔄</div>';
     html += '<div class="hx-icon-btn close" title="关闭">✕</div>';
     html += '</div></div>';
@@ -565,6 +588,7 @@
       html += '<div class="hx-save-btn">💾 保存修改 ('+Object.keys(pendingEdits).length+' 条)</div>';
     }
     $panel.html(html);
+    $panel.toggleClass('light', getTheme() === 'light');
     renderTabContent(curTab);
   }
 
@@ -609,6 +633,7 @@
           $panel.css({left:nl+'px', top:nt+'px', right:'auto', bottom:'auto'});
         }
         $panel.css('display','flex').addClass('open');
+        $panel.toggleClass('light', getTheme() === 'light');
         $ball.hide();
       }
     } catch(e){}
