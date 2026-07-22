@@ -18,6 +18,12 @@
   ];
 
   var curTab = '主角状态';
+  var mounted = false;
+
+  function log() {
+    var args = ['[HX-Float]'].concat(Array.prototype.slice.call(arguments));
+    try { console.log.apply(console, args); } catch (e) {}
+  }
 
   function getMvuGlobal() {
     try {
@@ -56,16 +62,18 @@
     var st = document.createElement('style');
     st.id = 'hx-stat-style';
     st.textContent = [
-      '#hx-stat-ball{position:fixed;top:64px;right:12px;z-index:99990;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;}',
-      '#hx-stat-ball .hx-fab{width:42px;height:42px;border-radius:50%;background:rgba(155,109,255,.92);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35);user-select:none;}',
-      '#hx-stat-ball .hx-panel{position:absolute;top:50px;right:0;width:300px;max-height:78vh;overflow:auto;background:rgba(18,16,28,.96);border:1px solid rgba(155,109,255,.4);border-radius:12px;color:#e8e3f5;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.5);display:none;}',
+      '#hx-stat-ball{position:fixed;top:70px;right:16px;z-index:2147483647;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;pointer-events:none;}',
+      '#hx-stat-ball *{pointer-events:auto;}',
+      '#hx-stat-ball .hx-fab{width:36px;height:36px;border-radius:50%;background:rgba(245,245,255,.95);color:#5b3fa0;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;box-shadow:0 0 0 2px rgba(155,109,255,.45),0 4px 16px rgba(0,0,0,.45);backdrop-filter:blur(4px);user-select:none;transition:transform .15s ease,box-shadow .15s ease;}',
+      '#hx-stat-ball .hx-fab:hover{transform:scale(1.08);box-shadow:0 0 0 3px rgba(155,109,255,.65),0 6px 22px rgba(0,0,0,.55);}',
+      '#hx-stat-ball .hx-panel{position:absolute;top:44px;right:0;width:310px;max-height:78vh;overflow:auto;background:rgba(22,18,36,.97);border:1px solid rgba(155,109,255,.45);border-radius:14px;color:#e8e3f5;font-size:13px;box-shadow:0 14px 40px rgba(0,0,0,.55);display:none;}',
       '#hx-stat-ball .hx-panel.open{display:block;}',
-      '#hx-stat-ball .hx-tabs{display:flex;flex-wrap:wrap;gap:4px;padding:8px;border-bottom:1px solid rgba(155,109,255,.25);}',
-      '#hx-stat-ball .hx-tab{padding:3px 7px;border-radius:6px;background:rgba(155,109,255,.12);cursor:pointer;white-space:nowrap;}',
-      '#hx-stat-ball .hx-tab.active{background:rgba(155,109,255,.4);}',
-      '#hx-stat-ball .hx-row{display:flex;justify-content:space-between;gap:8px;padding:3px 10px;line-height:1.5;}',
+      '#hx-stat-ball .hx-tabs{display:flex;flex-wrap:wrap;gap:5px;padding:10px;border-bottom:1px solid rgba(155,109,255,.25);}',
+      '#hx-stat-ball .hx-tab{padding:4px 8px;border-radius:8px;background:rgba(155,109,255,.14);cursor:pointer;white-space:nowrap;font-size:12px;}',
+      '#hx-stat-ball .hx-tab.active{background:rgba(155,109,255,.42);}',
+      '#hx-stat-ball .hx-row{display:flex;justify-content:space-between;gap:8px;padding:3px 11px;line-height:1.55;}',
       '#hx-stat-ball .hx-k{color:#a99fd0;}',
-      '#hx-stat-ball .hx-v{color:#fff;text-align:right;cursor:pointer;}',
+      '#hx-stat-ball .hx-v{color:#fff;text-align:right;cursor:pointer;max-width:58%;word-break:break-all;}',
       '#hx-stat-ball .hx-sub{padding-left:14px;}',
       '#hx-stat-ball .hx-edit{background:#2a2440;border:1px solid #6d5bb0;color:#fff;border-radius:4px;width:120px;font-size:12px;}'
     ].join('');
@@ -165,21 +173,29 @@
   }
 
   function mount() {
-    if (document.getElementById('hx-stat-ball')) { render(); return; }
-    ensureStyle();
-    var root = document.createElement('div');
-    root.id = 'hx-stat-ball';
-    var fab = document.createElement('div');
-    fab.className = 'hx-fab';
-    fab.textContent = '📊';
-    fab.title = '环晓科技状态栏';
-    var panel = document.createElement('div');
-    panel.className = 'hx-panel';
-    fab.onclick = function () { panel.classList.toggle('open'); if (panel.classList.contains('open')) render(); };
-    root.appendChild(fab);
-    root.appendChild(panel);
-    document.body.appendChild(root);
-    render();
+    if (document.getElementById('hx-stat-ball')) { render(); return true; }
+    if (!document.body) { log('document.body 尚未就绪，延迟挂载'); return false; }
+    try {
+      ensureStyle();
+      var root = document.createElement('div');
+      root.id = 'hx-stat-ball';
+      var fab = document.createElement('div');
+      fab.className = 'hx-fab';
+      fab.textContent = '🌙';
+      fab.title = '环晓科技状态栏';
+      var panel = document.createElement('div');
+      panel.className = 'hx-panel';
+      fab.onclick = function () { panel.classList.toggle('open'); if (panel.classList.contains('open')) render(); };
+      root.appendChild(fab);
+      root.appendChild(panel);
+      document.body.appendChild(root);
+      log('悬浮球已挂载');
+      render();
+      return true;
+    } catch (e) {
+      console.error('[HX-Float] 挂载失败', e);
+      return false;
+    }
   }
 
   function debouncedRender() {
@@ -188,16 +204,24 @@
   }
 
   function init() {
-    mount();
+    log('init 开始');
+    if (!mount()) {
+      var t = setInterval(function () {
+        if (mount()) { clearInterval(t); log('延迟挂载成功'); }
+      }, 300);
+      setTimeout(function () { clearInterval(t); }, 10000);
+    }
     var win = getMvuGlobal();
     if (win && win.Mvu && win.Mvu.events && win.Mvu.events.VARIABLE_UPDATE_ENDED) {
       var evt = win.Mvu.events.VARIABLE_UPDATE_ENDED;
       if (typeof eventOn === 'function') eventOn(evt, debouncedRender);
+      log('已监听 VARIABLE_UPDATE_ENDED');
+    } else {
+      log('MVU 事件对象未就绪');
     }
-    // 兜底：DOM 变动也尝试刷新
     if (typeof MutationObserver !== 'undefined') {
       var mo = new MutationObserver(debouncedRender);
-      mo.observe(document.body, { childList: true, subtree: true });
+      mo.observe(document.body || document.documentElement, { childList: true, subtree: true });
     }
     try { (window.parent || window).__悬浮球状态栏_loaded__ = true; } catch(e) { window.__悬浮球状态栏_loaded__ = true; }
   }
