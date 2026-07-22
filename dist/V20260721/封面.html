@@ -1,92 +1,555 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>环晓科技 · 接入协议</title>
-<style>
-  :root{
-    --bg:#0b0c10; --surface:#12141a; --text:#c5c6c7; --text-sub:#7a7f85;
-    --accent:#5fd0ff; --accent-dark:#2a7fa0; --accent-soft:rgba(95,208,255,.12);
-    --font-ui:'Segoe UI','Microsoft YaHei',sans-serif;
-    --font-lore:'Noto Serif SC',serif;
-  }
-  *{margin:0;padding:0;box-sizing:border-box}
-  html,body{background:var(--bg);color:var(--text);font-family:var(--font-ui);
-    line-height:1.8;overflow:hidden}
-  body{border-left:2px solid var(--accent-dark);border-right:2px solid var(--accent-dark);
-    box-shadow:inset 0 0 100px rgba(0,0,0,.8);min-height:0!important;height:auto!important}
-  .main{max-width:680px;margin:0 auto;padding:24px 24px 40px}
-  .header{text-align:center;padding:24px 0 28px}
-  .tag{font-size:.65rem;letter-spacing:.6rem;color:var(--accent);opacity:.8;
-    text-transform:uppercase;font-family:monospace}
-  h1{font-family:var(--font-lore);font-size:2.4rem;font-weight:900;letter-spacing:.3rem;
-    margin:12px 0;color:#fff;text-shadow:0 0 20px var(--accent-soft)}
-  .sub{color:var(--text-sub);font-size:.95rem}
-  .panel{background:var(--surface);border:1px solid rgba(95,208,255,.2);border-radius:14px;
-    padding:18px 20px;margin-top:18px;box-shadow:0 0 30px rgba(0,0,0,.4)}
-  .panel h2{font-size:1rem;color:var(--accent);margin-bottom:10px;letter-spacing:.1rem}
-  .panel p{font-size:.9rem;color:var(--text);margin:6px 0}
-  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
-  .chip{padding:6px 14px;border:1px solid rgba(95,208,255,.3);border-radius:20px;
-    font-size:.82rem;color:var(--text)}
-  .foot{text-align:center;color:var(--text-sub);font-size:.75rem;margin-top:24px}
-  @media(max-width:768px){
-    body{border-left:none;border-right:none;line-height:1.6}
-    .main{padding:16px 16px 28px}
-    h1{font-size:1.8rem;letter-spacing:.15rem}
-    .panel{padding:14px 16px;margin-top:14px}
-    .sub{font-size:.82rem}
-    .chip{font-size:.74rem;padding:5px 11px}
-    .foot{font-size:.7rem}
-  }
-  @media(max-width:480px){
-    .main{padding:12px 12px 22px}
-    h1{font-size:1.5rem}
-    .tag{font-size:.58rem;letter-spacing:.4rem}
-    .panel{padding:12px 14px;border-radius:10px}
-    .panel p{font-size:.82rem}
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>催眠助理·环晓科技 — 接入协议</title>
+    <style>
+        :root {
+            --bg: #100a18;
+            --surface: #181024;
+            --text: #d8d0ea;
+            --text-sub: #8a7fa8;
+            --accent: #9b6dff; /* 环晓科技紫 */
+            --accent-dark: #6d4bb0;
+            --accent-soft: rgba(155, 109, 255, 0.12);
+            --font-ui: 'Noto Sans SC', sans-serif;
+            --font-lore: 'Noto Serif SC', serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-ui);
+            line-height: 1.8;
+            min-height: 100vh;
+            overflow-x: hidden;
+            border-left: 2px solid var(--accent-dark);
+            border-right: 2px solid var(--accent-dark);
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.8);
+        }
+
+        .main {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 0 24px 60px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 24px 0 32px;
+        }
+
+        .header-tag {
+            font-size: 0.65rem;
+            letter-spacing: 0.6rem;
+            color: var(--accent);
+            opacity: 0.8;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            font-family: monospace;
+        }
+
+        .header h1 {
+            font-family: var(--font-lore);
+            font-size: 2.6rem;
+            font-weight: 900;
+            letter-spacing: 0.3rem;
+            line-height: 1.2;
+            margin-bottom: 12px;
+            color: #fff;
+            text-shadow: 0 0 20px var(--accent-soft);
+        }
+
+        .header-sub {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            letter-spacing: 0.2rem;
+        }
+
+        .header-sub em {
+            color: var(--accent);
+            font-style: normal;
+        }
+
+        .quote {
+            text-align: center;
+            padding: 12px 20px 32px;
+            background: linear-gradient(to right, transparent, rgba(155, 109, 255, 0.04), transparent);
+            border-radius: 4px;
+        }
+
+        .quote p {
+            font-family: var(--font-lore);
+            font-size: 1rem;
+            color: var(--text);
+            line-height: 2.2;
+            letter-spacing: 0.05rem;
+        }
+
+        .quote em {
+            color: var(--accent);
+            font-style: normal;
+            font-weight: 700;
+        }
+
+        .quote .aside {
+            margin-top: 12px;
+            font-family: var(--font-ui);
+            font-size: 0.75rem;
+            color: var(--accent-dark);
+            letter-spacing: 0.1rem;
+        }
+
+        .sep {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 40px;
+            opacity: 0.5;
+        }
+        .sep::before, .sep::after {
+            content: '';
+            width: 60px;
+            height: 1px;
+            background: var(--accent-dark);
+        }
+        .sep::before { margin-right: 15px; }
+        .sep::after { margin-left: 15px; }
+        .sep span {
+            width: 6px; height: 6px;
+            transform: rotate(45deg);
+            background: var(--accent);
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 48px;
+        }
+
+        .feat {
+            padding: 20px;
+            background: var(--surface);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-left: 3px solid var(--accent-dark);
+            transition: all 0.3s ease;
+        }
+
+        .feat:hover {
+            background: rgba(155, 109, 255, 0.06);
+            border-left-color: var(--accent);
+        }
+
+        .feat-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+            letter-spacing: 0.1rem;
+        }
+
+        .feat-desc {
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            line-height: 1.6;
+        }
+
+        .cta { text-align: center; }
+
+        .btn {
+            display: inline-block;
+            padding: 16px 64px;
+            font-family: var(--font-ui);
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 0.4rem;
+            color: var(--bg);
+            background: var(--accent);
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(155, 109, 255, 0.25);
+        }
+
+        .btn:hover {
+            background: #fff;
+            box-shadow: 0 0 25px rgba(155, 109, 255, 0.5);
+        }
+
+        .btn:active { transform: scale(0.98); }
+        .btn.loading { opacity: 0.5; pointer-events: none; }
+        .btn.disabled {
+            opacity: 0.3;
+            background: var(--text-sub);
+            pointer-events: none;
+            box-shadow: none;
+        }
+
+        .cta-note {
+            margin-top: 16px;
+            font-size: 0.7rem;
+            color: var(--accent-dark);
+            letter-spacing: 0.1rem;
+            font-family: monospace;
+        }
+
+        .agreement {
+            text-align: center;
+            margin-top: 40px;
+            padding: 24px;
+            border: 1px dashed var(--accent-dark);
+            background: rgba(0,0,0,0.3);
+        }
+
+        .agreement-text {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.8;
+            letter-spacing: 0.05rem;
+            margin-bottom: 16px;
+        }
+
+        .agreement-text span { color: #e74c3c; }
+
+        .agreement-check {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .agreement-check input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 1px solid var(--accent);
+            background: transparent;
+            cursor: pointer;
+            flex-shrink: 0;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .agreement-check input[type="checkbox"]:checked {
+            background: var(--accent);
+        }
+
+        .agreement-check input[type="checkbox"]:checked::after {
+            content: '';
+            position: absolute;
+            top: 2px; left: 5px;
+            width: 4px; height: 8px;
+            border: solid var(--bg);
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .agreement-check span {
+            font-size: 0.8rem;
+            color: var(--text);
+        }
+
+        .dep-status {
+            margin-bottom: 40px;
+            padding: 24px;
+            background: #050308;
+            border: 1px solid rgba(255,255,255,0.08);
+            font-family: monospace;
+        }
+
+        .dep-title {
+            font-size: 0.8rem;
+            color: var(--text);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            border-bottom: 1px dashed rgba(255,255,255,0.1);
+            padding-bottom: 8px;
+        }
+
+        .dep-title::before { content: '> '; color: var(--accent); }
+
+        .dep-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 6px 0;
+            font-size: 0.75rem;
+            color: var(--text-sub);
+        }
+
+        .dep-name { flex: 1; }
+
+        .dep-tag {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 2px;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .dep-tag.ok { color: var(--accent); }
+        .dep-tag.fail { color: #e74c3c; }
+
+        .dep-summary {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px dashed rgba(255,255,255,0.1);
+            font-size: 0.75rem;
+        }
+
+        .dep-summary.all-ok { color: var(--accent); }
+        .dep-summary.has-fail { color: #e74c3c; }
+
+        .foot {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 0.6rem;
+            color: var(--text-sub);
+            letter-spacing: 0.25rem;
+            font-family: monospace;
+            opacity: 0.5;
+        }
+
+        .page-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+        .page-loader.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .page-loader-text {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: var(--accent);
+            letter-spacing: 0.3rem;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+        .main { opacity: 0; transition: opacity 0.6s ease; transform: translateY(10px); }
+        .main.visible { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 600px) {
+            .header h1 { font-size: 2.1rem; }
+            .features { grid-template-columns: 1fr; }
+            .btn { width: 100%; padding: 15px; }
+        }
+    </style>
 </head>
+
 <body>
-  <div class="main">
-    <div class="header">
-      <div class="tag">HUANXIAO TECH</div>
-      <h1>环晓科技</h1>
-      <div class="sub">员工系统 · 接入协议 v20260721</div>
+
+    <div class="page-loader" id="pageLoader">
+        <span class="page-loader-text">INITIALIZING BRAIN-MACHINE INTERFACE...</span>
     </div>
-    <div class="panel">
-      <h2>欢迎，{{user}} 博士</h2>
-      <p>您已通过脑机接口鉴权。当前职级：<b>正式员工</b>，贡献点余额：<b>5</b>。</p>
-      <p>本终端通过外部资源加载（jsdelivr CDN）实时渲染，更新无需重装角色卡。</p>
+
+    <div class="main" id="mainContent">
+
+        <div class="header">
+            <div class="header-tag">SYSTEM ACTIVATED // HYPNOSIS ENGINE</div>
+            <h1>催眠助理·环晓科技</h1>
+            <p class="header-sub">脑机接口 · <em>纳米机器人</em> · 员工系统协议</p>
+        </div>
+
+        <div class="quote">
+            <p>环晓科技——一座融合脑机接口与催眠科技的超级企业<br>
+            皮下植入的纳米机器人，配合一管蓝色药液，<br>
+            便能远程写入催眠指令、铭刻记忆、改写人格。</p>
+            <p class="aside">—— 你，是研发部新入职的博士</p>
+        </div>
+
+        <div class="sep"><span></span></div>
+
+        <div class="features">
+            <div class="feat">
+                <div class="feat-label">脑机接口驱动</div>
+                <div class="feat-desc">纳米机器人 + 蓝色药液实现催眠指令写入，所有效果转化为精确数值，客观可核查。</div>
+            </div>
+            <div class="feat">
+                <div class="feat-label">MVU 变量闭环</div>
+                <div class="feat-desc">ZOD 防御性 Schema + 辅助计算自动结算，主角状态 / 助理 / 催眠系统实时同步。</div>
+            </div>
+            <div class="feat">
+                <div class="feat-label">催眠指令体系</div>
+                <div class="feat-desc">心无旁骛 / 普通指令 / 强制主奴分级消耗贡献点，解除后对所发生毫无记忆。</div>
+            </div>
+            <div class="feat">
+                <div class="feat-label">悬浮状态栏</div>
+                <div class="feat-desc">右侧悬浮球实时展示员工终端、助理档案与催眠系统进度，可双击内联编辑。</div>
+            </div>
+        </div>
+
+        <div class="dep-status" id="depStatus">
+            <div class="dep-title">核心模组状态自检</div>
+            <div class="dep-item">
+                <span class="dep-name">MVU 变量架构</span>
+                <span class="dep-tag" id="dep-mvu-tag">SCANNING...</span>
+            </div>
+            <div class="dep-item">
+                <span class="dep-name">ZOD 防御 Schema</span>
+                <span class="dep-tag" id="dep-zod-tag">SCANNING...</span>
+            </div>
+            <div class="dep-item">
+                <span class="dep-name">辅助计算引擎</span>
+                <span class="dep-tag" id="dep-calc-tag">SCANNING...</span>
+            </div>
+            <div class="dep-item">
+                <span class="dep-name">悬浮球状态栏.</span>
+                <span class="dep-tag" id="dep-statusbar-tag">SCANNING...</span>
+            </div>
+            <div class="dep-summary" id="depSummary">等待模组响应...</div>
+        </div>
+
+        <div class="cta">
+            <a class="btn disabled" id="enterBtn">确认接入</a>
+            <p class="cta-note">WAITING FOR AUTHORIZATION...</p>
+        </div>
+
+        <div class="agreement">
+            <p class="agreement-text"><span>⚠</span> 警告：本协议涉及脑机接口与催眠干预<br>严禁在常规网络与无防护社区传播本系统数据</p>
+            <label class="agreement-check">
+                <input type="checkbox" id="agreeCheck">
+                <span>我已阅知《环晓科技员工系统协议》并同意接入</span>
+            </label>
+        </div>
+
+        <div class="foot">MVU ENGINE × 催眠助理·环晓科技</div>
     </div>
-    <div class="panel">
-      <h2>快速入口</h2>
-      <div class="row">
-        <span class="chip">员工系统</span>
-        <span class="chip">贡献点商城</span>
-        <span class="chip">催眠剧本</span>
-        <span class="chip">隐藏场景</span>
-        <span class="chip">破解模式</span>
-      </div>
-    </div>
-    <div class="foot">环晓科技集团 · 陵东市总部 · 25F</div>
-  </div>
-<script>
-  // 机制A 关键: 向父窗口(对话流)回报高度以实现自适应
-  (function () {
-    function report() {
-      var h = Math.ceil(document.body.scrollHeight || document.documentElement.scrollHeight || 0);
-      try { parent.postMessage({ type: 'embed-resize', height: h }, '*'); } catch (e) {}
-    }
-    window.addEventListener('load', function () { report(); setTimeout(report, 300); });
-    if (window.ResizeObserver) {
-      new ResizeObserver(report).observe(document.body);
-    } else {
-      setInterval(report, 1000);
-    }
-  })();
-</script>
+
+    <script>
+        function getWin() {
+            try { return window.parent || window; } catch (e) { return window; }
+        }
+
+        function checkDep(id, test) {
+            var tag = document.getElementById('dep-' + id + '-tag');
+            var ok = test();
+            tag.textContent = ok ? '[ ONLINE ]' : '[ OFFLINE ]';
+            tag.classList.add(ok ? 'ok' : 'fail');
+            return ok;
+        }
+
+        function runDepChecks() {
+            var win = getWin();
+            var allOk = true;
+
+            allOk &= checkDep('mvu', function () {
+                try {
+                    var mvu = win.Mvu;
+                    return void 0 !== mvu && typeof mvu.getMvuData === 'function' && typeof mvu.replaceMvuData === 'function';
+                } catch (e) { return false; }
+            });
+
+            allOk &= checkDep('zod', function () {
+                try { return !!(win.__hx_zod_loaded__); } catch (e) { return false; }
+            });
+
+            allOk &= checkDep('calc', function () {
+                try { return !!(win.__辅助计算脚本_loaded__); } catch (e) { return false; }
+            });
+
+            allOk &= checkDep('statusbar', function () {
+                try { return !!(win.__hx_float_loaded__); } catch (e) { return false; }
+            });
+
+            var summary = document.getElementById('depSummary');
+            if (allOk) {
+                summary.textContent = '>> 核心模组自检通过，允许接入';
+                summary.classList.add('all-ok');
+            } else {
+                summary.textContent = '>> 警告：部分模组响应丢失，可能会影响数值结算';
+                summary.classList.add('has-fail');
+            }
+        }
+
+        (function () {
+            var loader = document.getElementById('pageLoader');
+            var main = document.getElementById('mainContent');
+            var revealed = false;
+            function showPage() {
+                if (revealed) return;
+                revealed = true;
+                loader.classList.add('fade-out');
+                main.classList.add('visible');
+                setTimeout(function () { loader.remove(); }, 600);
+            }
+            var imgs = document.querySelectorAll('img');
+            if (imgs.length === 0) { showPage(); }
+            else {
+                var loaded = 0; var total = imgs.length;
+                imgs.forEach(function (img) {
+                    if (img.complete) { if (++loaded >= total) showPage(); }
+                    else {
+                        img.addEventListener('load', function () { if (++loaded >= total) showPage(); });
+                        img.addEventListener('error', function () { if (++loaded >= total) showPage(); });
+                    }
+                });
+            }
+            setTimeout(showPage, 10000);
+        })();
+
+        setTimeout(runDepChecks, 1500);
+
+        var agreeCheck = document.getElementById('agreeCheck');
+        var enterBtn = document.getElementById('enterBtn');
+        var ctaNote = document.querySelector('.cta-note');
+
+        agreeCheck.addEventListener('change', function () {
+            if (this.checked) {
+                enterBtn.classList.remove('disabled');
+                ctaNote.textContent = "READY FOR DEPLOYMENT";
+                ctaNote.style.color = "var(--accent)";
+            } else {
+                enterBtn.classList.add('disabled');
+                ctaNote.textContent = "WAITING FOR AUTHORIZATION...";
+                ctaNote.style.color = "var(--accent-dark)";
+            }
+        });
+
+        enterBtn.addEventListener('click', async function (e) {
+            e.preventDefault();
+            if (!agreeCheck.checked) return;
+            var btn = this;
+            btn.classList.add('loading');
+            btn.textContent = '建立链接中...';
+            try {
+                var messages = await getChatMessages("0", { include_swipe: true });
+                var swipeId = 1;
+                if (messages && messages[0].swipes && messages[0].swipes[swipeId]) {
+                    await setChatMessage(messages[0].swipes[swipeId], 0, {
+                        swipe_id: swipeId,
+                        refresh: 'display_and_render_current'
+                    });
+                    if (typeof toastr !== 'undefined') toastr.success('已接入环晓科技');
+                } else {
+                    throw new Error('未找到剧情接驳点，请确认开局向导已就绪。');
+                }
+            } catch (err) {
+                console.error('链接失败:', err);
+                if (typeof toastr !== 'undefined') toastr.error('协议链接断开: ' + err.message);
+                btn.classList.remove('loading');
+                btn.textContent = '重新尝试接入';
+            }
+        });
+    </script>
 </body>
+
 </html>
