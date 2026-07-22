@@ -1,12 +1,12 @@
-/* 催眠助理·环晓科技 — 悬浮球状态栏 v2.3.6
+/* 催眠助理·环晓科技 — 悬浮球状态栏 v2.3.7
  *
  * 关键修复(对齐 轮回 终端 v2 模式):
  *   1. 锁定 window.parent.document 作为操作主窗口 → position:fixed/z-index 在主视口生效
  *   2. 所有 DOM 操作走 doc=parent.document → render() 能找到 ball/panel 节点
  *   3. prompt() 走 GS_PARENT.prompt() → 避免 about:srcdoc 内不可见
  *   4. mount() 强制重建 → 避免重新导入后旧 ball 残留导致 click handler 仍是旧脚本
- *   5. syncMount() + onChatChanged 监听 → 关闭聊天(payload=undefined)立即卸球,
- *      本卡聊天活跃时挂球;fab.onclick 动态查 panel 避免闭包陈旧引用
+ *   5. init() 无条件主动挂球(不依赖 getContext),syncMount 负责按 getContext 真实数据
+ *      决定挂/卸;fab.onclick 动态查 panel 避免闭包陈旧引用
  */
 (function () {
   'use strict';
@@ -290,54 +290,46 @@
 
   function syncMount() {
     try {
-      if (isOurCard()) {
-        // 本卡聊天活跃
-        if (!doc.getElementById('hx-stat-ball')) {
-          log('syncMount: 本卡聊天活跃,挂载球');
-          setTimeout(mount, 100);
-        } else {
-          // 球已存在 → hash 校验,数据变了才 re-render
-          var data = getStatData();
-          if (data) {
-            try {
-              var hash = JSON.stringify(data);
-              if (hash !== lastDataHash) {
-                lastDataHash = hash;
-                render();
-              }
-            } catch (e) {}
-          }
-        }
+      var ballExists = !!doc.getElementById('hx-stat-ball');
+      var cur = getCurrent();
+      // 调试日志:始终打,便于定位
+      try {
+        log('syncMount: ball=' + ballExists + ', cur=' + (cur ? JSON.stringify({chatId: cur.chatId, characterId: cur.characterId, name: cur.name}) : 'null'));
+      } catch (e) {}
+      if (!cur || !cur.chatId || !cur.characterId) {
+        // 无活跃聊天 → 卸球
+        if (ballExists) { log('syncMount: 无活跃聊天,卸载球'); unmount(); }
+        return;
+      }
+      if (cur.name.indexOf(CARD_KEY) === -1 && cur.name.indexOf('环晓') === -1) {
+        // 切到其他角色 → 卸球
+        if (ballExists) { log('syncMount: 当前聊天(' + cur.name + ')非本卡,卸载球'); unmount(); }
+        return;
+      }
+      // 本卡聊天活跃
+      if (!ballExists) {
+        log('syncMount: 本卡聊天(' + cur.name + ')活跃,挂载球');
+        setTimeout(mount, 50);
       } else {
-        // 非本卡 / 无聊天 / 上下文不可用 → 卸球
-        if (doc.getElementById('hx-stat-ball')) {
-          log('syncMount: 非本卡或无聊天,卸载球');
-          unmount();
+        // 球已存在 → hash 校验
+        var data = getStatData();
+        if (data) {
+          try {
+            var hash = JSON.stringify(data);
+            if (hash !== lastDataHash) { lastDataHash = hash; render(); }
+          } catch (e) {}
         }
       }
     } catch (e) {
       try { GS_PARENT.console.warn('[HX-Float] syncMount 异常', e && e.message); } catch (e2) {}
-      // 兜底:连聊天容器都找不到 → 卸球
-      try {
-        var chatExists = doc.querySelector('#chat, .mes, #sheld, [id*="chat-container"]');
-        if (!chatExists && doc.getElementById('hx-stat-ball')) {
-          log('syncMount: 未发现聊天容器,兜底卸载');
-          unmount();
-        }
-      } catch (e2) {}
     }
   }
 
-  // 「关闭聊天」信号独立处理 — Tavern 此时 CHAT_CHANGED payload 为 undefined
+  // 「关闭聊天」信号独立处理 — Tavern 此时 CHAT_CHANGED payload 为 undefined;
+  // 但 QR2 模块传给 onChatChanged 的 payload 实际经常是字符串/undefined 不一,
+  // 统一走 syncMount 让 syncMount 内部基于 getContext 真实数据判断
   function onChatChanged(payload) {
-    try { log('CHAT_CHANGED 触发, payload type=' + (typeof payload)); } catch (e) {}
-    if (typeof payload === 'undefined' || payload === null) {
-      if (doc.getElementById('hx-stat-ball')) {
-        log('CHAT_CHANGED=undefined → 检测到关闭聊天,立即卸载球');
-        unmount();
-      }
-      return;
-    }
+    try { log('CHAT_CHANGED 触发, payload type=' + (typeof payload) + ', val=' + (typeof payload === 'string' ? payload.slice(0, 60) : String(payload).slice(0, 60))); } catch (e) {}
     setTimeout(syncMount, 80);
   }
 
@@ -356,6 +348,9 @@
 
   function init() {
     log('init 开始');
+    try {
+      log('init: GS_PARENT===window.parent=' + (GS_PARENT === window.parent) + ', body=' + !!doc.body + ', hasGetCtx=' + (typeof GS_PARENT.getContext));
+    } catch (e) {}
     if (!doc.body) {
       var wait = setInterval(function () {
         if (doc.body) { clearInterval(wait); init(); }
@@ -363,7 +358,13 @@
       setTimeout(function () { clearTimeout(wait); clearInterval(wait); }, 10000);
       return;
     }
-    syncMount();
+    // 无条件主动挂球,不依赖 getContext 判断(避免 init 时上下文未就绪导致静默不挂)
+    if (!doc.getElementById('hx-stat-ball')) {
+      log('init: 主动挂载球');
+      setTimeout(mount, 50);
+    } else {
+      log('init: 球已存在,跳过初次挂载');
+    }
     // 监听 MVU 变量更新(初次可能未就绪,2s 后再补一次)
     if (bindMvuListener()) log('已监听 VARIABLE_UPDATE_ENDED');
     else log('MVU 事件对象未就绪,2s 后重试');
@@ -381,7 +382,7 @@
         }
       }
     } catch (e) {}
-    // 兜底轮询(3s):保证关聊天时能自动卸载 + 数据变更时刷新
+    // 兜底轮询(3s):负责"切到其他角色"卸球 + 数据变更刷新
     setInterval(syncMount, 3000);
     try { GS_PARENT.__悬浮球状态栏_loaded__ = true; } catch (e) { window.__悬浮球状态栏_loaded__ = true; }
   }
