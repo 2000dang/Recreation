@@ -1,11 +1,12 @@
-/* 催眠助理·环晓科技 — 悬浮球状态栏 v2.3.5
+/* 催眠助理·环晓科技 — 悬浮球状态栏 v2.3.6
  *
  * 关键修复(对齐 轮回 终端 v2 模式):
  *   1. 锁定 window.parent.document 作为操作主窗口 → position:fixed/z-index 在主视口生效
  *   2. 所有 DOM 操作走 doc=parent.document → render() 能找到 ball/panel 节点
  *   3. prompt() 走 GS_PARENT.prompt() → 避免 about:srcdoc 内不可见
  *   4. mount() 强制重建 → 避免重新导入后旧 ball 残留导致 click handler 仍是旧脚本
- *   5. syncMount() 轮询 + CHAT_CHANGED → 未在本卡聊天时自动卸载球
+ *   5. syncMount() + onChatChanged 监听 → 关闭聊天(payload=undefined)立即卸球,
+ *      本卡聊天活跃时挂球;fab.onclick 动态查 panel 避免闭包陈旧引用
  */
 (function () {
   'use strict';
@@ -224,12 +225,16 @@
 
       fab.onclick = function (ev) {
         try { if (ev && ev.stopPropagation) ev.stopPropagation(); } catch (e) {}
-        var isOpen = panel.classList.contains('open');
-        if (isOpen) {
-          panel.classList.remove('open');
+        // 动态查找 panel,避免闭包引用陈旧 DOM(重新挂载/旧球残留场景)
+        var root = fab.parentNode;
+        if (!root) return;
+        var p = root.querySelector('.hx-panel');
+        if (!p) return;
+        if (p.classList.contains('open')) {
+          p.classList.remove('open');
         } else {
           render();
-          panel.classList.add('open');
+          p.classList.add('open');
         }
       };
 
@@ -270,37 +275,70 @@
     } catch (e) { return null; }
   }
 
-  function shouldMount() {
-    var cur = getCurrent();
-    if (!cur) return true; // 取不到上下文时保持现状(避免误卸载)
-    if (!cur.chatId) return false;          // 没开聊天就不挂
-    if (!cur.characterId) return false;
-    if (!cur.name) return false;
-    return cur.name.indexOf(CARD_KEY) !== -1 || cur.name.indexOf('环晓') !== -1;
+  function isOurCard() {
+    try {
+      var cur = getCurrent();
+      if (!cur) return false;                    // 取不到上下文 → 当作非本卡
+      if (!cur.chatId) return false;             // 没开聊天 → 不是本卡
+      if (!cur.characterId) return false;
+      if (!cur.name) return false;
+      return cur.name.indexOf(CARD_KEY) !== -1 || cur.name.indexOf('环晓') !== -1;
+    } catch (e) {
+      return false;
+    }
   }
 
   function syncMount() {
-    if (shouldMount()) {
-      if (!doc.getElementById('hx-stat-ball')) {
-        setTimeout(mount, 200);
+    try {
+      if (isOurCard()) {
+        // 本卡聊天活跃
+        if (!doc.getElementById('hx-stat-ball')) {
+          log('syncMount: 本卡聊天活跃,挂载球');
+          setTimeout(mount, 100);
+        } else {
+          // 球已存在 → hash 校验,数据变了才 re-render
+          var data = getStatData();
+          if (data) {
+            try {
+              var hash = JSON.stringify(data);
+              if (hash !== lastDataHash) {
+                lastDataHash = hash;
+                render();
+              }
+            } catch (e) {}
+          }
+        }
       } else {
-        // 球已存在时,做一次 hash 校验,数据变了才重渲染
-        var data = getStatData();
-        if (data) {
-          try {
-            var hash = JSON.stringify(data);
-            if (hash !== lastDataHash) {
-              lastDataHash = hash;
-              render();
-            }
-          } catch (e) {}
+        // 非本卡 / 无聊天 / 上下文不可用 → 卸球
+        if (doc.getElementById('hx-stat-ball')) {
+          log('syncMount: 非本卡或无聊天,卸载球');
+          unmount();
         }
       }
-    } else {
+    } catch (e) {
+      try { GS_PARENT.console.warn('[HX-Float] syncMount 异常', e && e.message); } catch (e2) {}
+      // 兜底:连聊天容器都找不到 → 卸球
+      try {
+        var chatExists = doc.querySelector('#chat, .mes, #sheld, [id*="chat-container"]');
+        if (!chatExists && doc.getElementById('hx-stat-ball')) {
+          log('syncMount: 未发现聊天容器,兜底卸载');
+          unmount();
+        }
+      } catch (e2) {}
+    }
+  }
+
+  // 「关闭聊天」信号独立处理 — Tavern 此时 CHAT_CHANGED payload 为 undefined
+  function onChatChanged(payload) {
+    try { log('CHAT_CHANGED 触发, payload type=' + (typeof payload)); } catch (e) {}
+    if (typeof payload === 'undefined' || payload === null) {
       if (doc.getElementById('hx-stat-ball')) {
+        log('CHAT_CHANGED=undefined → 检测到关闭聊天,立即卸载球');
         unmount();
       }
+      return;
     }
+    setTimeout(syncMount, 80);
   }
 
   // ===== 6. 启动 =====
@@ -337,7 +375,7 @@
       if (typeof tavern_events !== 'undefined') {
         var eon = (typeof GS_PARENT.eventOn === 'function') ? GS_PARENT.eventOn : (typeof eventOn === 'function' ? eventOn : null);
         if (eon) {
-          if (tavern_events.CHAT_CHANGED) eon(tavern_events.CHAT_CHANGED, syncMount);
+          if (tavern_events.CHAT_CHANGED) eon(tavern_events.CHAT_CHANGED, onChatChanged);
           if (tavern_events.MESSAGE_DELETED) eon(tavern_events.MESSAGE_DELETED, debouncedRender);
           if (tavern_events.MESSAGE_SWIPED) eon(tavern_events.MESSAGE_SWIPED, debouncedRender);
         }
