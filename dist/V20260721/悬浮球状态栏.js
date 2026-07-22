@@ -1,30 +1,43 @@
-/* 催眠助理·环晓科技 — 悬浮球状态栏 v2.4.0
- *
- * 机制对齐轮回「主神终端」(常驻模式):
- *   - 球常驻 document.body, 关闭聊天/切角色均不卸载(与轮回一致)
- *   - CHAT_CHANGED / MESSAGE_DELETED / MESSAGE_SWIPED → debouncedRefresh(仅刷新数据)
- *   - IIFE 启动即 preClean(): 移除旧球 + 解绑旧事件 + 清 guardTimer(防多版本共存)
- *   - guardTimer 每 15s 检查球在不在 DOM, 不在则重建(防被误删, 非卸球)
- *   - getContext 仅取 chatId 用于渲染标题, 不判挂/卸
- *
- * v2.3.x 的"关闭聊天自动卸球"是偏离轮回的需求, 已整体删除(该需求导致
- * eventOn 吃事件 / isChatUiVisible 误判 / 旧闭包点不动 等全部 bug)
- *
- * 保留本卡特性: 🌙 图标 / 6 分类 Tab / 🔓 破解模式开关(环晓科技员工系统 ROOT)
+/* 催眠助理·环晓科技 — 悬浮球状态栏 v3.0.0
+ * 
+ * 基于轮回卡「主神终端」源码重构，保留其核心交互框架：
+ *   - preClean (IIFE 启动清理旧实例, 防多版本并存)
+ *   - 球+面板挂主窗口 body + 拖拽系统 (setupDragEngines)
+ *   - 面板开关 (togglePanel) + 防抖刷新 (debouncedRefresh)
+ *   - 编辑模式 (editDisplayHtml / stageEdit / writeBackMvu)
+ *   - 守卫定时器 (guardTimer 15s 重建)
+ *   - eventOn 绑定 CHAT_CHANGED / MESSAGE_DELETED / MESSAGE_SWIPED
+ * 
+ * 内容替换为催眠卡：
+ *   - 6 分类 Tab (主角状态 / 环境与系统 / 助理管理 / 催眠系统 / 隐藏场景 / 剧情进度)
+ *   - 破解模式开关 (环晓科技员工系统 ROOT 权限)
+ *   - 暗紫配色 (环晓科技视觉)
  */
 (function () {
   'use strict';
+  try { console.log('%c[环晓·终端] ⚡ 悬浮球状态栏 v3.0 接入中...', 'color:#b39dff;font-weight:bold'); } catch (e) {}
 
-  // ===== 1. 锁定主窗口 =====
+  // ===== 1. 锁定主窗口 (来自轮回) =====
   var GS_PARENT = (function () {
     try { if (window.parent && window.parent !== window && window.parent.document && window.parent.document.body) return window.parent; } catch (e) {}
     try { if (window.top && window.top !== window && window.top.document && window.top.document.body) return window.top; } catch (e) {}
     return window;
   })();
-  var doc = GS_PARENT.document;
-  var _ = GS_PARENT._ || window._;
+  var $ = (GS_PARENT.jQuery || GS_PARENT.$ || window.jQuery || window.$);
+  var document = GS_PARENT.document;
+  var _ = (GS_PARENT._ || window._);
 
-  var CARD_KEY = '催眠助理'; // 角色名匹配关键字
+  // ===== 2. 缓存配置 =====
+  var HX_CONFIG = {
+    pos:    'hx_ball_pos_v3',
+    open:   'hx_panel_open_v3',
+    tab:    'hx_tab_v3',
+    edit:   'hx_edit_v3',
+    hack:   'hx_hack_mode',
+    theme:  'hx_theme_v3'
+  };
+
+  // ===== 3. 分类定义 =====
   var CATEGORIES = [
     { key: '主角状态', icon: '🧑' },
     { key: '环境与系统', icon: '🏢' },
@@ -33,361 +46,564 @@
     { key: '隐藏场景', icon: '🔞' },
     { key: '剧情进度', icon: '📜' }
   ];
-  var curTab = '主角状态';
-  var lastDataHash = null;
-  var chatTitle = '';
 
-  function log() {
-    var args = ['[HX-Float]'].concat(Array.prototype.slice.call(arguments));
-    try { (GS_PARENT.console || console).log.apply(GS_PARENT.console || console, args); } catch (e) {}
+  // ===== 4. 受保护(只读)字段 =====
+  function isReadonlyPath(path) { return false; }  // 破解模式下允许改所有字段
+
+  // ===== 5. 预清理旧实例 (来自轮回) =====
+  function hxPreClean() {
+    try {
+      if ($) {
+        $('#hx-stat-ball, #hx-stat-panel, #hx-stat-modal, #hx-stat-style').remove();
+        $(document).off('.hx');
+      }
+      if (window.__hx_guard_timer__) clearInterval(window.__hx_guard_timer__);
+      if (window.__hx_refresh_timer__) clearTimeout(window.__hx_refresh_timer__);
+    } catch (e) { console.warn('[环晓·终端] 预清理失败:', e && e.message); }
   }
+  hxPreClean();
 
-  // ===== 2. MVU 读写 =====
-  function getMvu() {
-    try { if (GS_PARENT.Mvu && typeof GS_PARENT.Mvu.getMvuData === 'function') return GS_PARENT.Mvu; } catch (e) {}
+  // ===== 6. MVU 读写 (来自轮回) =====
+  function getMvuGlobal() {
+    try { if (typeof GS_PARENT.Mvu !== 'undefined') return GS_PARENT; } catch (e) {}
+    try { if (typeof window.Mvu !== 'undefined') return window; } catch (e) {}
     return null;
   }
   function getStatData() {
-    var mvu = getMvu(); if (!mvu) return null;
-    try {
-      var data = mvu.getMvuData({ type: 'message', message_id: 'latest' });
-      if (data && data.stat_data) return data.stat_data;
-      if (data && typeof data === 'object') return data;
-    } catch (e) {}
+    var win = getMvuGlobal();
+    if (win && win.Mvu && typeof win.Mvu.getMvuData === 'function') {
+      try {
+        var r = win.Mvu.getMvuData({ type: 'message', message_id: 'latest' });
+        if (r && r.stat_data) return r.stat_data;
+        if (r && typeof r === 'object') return r;
+      } catch (e) {}
+    }
     return null;
   }
-  function setVar(path, value) {
-    var mvu = getMvu();
-    if (!mvu || !_ || typeof _.set !== 'function') return;
+  function writeBackMvu(mutator) {
     try {
-      var data = mvu.getMvuData({ type: 'message', message_id: 'latest' }) || {};
-      if (!data.stat_data) data.stat_data = {};
-      _.set(data.stat_data, path, value);
-      var cloned = (_.cloneDeep) ? _.cloneDeep(data) : JSON.parse(JSON.stringify(data));
-      mvu.replaceMvuData(cloned, { type: 'message', message_id: 'latest' });
-      try { mvu.replaceMvuData(cloned, { type: 'chat' }); } catch (e) {}
-    } catch (e) { try { GS_PARENT.console.warn('[HX-Float] 写回失败', e && e.message); } catch (e2) {} }
-  }
-
-  // ===== 3. 样式与渲染 =====
-  function ensureStyle() {
-    if (doc.getElementById('hx-stat-style')) return;
-    var st = doc.createElement('style');
-    st.id = 'hx-stat-style';
-    st.textContent = [
-      '#hx-stat-ball{position:fixed;top:70px;right:16px;z-index:2147483647;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;pointer-events:none;}',
-      '#hx-stat-ball *{pointer-events:auto;}',
-      '#hx-stat-ball .hx-fab{width:36px;height:36px;border-radius:50%;background:rgba(245,245,255,.95);color:#5b3fa0;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;box-shadow:0 0 0 2px rgba(155,109,255,.45),0 4px 16px rgba(0,0,0,.45);backdrop-filter:blur(4px);user-select:none;transition:transform .15s ease,box-shadow .15s ease;}',
-      '#hx-stat-ball .hx-fab:hover{transform:scale(1.08);box-shadow:0 0 0 3px rgba(155,109,255,.65),0 6px 22px rgba(0,0,0,.55);}',
-      '#hx-stat-ball .hx-panel{position:absolute;top:44px;right:0;width:310px;max-height:78vh;overflow:auto;background:rgba(22,18,36,.97);border:1px solid rgba(155,109,255,.45);border-radius:14px;color:#e8e3f5;font-size:13px;box-shadow:0 14px 40px rgba(0,0,0,.55);display:none;}',
-      '#hx-stat-ball .hx-panel.open{display:block;}',
-      '#hx-stat-ball .hx-tabs{display:flex;flex-wrap:wrap;gap:5px;padding:10px;border-bottom:1px solid rgba(155,109,255,.25);}',
-      '#hx-stat-ball .hx-tab{padding:4px 8px;border-radius:8px;background:rgba(155,109,255,.14);cursor:pointer;white-space:nowrap;font-size:12px;}',
-      '#hx-stat-ball .hx-tab.active{background:rgba(155,109,255,.42);}',
-      '#hx-stat-ball .hx-row{display:flex;justify-content:space-between;gap:8px;padding:3px 11px;line-height:1.55;}',
-      '#hx-stat-ball .hx-k{color:#a99fd0;}',
-      '#hx-stat-ball .hx-v{color:#fff;text-align:right;cursor:pointer;max-width:58%;word-break:break-all;}',
-      '#hx-stat-ball .hx-sub{padding-left:14px;}',
-      '#hx-stat-ball .hx-toolbar{display:flex;align-items:center;justify-content:space-between;padding:7px 11px;border-bottom:1px solid rgba(155,109,255,.25);font-size:12px;color:#a99fd0;background:rgba(155,109,255,.06);}',
-      '#hx-stat-ball .hx-hack-label{font-weight:600;letter-spacing:0.5px;}',
-      '#hx-stat-ball .hx-hack-switch{position:relative;width:36px;height:18px;border-radius:9px;background:rgba(155,109,255,.18);cursor:pointer;transition:background .15s;flex-shrink:0;}',
-      '#hx-stat-ball .hx-hack-switch.on{background:rgba(255,170,80,.6);}',
-      '#hx-stat-ball .hx-hack-knob{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .18s ease;box-shadow:0 1px 3px rgba(0,0,0,.3);}',
-      '#hx-stat-ball .hx-hack-switch.on .hx-hack-knob{left:20px;}',
-      '#hx-stat-ball .hx-hack-tip{padding:6px 11px;font-size:11px;color:#ffb84d;background:rgba(255,170,80,.10);border-bottom:1px solid rgba(255,170,80,.25);}'
-    ].join('');
-    doc.head.appendChild(st);
-  }
-
-  function renderCell(k, v, path) {
-    var row = doc.createElement('div');
-    row.className = 'hx-row';
-    var kEl = doc.createElement('span');
-    kEl.className = 'hx-k';
-    kEl.textContent = k;
-    var vEl = doc.createElement('span');
-    vEl.className = 'hx-v';
-    if (typeof v === 'boolean') {
-      vEl.textContent = v ? '✓' : '✗';
-      vEl.title = '单击切换';
-      vEl.onclick = (function (cur, p) { return function (ev) { try { if (ev && ev.stopPropagation) ev.stopPropagation(); if (ev && ev.preventDefault) ev.preventDefault(); } catch (e) {} setVar(p, !cur); }; })(v, path);
-    } else if (typeof v === 'object' && v !== null) {
-      vEl.textContent = '{…}';
-      if (getHackMode()) {
-        // 破解模式:对象也允许编辑
-        vEl.style.cursor = 'pointer';
-        vEl.title = '破解模式:双击以 JSON 文本编辑该对象';
-        vEl.ondblclick = (function (kName, p, cur) {
-          return function (ev) { try { if (ev && ev.stopPropagation) ev.stopPropagation(); if (ev && ev.preventDefault) ev.preventDefault(); } catch (e) {}
-            var def = JSON.stringify(cur, null, 2);
-            var nv = null;
-            try { nv = GS_PARENT.prompt('⚡ 破解模式 - 修改 ' + kName + ' (JSON 格式):', def); } catch (e) { nv = prompt('修改 ' + kName + ' (JSON 格式):', def); }
-            if (nv === null) return;
-            try { var parsed = JSON.parse(nv); setVar(p, parsed); }
-            catch (err) { try { GS_PARENT.alert('JSON 解析失败:' + err.message); } catch (e) { alert('JSON 解析失败:' + err.message); } }
-          };
-        })(k, path, v);
-      } else {
-        vEl.title = '对象不可编辑(开启 🔓 破解模式后可编辑)';
-        vEl.style.cursor = 'default';
+      var win = getMvuGlobal();
+      if (!win || !win.Mvu || typeof win.Mvu.getMvuData !== 'function' || typeof win.Mvu.replaceMvuData !== 'function') {
+        console.warn('[环晓·终端] MVU写回API不可用');
+        return false;
       }
-    } else {
-      vEl.textContent = (v === '' || v === null || v === undefined) ? '—' : String(v);
-      vEl.title = '双击编辑';
-      vEl.ondblclick = (function (kName, p) {
-        return function (ev) { try { if (ev && ev.stopPropagation) ev.stopPropagation(); if (ev && ev.preventDefault) ev.preventDefault(); } catch (e) {}
-          var nv = null;
-          try { nv = GS_PARENT.prompt('修改 ' + kName + '：', vEl.textContent === '—' ? '' : vEl.textContent); } catch (e) { nv = prompt('修改 ' + kName + '：', vEl.textContent === '—' ? '' : vEl.textContent); }
-          if (nv === null) return;
-          var num = Number(nv);
-          var val = (nv !== '' && !isNaN(num) && nv.trim() !== '') ? num : nv;
-          setVar(p, val);
-        };
-      })(k, path);
-    }
-    row.appendChild(kEl); row.appendChild(vEl);
-    return row;
-  }
-
-  function renderObject(container, obj, basePath, depth) {
-    if (!obj || typeof obj !== 'object') return;
-    var isArr = Array.isArray(obj);
-    Object.keys(obj).forEach(function (key) {
-      var val = obj[key];
-      var path = basePath ? basePath + '.' + key : key;
-      if (val && typeof val === 'object' && !(val instanceof Date)) {
-        if (depth < 2) {
-          var sub = doc.createElement('div');
-          sub.className = 'hx-sub';
-          var head = doc.createElement('div');
-          head.className = 'hx-row';
-          head.innerHTML = '<span class="hx-k">' + (isArr ? '[' + key + ']' : key) + '</span>';
-          sub.appendChild(head);
-          renderObject(sub, val, path, depth + 1);
-          container.appendChild(sub);
-        } else {
-          container.appendChild(renderCell(isArr ? '[' + key + ']' : key, val, path));
-        }
-      } else {
-        container.appendChild(renderCell(isArr ? '[' + key + ']' : key, val, path));
-      }
-    });
-  }
-
-  function render() {
-    var root = doc.getElementById('hx-stat-ball');
-    if (!root) return;
-    var panel = root.querySelector('.hx-panel');
-    if (!panel) return;
-    panel.innerHTML = '';
-    var hackOn = getHackMode();
-    // ===== 破解模式开关 =====
-    var tb = doc.createElement('div');
-    tb.className = 'hx-toolbar';
-    tb.innerHTML =
-      '<span class="hx-hack-label">🔓 破解模式</span>' +
-      '<span class="hx-hack-switch' + (hackOn ? ' on' : '') + '" data-on="' + (hackOn ? '1' : '0') + '"><span class="hx-hack-knob"></span></span>';
-    panel.appendChild(tb);
-    (function () {
-      var sw = tb.querySelector('.hx-hack-switch');
-      if (!sw) return;
-      sw.onclick = function (ev) {
-        try { if (ev && ev.stopPropagation) ev.stopPropagation(); if (ev && ev.preventDefault) ev.preventDefault(); } catch (e) {}
-        var on = sw.getAttribute('data-on') === '1';
-        setHackMode(!on);
-        log('破解模式 → ' + (!on ? 'ON' : 'OFF'));
-        render();
-      };
-    })();
-    // hack 模式提示条
-    if (hackOn) {
-      var tip = doc.createElement('div');
-      tip.className = 'hx-hack-tip';
-      tip.textContent = '⚡ 破解模式已开启：已获得环晓科技员工系统最高权限(ROOT)，并解锁全部面板字段(对象可双击编辑)';
-      panel.appendChild(tip);
-    }
-    // ===== 6 个分类 Tab =====
-    var tabs = doc.createElement('div');
-    tabs.className = 'hx-tabs';
-    CATEGORIES.forEach(function (c) {
-      var t = doc.createElement('div');
-      t.className = 'hx-tab' + (c.key === curTab ? ' active' : '');
-      t.textContent = c.icon + c.key;
-      t.onclick = (function (k) { return function (ev) { try { if (ev && ev.stopPropagation) ev.stopPropagation(); } catch (e) {} curTab = k; render(); }; })(c.key);
-      tabs.appendChild(t);
-    });
-    panel.appendChild(tabs);
-
-    var data = getStatData();
-    if (!data) {
-      var empty = doc.createElement('div');
-      empty.className = 'hx-row';
-      empty.innerHTML = '<span class="hx-k">变量未初始化</span>';
-      panel.appendChild(empty);
-      return;
-    }
-    var sub = data[curTab];
-    if (!sub || typeof sub !== 'object') {
-      var none = doc.createElement('div');
-      none.className = 'hx-row';
-      none.innerHTML = '<span class="hx-k">' + curTab + '：空</span>';
-      panel.appendChild(none);
-      return;
-    }
-    renderObject(panel, sub, curTab, 0);
-  }
-
-  // ===== 4. 挂载(常驻, 不卸载) =====
-  function mount() {
-    if (!doc.body) { log('body 未就绪'); return false; }
-    // 强制重建: 避免旧版本脚本闭包残留导致点不动(对齐轮回 samPreClean 思路)
-    var old = doc.getElementById('hx-stat-ball');
-    if (old) { try { old.remove(); } catch (e) {} }
-    try {
-      ensureStyle();
-      var root = doc.createElement('div');
-      root.id = 'hx-stat-ball';
-      var fab = doc.createElement('div');
-      fab.className = 'hx-fab';
-      fab.textContent = '🌙';
-      fab.title = '环晓科技状态栏（点击展开/收起）';
-      var panel = doc.createElement('div');
-      panel.className = 'hx-panel';
-
-      fab.onclick = function (ev) {
-        try { if (ev && ev.stopPropagation) ev.stopPropagation(); } catch (e) {}
-        // 动态查找 panel, 避免闭包引用陈旧 DOM
-        var root = fab.parentNode;
-        if (!root) return;
-        var p = root.querySelector('.hx-panel');
-        if (!p) return;
-        if (p.classList.contains('open')) {
-          p.classList.remove('open');
-        } else {
-          render();
-          p.classList.add('open');
-        }
-      };
-
-      root.appendChild(fab);
-      root.appendChild(panel);
-      doc.body.appendChild(root);
-      log('悬浮球已挂载(常驻)');
-      render();
+      var mvuData = win.Mvu.getMvuData({ type: 'message', message_id: 'latest' });
+      if (!mvuData || !mvuData.stat_data) { console.warn('[环晓·终端] 无可写数据'); return false; }
+      var before = (_ && _.cloneDeep) ? _.cloneDeep(mvuData) : JSON.parse(JSON.stringify(mvuData));
+      var cloned = (_ && _.cloneDeep) ? _.cloneDeep(mvuData) : JSON.parse(JSON.stringify(mvuData));
+      if (typeof mutator === 'function') mutator(cloned.stat_data);
+      win.Mvu.replaceMvuData(cloned, { type: 'message', message_id: 'latest' });
+      try { win.Mvu.replaceMvuData(cloned, { type: 'chat' }); } catch (e2) {}
+      try {
+        var evtName = win.Mvu.events && win.Mvu.events.VARIABLE_UPDATE_ENDED;
+        if (evtName && typeof win.eventEmit === 'function') win.eventEmit(evtName, cloned, before);
+        else if (evtName && typeof eventEmit === 'function') eventEmit(evtName, cloned, before);
+      } catch (e3) {}
       return true;
-    } catch (e) {
-      try { GS_PARENT.console.error('[HX-Float] 挂载失败', e); } catch (e2) {}
-      return false;
+    } catch (e) { console.error('[环晓·终端] 写回MVU失败:', e); return false; }
+  }
+
+  // ===== 7. 工具函数 (来自轮回) =====
+  function esc(s) { if (s === null || s === undefined) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function safeNum(v, def) { var n = Number(v); return Number.isFinite(n) ? n : (def || 0); }
+  function safeStr(v, def) { return (v === null || v === undefined) ? (def || '') : String(v); }
+  function isMobile() { return (GS_PARENT.innerWidth || 1024) <= 768; }
+  function getCurrentTab() { try { var t = localStorage.getItem(HX_CONFIG.tab); if (t) return t; } catch(e){} return '主角状态'; }
+  function setCurrentTab(t) { try { localStorage.setItem(HX_CONFIG.tab, t); } catch(e){} }
+  function isEditMode() { try { return localStorage.getItem(HX_CONFIG.edit) === '1'; } catch(e){ return false; } }
+  function setEditMode(on) { try { localStorage.setItem(HX_CONFIG.edit, on ? '1' : '0'); } catch(e){} pendingEdits = {}; }
+  function getHackMode() { try { return localStorage.getItem(HX_CONFIG.hack) === '1'; } catch(e){} return false; }
+  function setHackMode(on) {
+    try { localStorage.setItem(HX_CONFIG.hack, on ? '1' : '0'); } catch(e){}
+    try { writeBackMvu(function(sd) { sd.__hx_hack_mode = !!on; }); } catch(e){}
+  }
+  var pendingEdits = {};
+  function stageEdit(path, val, type) { if (!path) return; pendingEdits[path] = { val: val, type: type || 'text' }; }
+
+  // ===== 8. 编辑模式 HTML 生成器 (来自轮回) =====
+  function editDisplayInner(val) {
+    var vs = (val === null || val === undefined) ? '' : (Array.isArray(val) ? val.join(',') : String(val));
+    return (vs === '' ? '<span class="hx-ed-ph">空</span>' : esc(vs));
+  }
+  function editDisplayHtml(path, val, type, optsStr) {
+    var optsAttr = optsStr ? ' data-opts="'+esc(optsStr)+'"' : '';
+    return '<span class="hx-ed-wrap" data-path="'+esc(path)+'" data-type="'+esc(type||'text')+'"'+optsAttr+'>'
+      + '<span class="hx-ed-val">'+editDisplayInner(val)+'</span>'
+      + '<span class="hx-ed-ico">✎</span>'
+      + '</span>';
+  }
+  function editRealInputHtml(path, val, type) {
+    var v = (val === null || val === undefined) ? '' : String(val);
+    if (type === 'textarea') return '<textarea class="hx-edit-input" data-path="'+esc(path)+'" data-type="textarea" rows="2" style="width:100%;min-height:40px;resize:vertical;">'+esc(v)+'</textarea>';
+    return '<input class="hx-edit-input" type="'+esc(type||'text')+'" data-path="'+esc(path)+'" data-type="'+esc(type||'text')+'" value="'+esc(v)+'" />';
+  }
+  function editRealSelectHtml(path, options, val) {
+    var html = '<select class="hx-edit-input" data-path="'+esc(path)+'" data-type="select">';
+    options.forEach(function(o) { html += '<option value="'+esc(o)+'"'+(String(o)===String(val)?' selected':'')+'>'+esc(o)+'</option>'; });
+    html += '</select>'; return html;
+  }
+
+  // ===== 9. CSS 注入 =====
+  function buildCSS() {
+    return '\n'
++ '#hx-stat-ball { position: fixed; top: 70px; right: 16px; z-index: 999999; width: 36px; height: 36px;'
++ '  border-radius: 50%; background: linear-gradient(135deg, rgba(245,245,255,0.95), rgba(210,195,255,0.9));'
++ '  border: 1.5px solid rgba(155,109,255,0.5); box-shadow: 0 0 12px rgba(155,109,255,0.35), 0 4px 16px rgba(0,0,0,0.45);'
++ '  display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none;'
++ '  font-size: 18px; color: #5b3fa0; backdrop-filter: blur(4px);'
++ '  transition: transform 0.15s ease, box-shadow 0.15s ease; }'
++ '#hx-stat-ball:hover { transform: scale(1.08); box-shadow: 0 0 18px rgba(155,109,255,0.55), 0 6px 22px rgba(0,0,0,0.55); }'
++ '#hx-stat-ball .hx-core { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }'
++ '#hx-stat-panel { display: none; flex-direction: column; position: fixed; top: 110px; right: 16px;'
++ '  width: 330px; max-height: 78vh; overflow: hidden auto; background: rgba(18,14,30,0.97);'
++ '  border: 1px solid rgba(155,109,255,0.35); border-radius: 14px; color: #e8e3f5; font-size: 13px;'
++ '  box-shadow: 0 14px 40px rgba(0,0,0,0.55); z-index: 999998; font-family: -apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }'
++ '#hx-stat-panel.open { display: flex; }'
++ '#hx-stat-modal { display: none; position: fixed; top:0; left:0; width:100vw; height:100vh; z-index:1000000;'
++ '  background: rgba(0,0,0,0.65); align-items: center; justify-content: center; }'
++ '#hx-stat-modal.open { display: flex; }'
++ '.hx-modal-box { background: rgba(22,18,36,0.98); border: 1px solid rgba(155,109,255,0.4); border-radius: 14px;'
++ '  max-width: 600px; width: 90vw; max-height: 80vh; overflow: auto; box-shadow: 0 14px 40px rgba(0,0,0,0.6); }'
++ '.hx-modal-head { display:flex; justify-content:space-between; padding:12px 16px; border-bottom:1px solid rgba(155,109,255,0.25);'
++ '  font-weight:bold; color:#b39dff; }'
++ '.hx-modal-close { cursor:pointer; font-size:16px; }'
++ '.hx-modal-body { padding: 12px 16px; }'
++ '.hx-topbar { display:flex; justify-content:space-between; align-items:center; padding:9px 12px;'
++ '  border-bottom:1px solid rgba(155,109,255,0.25); background:rgba(155,109,255,0.06); }'
++ '.hx-topbar .hx-tl-info { font-size:12px; color: #9b8fc0; }'
++ '.hx-topbar .hx-tl-title { font-size:13px; color: #d5c8f5; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px; }'
++ '.hx-topbar .hx-tl-actions { display:flex; gap:6px; flex-shrink:0; }'
++ '.hx-icon-btn { width:28px; height:28px; border-radius:6px; background:rgba(155,109,255,0.12); border:none; color:#b39dff;'
++ '  font-size:14px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background 0.15s; }'
++ '.hx-icon-btn:hover { background:rgba(155,109,255,0.28); }'
++ '.hx-icon-btn.edit-on { background:rgba(255,170,80,0.25); color:#ffb84d; }'
++ '.hx-hack-toggle { display:flex; align-items:center; gap:4px; font-size:11px; color:#ffb84d; cursor:pointer; padding:2px 6px;'
++ '  border-radius:6px; background:rgba(255,170,80,0.08); transition:background 0.15s; }'
++ '.hx-hack-toggle:hover { background:rgba(255,170,80,0.18); }'
++ '.hx-hack-toggle.on { background:rgba(255,170,80,0.2); }'
++ '.hx-hack-badge { font-size:11px; font-weight:bold; }'
++ '.hx-hack-tip { padding:6px 12px; font-size:11px; color:#ffb84d; background:rgba(255,170,80,0.10);'
++ '  border-bottom:1px solid rgba(255,170,80,0.25); }'
++ '.hx-tab-rail { display:flex; flex-wrap:wrap; gap:5px; padding:10px; border-bottom:1px solid rgba(155,109,255,0.2);'
++ '  background:rgba(155,109,255,0.04); }'
++ '.hx-tab-btn { padding:5px 9px; border-radius:8px; background:rgba(155,109,255,0.10); cursor:pointer; white-space:nowrap;'
++ '  font-size:12px; color:#a99fd0; border:none; transition:background 0.15s,color 0.15s; }'
++ '.hx-tab-btn.active { background:rgba(155,109,255,0.35); color:#fff; font-weight:600; }'
++ '.hx-tab-btn:hover:not(.active) { background:rgba(155,109,255,0.20); }'
++ '.hx-tab-content { flex:1; overflow-y:auto; padding:6px 0; }'
++ '.hx-empty { text-align:center; padding:30px 20px; color:#9b8fc0; font-size:13px; }'
++ '.hx-row { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:5px 12px; min-height:30px; }'
++ '.hx-row:hover { background:rgba(155,109,255,0.06); }'
++ '.hx-k { color:#9b8fc0; font-size:12px; white-space:nowrap; }'
++ '.hx-v { color:#f0ecff; font-size:13px; text-align:right; word-break:break-all; flex:1; }'
++ '.hx-sub { padding-left:14px; }'
++ '.hx-sub .hx-k { color:#7d709f; }'
++ '.hx-edit-badge { padding:8px 12px; font-size:11px; color:#ffb84d; background:rgba(255,170,80,0.08);'
++ '  border-bottom:1px solid rgba(255,170,80,0.2); }'
++ '.hx-save-btn { display:block; width:calc(100% - 24px); margin:8px 12px; padding:8px; background:rgba(155,109,255,0.3);'
++ '  border:1px solid rgba(155,109,255,0.5); border-radius:8px; color:#fff; font-size:13px; cursor:pointer; }'
++ '.hx-save-btn:hover { background:rgba(155,109,255,0.45); }'
++ '.hx-ed-wrap { display:inline-flex; align-items:center; gap:4px; cursor:pointer; }'
++ '.hx-ed-ph { color:#7d709f; font-style:italic; }'
++ '.hx-ed-ico { font-size:10px; opacity:0.4; }'
++ '.hx-ed-wrap:hover .hx-ed-ico { opacity:1; }'
++ '.hx-edit-input { background:rgba(0,0,0,0.4); border:1px solid rgba(155,109,255,0.5); color:#fff; padding:2px 6px;'
++ '  border-radius:4px; font-size:13px; width:100%; box-sizing:border-box; }'
++ '@keyframes hxPulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }';
+  }
+
+  function initHxCss() {
+    var old = document.getElementById('hx-stat-style');
+    if (old) old.remove();
+    var styleEl = document.createElement('style');
+    styleEl.id = 'hx-stat-style';
+    styleEl.type = 'text/css';
+    styleEl.innerHTML = buildCSS();
+    document.head.appendChild(styleEl);
+  }
+
+  // ===== 10. 面板开关 (来自轮回) =====
+  function togglePanel() {
+    var $panel = $('#hx-stat-panel');
+    var $ball = $('#hx-stat-ball');
+    var isOpen = $panel.hasClass('open');
+    if (isOpen) {
+      $panel.removeClass('open').css('display', 'none');
+      $ball.stop(true, true).fadeIn(160);
+      try { localStorage.setItem(HX_CONFIG.open, '0'); } catch(e){}
+    } else {
+      if (isMobile()) { $panel.css({left:'',top:'',right:'',bottom:'',height:''}); }
+      else {
+        var r = $ball[0].getBoundingClientRect();
+        var vw = GS_PARENT.innerWidth, vh = GS_PARENT.innerHeight;
+        var nl = Math.max(20, Math.min(vw - 340, r.left > vw/2 ? r.left - 340 - 10 : r.left + 50));
+        var nt = Math.max(20, Math.min(vh - 600, r.top));
+        $panel.css({left:nl+'px', top:nt+'px', right:'auto', bottom:'auto'});
+      }
+      $panel.css('display', 'flex').addClass('open');
+      $ball.stop(true, true).fadeOut(160);
+      try { localStorage.setItem(HX_CONFIG.open, '1'); } catch(e){}
+      renderAll();
     }
   }
 
-  // ===== 5. 生命周期(对齐轮回: 常驻 + preClean + guardTimer) =====
-  function preClean() {
-    // IIFE 启动即清理旧实例, 防止多版本脚本共存导致事件/定时器累积(对齐轮回 samPreClean)
-    try {
-      var old = doc.getElementById('hx-stat-ball');
-      if (old) old.remove();
-      var style = doc.getElementById('hx-stat-style');
-      if (style) style.remove();
-      if (GS_PARENT.__hx_guard_timer__) { clearInterval(GS_PARENT.__hx_guard_timer__); GS_PARENT.__hx_guard_timer__ = null; }
-    } catch (e) {}
-  }
-
-  // 防抖刷新: 500ms 内多次事件只触发一次 render(纯读不写, 无死循环)
-  // 对齐轮回 debouncedRefresh, CHAT_CHANGED/MESSAGE_DELETED/MESSAGE_SWIPED/MVU 更新都走它
-  function debouncedRefresh() {
-    if (GS_PARENT.__hx_refresh_t__) clearTimeout(GS_PARENT.__hx_refresh_t__);
-    GS_PARENT.__hx_refresh_t__ = setTimeout(function () {
-      GS_PARENT.__hx_refresh_t__ = null;
-      render();
-    }, 500);
-  }
-
-  // 仅取 chatId 用于渲染标题, 不判挂/卸
-  function syncTitle() {
-    try {
-      var win = GS_PARENT || window;
-      var api = (win.SillyTavern && typeof win.SillyTavern.getContext === 'function') ? win.SillyTavern.getContext
-               : (typeof win.getContext === 'function' ? win.getContext : null);
-      if (!api) return;
-      var ctx = api();
-      if (ctx && ctx.chatId) chatTitle = ctx.chatId;
-    } catch (e) {}
-  }
-
-  // guardTimer: 每 15s 检查球在不在 DOM, 不在则重建(防被误删, 非卸球, 对齐轮回)
-  function startGuard() {
-    if (GS_PARENT.__hx_guard_timer__) clearInterval(GS_PARENT.__hx_guard_timer__);
-    GS_PARENT.__hx_guard_timer__ = setInterval(function () {
-      if (!doc.getElementById('hx-stat-ball')) {
-        log('guard: 球丢失, 重建');
-        mount();
+  // ===== 11. 拖拽系统 (来自轮回, 仅球可拖) =====
+  function setupDragEngine() {
+    var $ball = $('#hx-stat-ball');
+    var $panel = $('#hx-stat-panel');
+    if (!$ball.length || !$panel.length) return;
+    if (!$ball.data('hxDragBound')) {
+      $ball.data('hxDragBound', '1');
+      var sx1=0, sy1=0, ox1=0, oy1=0, dragging1=false, moved1=false;
+      try {
+        var savedPos = localStorage.getItem(HX_CONFIG.pos);
+        if (savedPos && !isMobile()) {
+          var arr = savedPos.split(',');
+          if (arr.length === 2) {
+            $ball[0].style.setProperty('left', arr[0]+'px', 'important');
+            $ball[0].style.setProperty('top', arr[1]+'px', 'important');
+            $ball[0].style.setProperty('right', 'auto', 'important');
+          }
+        }
+      } catch(e){}
+      $ball[0].addEventListener('touchstart', handleBallDown, { passive: false });
+      $ball.on('mousedown', function(e) { if (e.button !== 0) return; handleBallDown(e); });
+      function handleBallDown(e) {
+        var p = e.originalEvent && e.originalEvent.touches ? e.originalEvent.touches[0] : (e.touches ? e.touches[0] : e);
+        sx1 = p.clientX; sy1 = p.clientY;
+        var r = $ball[0].getBoundingClientRect(); ox1 = r.left; oy1 = r.top;
+        dragging1 = true;
+        document.addEventListener('mousemove', handleBallMove);
+        document.addEventListener('touchmove', handleBallMove, { passive: false });
+        document.addEventListener('mouseup', handleBallUp);
+        document.addEventListener('touchend', handleBallUp);
       }
-    }, 15000);
+      function handleBallMove(me) {
+        if (!dragging1) return;
+        var mp = me.originalEvent && me.originalEvent.touches ? me.originalEvent.touches[0] : (me.touches ? me.touches[0] : me);
+        var dx = mp.clientX - sx1, dy = mp.clientY - sy1;
+        if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+          moved1 = true;
+          var vw = GS_PARENT.innerWidth||1024, vh = GS_PARENT.innerHeight||768;
+          var sz = $ball[0].offsetWidth || 36;
+          var nl = Math.max(10, Math.min(vw-sz-10, ox1+dx));
+          var nt = Math.max(10, Math.min(vh-sz-10, oy1+dy));
+          $ball[0].style.setProperty('right','auto','important');
+          $ball[0].style.setProperty('bottom','auto','important');
+          $ball[0].style.setProperty('left', nl+'px','important');
+          $ball[0].style.setProperty('top', nt+'px','important');
+          if (me.type === 'touchmove' && me.cancelable) me.preventDefault();
+        }
+      }
+      function handleBallUp() {
+        if (dragging1 && moved1) {
+          try { localStorage.setItem(HX_CONFIG.pos, parseInt($ball[0].style.left)+','+parseInt($ball[0].style.top)); } catch(e){}
+        }
+        dragging1 = false;
+        document.removeEventListener('mousemove', handleBallMove);
+        document.removeEventListener('touchmove', handleBallMove);
+        document.removeEventListener('mouseup', handleBallUp);
+        document.removeEventListener('touchend', handleBallUp);
+        setTimeout(function() { moved1 = false; }, 50);
+      }
+      $ball.on('click', function() { if (!moved1) togglePanel(); });
+    }
   }
 
-  // 「破解模式」状态 — 开启时允许强行修改只读字段/对象/数值
-  // 状态写入 MVU 的 stat_data.__hx_hack_mode(持久化跨对话) + localStorage(快速读取)
-  function getHackMode() {
-    try {
-      var ls = GS_PARENT.localStorage && GS_PARENT.localStorage.getItem('hx_hack_mode');
-      if (ls === '1') return true;
-      var d = getStatData();
-      if (d && d.__hx_hack_mode === true) return true;
-    } catch (e) {}
-    return false;
+  // ===== 12. DOM 注入 =====
+  function initHxDOM() {
+    if (!document.getElementById('hx-stat-ball')) {
+      var tpl = '<div id="hx-stat-ball"><div class="hx-core">🌙</div></div><div id="hx-stat-panel"></div><div id="hx-stat-modal"></div>';
+      $('body').append(tpl);
+      setupDragEngine();
+      bindUIEvents();
+    }
   }
-  function setHackMode(on) {
-    try { if (GS_PARENT.localStorage) GS_PARENT.localStorage.setItem('hx_hack_mode', on ? '1' : '0'); } catch (e) {}
-    try { setVar('__hx_hack_mode', on ? true : false); } catch (e) {}
+
+  // ===== 13. 弹窗 =====
+  function showModal(title, bodyHtml) {
+    var $m = $('#hx-stat-modal');
+    if (!$m.length) { $('body').append('<div id="hx-stat-modal"></div>'); $m = $('#hx-stat-modal'); }
+    $m.html('<div class="hx-modal-box"><div class="hx-modal-head"><span>'+esc(title)+'</span><span class="hx-modal-close">✕</span></div><div class="hx-modal-body">'+bodyHtml+'</div></div>');
+    $m[0].scrollTop = 0;
+    $m.addClass('open');
+    $m.off('click.hxModal').on('click.hxModal', '.hx-modal-close', function() { $('#hx-stat-modal').removeClass('open'); });
+    $m.off('click.hxModalBg').on('click.hxModalBg', function(e) { if (e.target === this) $('#hx-stat-modal').removeClass('open'); });
+  }
+
+  // ===== 14. UI 事件绑定 (来自轮回) =====
+  function bindUIEvents() {
+    var $panel = $('#hx-stat-panel');
+    // 关闭
+    $panel.off('click.hxClose').on('click.hxClose', '.hx-icon-btn.close', function() {
+      if (isEditMode()) setEditMode(false);
+      if ($('#hx-stat-panel').hasClass('open')) togglePanel();
+    });
+    // 刷新
+    $panel.off('click.hxRefresh').on('click.hxRefresh', '.hx-icon-btn.refresh', function() {
+      if (isEditMode()) setEditMode(false);
+      renderAll();
+    });
+    // 设置(编辑模式)
+    $panel.off('click.hxSettings').on('click.hxSettings', '.hx-icon-btn.settings', function() {
+      var newEdit = !isEditMode();
+      setEditMode(newEdit);
+      renderAll();
+    });
+    // 破解模式
+    $panel.off('click.hxHack').on('click.hxHack', '.hx-hack-toggle', function(e) {
+      e.stopPropagation();
+      setHackMode(!getHackMode());
+      renderAll();
+    });
+    // Tab 切换
+    $panel.off('click.hxTab').on('click.hxTab', '.hx-tab-btn', function() {
+      var tab = $(this).data('tab');
+      setCurrentTab(tab);
+      renderTabContent(tab);
+      $panel.find('.hx-tab-btn').removeClass('active');
+      $(this).addClass('active');
+    });
+    // 编辑态: 点击编辑框进入输入
+    $panel.off('click.hxEditWrap').on('click.hxEditWrap', '.hx-ed-wrap', function(e) {
+      if (!isEditMode()) return;
+      var $wrap = $(this);
+      var path = $wrap.attr('data-path');
+      var type = $wrap.attr('data-type') || 'text';
+      var optsStr = $wrap.attr('data-opts') || '';
+      var val = $wrap.find('.hx-ed-val').text();
+      if (val === '空') val = '';
+      var inputHtml;
+      if (optsStr) {
+        var opts = String(optsStr).split('|');
+        inputHtml = editRealSelectHtml(path, opts, val);
+      } else {
+        inputHtml = editRealInputHtml(path, val, type);
+      }
+      $wrap.addClass('editing').html(inputHtml);
+      var input = $wrap.find('.hx-edit-input');
+      if (input.length) { input.focus(); if (type !== 'select') input[0].select(); }
+    });
+    // 编辑态: 失焦/回车 暂存
+    $panel.off('blur.hxEdit change.hxEdit keydown.hxEdit')
+      .on('blur', '.hx-edit-input', function() { flushEditable($(this)); })
+      .on('change', '.hx-edit-input[data-type="select"]', function() { flushEditable($(this)); })
+      .on('keydown', '.hx-edit-input', function(e) { if (e.which === 13) { e.preventDefault(); flushEditable($(this)); } });
+    // 保存按钮
+    $panel.off('click.hxSave').on('click.hxSave', '.hx-save-btn', function() {
+      if (Object.keys(pendingEdits).length === 0) return;
+      var saved = false;
+      writeBackMvu(function(statData) {
+        if (!statData) return;
+        Object.keys(pendingEdits).forEach(function(path) {
+          var ed = pendingEdits[path];
+          if (!ed) return;
+          if (ed.type === 'number') ed.val = Number(ed.val);
+          if (path.indexOf('.身份') >= 0 || path.indexOf('.职业') >= 0) ed.val = String(ed.val).split(/[\/,，]/).map(function(s){return s.trim();}).filter(Boolean);
+          if (_ && typeof _.set === 'function') _.set(statData, path, ed.val);
+        });
+        saved = true;
+      });
+      if (saved) { pendingEdits = {}; renderAll(); console.log('%c[环晓·终端] ✅ 已保存 %d 条修改', 'color:#86efac', Object.keys(pendingEdits).length || '全部'); }
+    });
+  }
+
+  function flushEditable($el) {
+    if (!$el || !$el.length) return;
+    var path = $el.attr('data-path');
+    if (!path) return;
+    var type = $el.attr('data-type') || 'text';
+    var val = $el.is('select') ? $el.val() : $el.val();
+    if (type === 'number') { var n = Number(val); val = Number.isFinite(n) ? n : 0; }
+    if (path.indexOf('.身份') >= 0 || path.indexOf('.职业') >= 0) {
+      val = String(val).split(/[\/,，]/).map(function(s){return s.trim();}).filter(Boolean);
+    }
+    stageEdit(path, val, type);
+    var $wrap = $el.closest('.hx-ed-wrap');
+    if (!$wrap.length) { $wrap = $el.wrap('<span class="hx-ed-wrap"></span>').closest('.hx-ed-wrap'); }
+    var disp = editDisplayInner(val);
+    $wrap.attr('data-path', path).attr('data-type', type);
+    $wrap.removeClass('editing').html(disp + '<span class="hx-ed-ico">✎</span>');
+  }
+
+  // ===== 15. 渲染字段项 =====
+  function renderField(key, val, basePath) {
+    var path = basePath + '.' + key;
+    var vType = typeof val;
+    // 对象嵌套(<2层): 展开子字段
+    if (val && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date)) {
+      var html = '<div class="hx-sub"><div class="hx-row"><span class="hx-k">'+esc(key)+'</span></div>';
+      Object.keys(val).forEach(function(kk) {
+        html += renderField(kk, val[kk], path);
+      });
+      html += '</div>';
+      return html;
+    }
+    // 数组
+    if (Array.isArray(val)) {
+      var arrHtml = '<div class="hx-sub"><div class="hx-row"><span class="hx-k">'+esc(key)+' ['+val.length+']</span></div>';
+      val.forEach(function(item, idx) {
+        arrHtml += renderField('['+idx+']', item, path);
+      });
+      arrHtml += '</div>';
+      return arrHtml;
+    }
+    // 标量
+    var editMode = isEditMode();
+    var hackOn = getHackMode();
+    var display;
+    if (vType === 'boolean') {
+      display = val ? '<span style="color:#86efac;">✓</span>' : '<span style="color:#f87171;">✗</span>';
+      if (editMode) display = editDisplayHtml(path, val, 'text', 'true|false');
+    } else if (vType === 'number') {
+      display = String(val);
+      if (editMode) display = editDisplayHtml(path, val, 'number');
+    } else {
+      display = esc(String(val === '' || val === null || val === undefined ? '—' : val));
+      if (editMode) {
+        if (hackOn) display = editDisplayHtml(path, val, 'text');
+        else display = esc(String(val === '' || val === null || val === undefined ? '—' : val));
+      }
+    }
+    return '<div class="hx-row"><span class="hx-k">'+esc(key)+'</span><span class="hx-v">'+display+'</span></div>';
+  }
+
+  function renderTabContent(tab) {
+    var $content = $('#hx-tab-content');
+    if (!$content.length) return;
+    var sd = getStatData();
+    if (!sd || !sd[tab]) {
+      $content.html('<div class="hx-empty">'+CATEGORIES.find(function(c){return c.key===tab;}).icon+' '+tab+'：暂无数据</div>');
+      return;
+    }
+    var sub = sd[tab];
+    var html = '';
+    Object.keys(sub).forEach(function(key) {
+      html += renderField(key, sub[key], tab);
+    });
+    $content.html(html || '<div class="hx-empty">空</div>');
+  }
+
+  // ===== 16. 主渲染入口 =====
+  function renderAll() {
+    try {
+      var ae = document.activeElement;
+      if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA')) {
+        var pn = document.getElementById('hx-stat-panel');
+        if (pn && pn.contains(ae)) ae.blur();
+      }
+    } catch(e) {}
+    var sd = getStatData();
+    var $panel = $('#hx-stat-panel');
+    if (!sd) {
+      $panel.html('<div class="hx-topbar"><div class="hx-tl-info"><div class="hx-tl-title">终端未响应</div></div><div class="hx-tl-actions"><div class="hx-icon-btn refresh" title="刷新数据">🔄</div><div class="hx-icon-btn settings'+(isEditMode()?' edit-on':'')+'" title="编辑模式">⚙️</div><div class="hx-icon-btn close" title="关闭">✕</div></div></div><div class="hx-empty"><div style="font-size:36px;opacity:0.6;animation:hxPulse 2s infinite;">📡</div><div style="margin-top:10px;">变量尚未初始化...</div></div>');
+      return;
+    }
+    // 提取 chat title
+    var chatTitle = '';
+    try {
+      var ctx = (GS_PARENT.SillyTavern && typeof GS_PARENT.SillyTavern.getContext === 'function') ? GS_PARENT.SillyTavern.getContext() : null;
+      if (ctx && ctx.chatId) {
+        chatTitle = ctx.chatId.length > 30 ? ctx.chatId.substring(0, 27) + '...' : ctx.chatId;
+      }
+    } catch(e){}
+    var editMode = isEditMode();
+    var hackOn = getHackMode();
+    var curTab = getCurrentTab();
+    var html = '';
+    // 顶栏
+    html += '<div class="hx-topbar">';
+    html += '<div class="hx-tl-info"><div class="hx-tl-title">🌙 '+(chatTitle || '环晓科技·状态栏')+'</div></div>';
+    html += '<div class="hx-tl-actions">';
+    html += '<div class="hx-hack-toggle'+(hackOn?' on':'')+'"><span class="hx-hack-badge">🔓</span></div>';
+    html += '<div class="hx-icon-btn refresh" title="刷新数据">🔄</div>';
+    html += '<div class="hx-icon-btn settings'+(editMode?' edit-on':'')+'" title="编辑模式">⚙️</div>';
+    html += '<div class="hx-icon-btn close" title="关闭">✕</div>';
+    html += '</div></div>';
+    // 破解模式提示
+    if (hackOn) {
+      html += '<div class="hx-hack-tip">⚡ 破解模式已开启：已获得环晓科技员工系统最高权限(ROOT)</div>';
+    }
+    // Tab 栏
+    html += '<div class="hx-tab-rail">';
+    CATEGORIES.forEach(function(c) {
+      html += '<div class="hx-tab-btn'+(c.key === curTab ? ' active' : '')+'" data-tab="'+esc(c.key)+'">'+c.icon+' '+esc(c.key)+'</div>';
+    });
+    html += '</div>';
+    // 编辑模式额外UI
+    if (editMode) {
+      html += '<div class="hx-edit-badge">编辑模式 · 点击数值就地修改，失焦/回车暂存，结束时点保存写回MVU</div>';
+    }
+    // Tab 内容容器
+    html += '<div class="hx-tab-content" id="hx-tab-content"></div>';
+    if (editMode && Object.keys(pendingEdits).length > 0) {
+      html += '<div class="hx-save-btn">💾 保存修改 ('+Object.keys(pendingEdits).length+' 条)</div>';
+    }
+    $panel.html(html);
+    renderTabContent(curTab);
+  }
+
+  // ===== 17. 生命周期 (来自轮回) =====
+  var debouncedRefresh = null;
+  function setupDebouncedRefresh() {
+    var win = getMvuGlobal();
+    debouncedRefresh = function() {
+      if (window.__hx_refresh_timer__) clearTimeout(window.__hx_refresh_timer__);
+      window.__hx_refresh_timer__ = setTimeout(function() {
+        window.__hx_refresh_timer__ = null;
+        if ($('#hx-stat-panel').hasClass('open') && !isEditMode()) renderAll();
+      }, 500);
+    };
+    try {
+      if (win && win.Mvu && win.Mvu.events) {
+        if (typeof eventOn === 'function') eventOn(win.Mvu.events.VARIABLE_UPDATE_ENDED, debouncedRefresh);
+      }
+    } catch(e){}
+    try {
+      if (typeof tavern_events !== 'undefined') {
+        if (tavern_events.MESSAGE_DELETED && typeof eventOn === 'function') eventOn(tavern_events.MESSAGE_DELETED, debouncedRefresh);
+        if (tavern_events.MESSAGE_SWIPED  && typeof eventOn === 'function') eventOn(tavern_events.MESSAGE_SWIPED,  debouncedRefresh);
+        if (tavern_events.CHAT_CHANGED    && typeof eventOn === 'function') eventOn(tavern_events.CHAT_CHANGED,    debouncedRefresh);
+      }
+    } catch(e){}
   }
 
   function init() {
-    log('init 开始(常驻模式, 对齐轮回)');
-    if (!doc.body) {
-      var wait = setInterval(function () {
-        if (doc.body) { clearInterval(wait); init(); }
-      }, 200);
-      setTimeout(function () { clearTimeout(wait); clearInterval(wait); }, 10000);
-      return;
-    }
-    // 常驻挂载(不判挂/卸)
-    mount();
-    syncTitle();
-    // 事件绑定(GS_PARENT.__hx_bound__ 防多版本重复注册)
-    if (!GS_PARENT.__hx_bound__) {
-      GS_PARENT.__hx_bound__ = true;
-      var eon = (typeof GS_PARENT.eventOn === 'function') ? GS_PARENT.eventOn : (typeof eventOn === 'function' ? eventOn : null);
-      try {
-        if (typeof tavern_events !== 'undefined') {
-          if (tavern_events.CHAT_CHANGED) eon(tavern_events.CHAT_CHANGED, debouncedRefresh);
-          if (tavern_events.MESSAGE_DELETED) eon(tavern_events.MESSAGE_DELETED, debouncedRefresh);
-          if (tavern_events.MESSAGE_SWIPED) eon(tavern_events.MESSAGE_SWIPED, debouncedRefresh);
-          log('已监听 CHAT_CHANGED/MESSAGE_DELETED/MESSAGE_SWIPED → debouncedRefresh');
+    initHxCss();
+    initHxDOM();
+    renderAll();
+    try {
+      if (localStorage.getItem(HX_CONFIG.open) === '1') {
+        var $panel = $('#hx-stat-panel');
+        var $ball = $('#hx-stat-ball');
+        if (!isMobile()) {
+          var r = $ball[0].getBoundingClientRect();
+          var vw = GS_PARENT.innerWidth, vh = GS_PARENT.innerHeight;
+          var nl = Math.max(20, Math.min(vw - 340, r.left > vw/2 ? r.left - 340 - 10 : r.left + 50));
+          var nt = Math.max(20, Math.min(vh - 600, r.top));
+          $panel.css({left:nl+'px', top:nt+'px', right:'auto', bottom:'auto'});
         }
-      } catch (e) {}
-      // MVU 变量更新结束 → 刷新
-      try {
-        var mvu = getMvu();
-        if (mvu && mvu.events && mvu.events.VARIABLE_UPDATE_ENDED && eon) {
-          eon(mvu.events.VARIABLE_UPDATE_ENDED, debouncedRefresh);
-          log('已监听 VARIABLE_UPDATE_ENDED → debouncedRefresh');
-        }
-      } catch (e) {}
-    } else {
-      log('事件已绑定过, 跳过');
-    }
-    // guardTimer 兜底(防球被误删, 非卸球)
-    startGuard();
-    try { GS_PARENT.__悬浮球状态栏_loaded__ = true; } catch (e) { window.__悬浮球状态栏_loaded__ = true; }
-    log('init 完成(常驻)');
+        $panel.css('display','flex').addClass('open');
+        $ball.hide();
+      }
+    } catch(e){}
+    setupDebouncedRefresh();
+    // 守卫定时器: 15s 检查球存在(来自轮回)
+    window.__hx_guard_timer__ = setInterval(function() {
+      if (!document.getElementById('hx-stat-ball') || !document.getElementById('hx-stat-panel')) {
+        initHxDOM();
+        renderAll();
+      }
+    }, 15000);
+    try { GS_PARENT.__悬浮球状态栏_loaded__ = true; } catch(e) { window.__悬浮球状态栏_loaded__ = true; }
+    try { console.log('%c[环晓·终端] ✅ v3.0 初始化完成', 'color:#86efac;font-weight:bold'); } catch(e){}
   }
 
-  // ===== 启动 =====
-  preClean();  // IIFE 顶部预清理旧实例
-  if (doc.readyState === 'loading') {
-    doc.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  // ===== 18. 启动 =====
+  (function bootstrap() {
+    if ($ && document.body) init();
+    else setTimeout(bootstrap, 200);
+  })();
+
+  try { $(window).on('unload.hx', hxPreClean); } catch(e) {}
 })();
