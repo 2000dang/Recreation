@@ -1,25 +1,16 @@
-/* 催眠助理·环晓科技 — 悬浮球状态栏 v2.3.11
+/* 催眠助理·环晓科技 — 悬浮球状态栏 v2.4.0
  *
- * 关键修复(v2.3.10→v2.3.11):
- *   11. init() 不再"球已存在则跳过"→ 强制 unmount+mount,旧球 handler 来自旧版本
- *       会导致 fab 点击无反应 + 30+ 次轮询日志;新版必须重建
- *   12. IIFE 幂等闸(GS_PARENT.__hx_*_bound__ / __hx_interval_id__)→ 防止脚本被
- *       酒馆注入多次时 eventOn/setInterval 累积触发
- *   13. 主动挂 MutationObserver 监听 #sheld 移除 → 关闭聊天立即卸球(不依赖
- *       isChatUiVisible 的误判,也不依赖 eventOn)
- *   14. syncMount 加状态节流:连续相同状态 5 次后转静默,避免 30+ 行轮询日志
+ * 机制对齐轮回「主神终端」(常驻模式):
+ *   - 球常驻 document.body, 关闭聊天/切角色均不卸载(与轮回一致)
+ *   - CHAT_CHANGED / MESSAGE_DELETED / MESSAGE_SWIPED → debouncedRefresh(仅刷新数据)
+ *   - IIFE 启动即 preClean(): 移除旧球 + 解绑旧事件 + 清 guardTimer(防多版本共存)
+ *   - guardTimer 每 15s 检查球在不在 DOM, 不在则重建(防被误删, 非卸球)
+ *   - getContext 仅取 chatId 用于渲染标题, 不判挂/卸
  *
- * 关键修复(累计):
- *   1. 锁定 window.parent.document 作为操作主窗口
- *   2. 所有 DOM 操作走 doc=parent.document
- *   3. prompt() 走 GS_PARENT.prompt()
- *   4. mount() 强制重建(避免旧球残留)
- *   5. 删除 doc 全局 closeOnOutside 监听器
- *   6. syncMount 用 chatId 判本卡
- *   7. syncMount 加 !isChatUiVisible() 兜底
- *   8. onChatChanged 收到 payload=undefined 立即 unmount
- *   9. 加 🔓 破解模式开关(panel 顶部 toolbar)
- *   10. 破解模式文案对齐世界观:开启即取得环晓科技员工系统最高管理员(ROOT)权限
+ * v2.3.x 的"关闭聊天自动卸球"是偏离轮回的需求, 已整体删除(该需求导致
+ * eventOn 吃事件 / isChatUiVisible 误判 / 旧闭包点不动 等全部 bug)
+ *
+ * 保留本卡特性: 🌙 图标 / 6 分类 Tab / 🔓 破解模式开关(环晓科技员工系统 ROOT)
  */
 (function () {
   'use strict';
@@ -43,9 +34,8 @@
     { key: '剧情进度', icon: '📜' }
   ];
   var curTab = '主角状态';
-  var mountedFlag = false;
-  var closeListenerAdded = false;
   var lastDataHash = null;
+  var chatTitle = '';
 
   function log() {
     var args = ['[HX-Float]'].concat(Array.prototype.slice.call(arguments));
@@ -247,23 +237,10 @@
     renderObject(panel, sub, curTab, 0);
   }
 
-  // ===== 4. 挂载/卸载 =====
-  function unmount() {
-    try {
-      var existing = doc.getElementById('hx-stat-ball');
-      if (existing) existing.remove();
-      var style = doc.getElementById('hx-stat-style');
-      if (style) style.remove();
-      mountedFlag = false;
-      log('已卸载');
-    } catch (e) { try { GS_PARENT.console.warn('[HX-Float] 卸载异常', e && e.message); } catch (e2) {} }
-  }
-
-  function closeOnOutside(e) { /* 关闭逻辑改为 fab 再次点击;不挂全局 listener,避免陈旧引用导致 panel 误关 */ }
-
+  // ===== 4. 挂载(常驻, 不卸载) =====
   function mount() {
     if (!doc.body) { log('body 未就绪'); return false; }
-    // 强制重建：避免重新导入后旧球残留导致 click handler 仍是旧脚本
+    // 强制重建: 避免旧版本脚本闭包残留导致点不动(对齐轮回 samPreClean 思路)
     var old = doc.getElementById('hx-stat-ball');
     if (old) { try { old.remove(); } catch (e) {} }
     try {
@@ -279,7 +256,7 @@
 
       fab.onclick = function (ev) {
         try { if (ev && ev.stopPropagation) ev.stopPropagation(); } catch (e) {}
-        // 动态查找 panel,避免闭包引用陈旧 DOM(重新挂载/旧球残留场景)
+        // 动态查找 panel, 避免闭包引用陈旧 DOM
         var root = fab.parentNode;
         if (!root) return;
         var p = root.querySelector('.hx-panel');
@@ -295,8 +272,7 @@
       root.appendChild(fab);
       root.appendChild(panel);
       doc.body.appendChild(root);
-      mountedFlag = true;
-      log('悬浮球已挂载');
+      log('悬浮球已挂载(常驻)');
       render();
       return true;
     } catch (e) {
@@ -305,100 +281,49 @@
     }
   }
 
-  function debouncedRender() {
-    if (GS_PARENT.__hx_render_t__) clearTimeout(GS_PARENT.__hx_render_t__);
-    GS_PARENT.__hx_render_t__ = setTimeout(render, 120);
+  // ===== 5. 生命周期(对齐轮回: 常驻 + preClean + guardTimer) =====
+  function preClean() {
+    // IIFE 启动即清理旧实例, 防止多版本脚本共存导致事件/定时器累积(对齐轮回 samPreClean)
+    try {
+      var old = doc.getElementById('hx-stat-ball');
+      if (old) old.remove();
+      var style = doc.getElementById('hx-stat-style');
+      if (style) style.remove();
+      if (GS_PARENT.__hx_guard_timer__) { clearInterval(GS_PARENT.__hx_guard_timer__); GS_PARENT.__hx_guard_timer__ = null; }
+    } catch (e) {}
   }
 
-  // ===== 5. 生命周期：跟随本卡聊天 =====
-  // 关键:getContext 挂在 window.parent.SillyTavern.getContext (非 window.parent.getContext)
-  function getContextSafe() {
+  // 防抖刷新: 500ms 内多次事件只触发一次 render(纯读不写, 无死循环)
+  // 对齐轮回 debouncedRefresh, CHAT_CHANGED/MESSAGE_DELETED/MESSAGE_SWIPED/MVU 更新都走它
+  function debouncedRefresh() {
+    if (GS_PARENT.__hx_refresh_t__) clearTimeout(GS_PARENT.__hx_refresh_t__);
+    GS_PARENT.__hx_refresh_t__ = setTimeout(function () {
+      GS_PARENT.__hx_refresh_t__ = null;
+      render();
+    }, 500);
+  }
+
+  // 仅取 chatId 用于渲染标题, 不判挂/卸
+  function syncTitle() {
     try {
       var win = GS_PARENT || window;
       var api = (win.SillyTavern && typeof win.SillyTavern.getContext === 'function') ? win.SillyTavern.getContext
                : (typeof win.getContext === 'function' ? win.getContext : null);
-      if (!api) return null;
-      return api();
-    } catch (e) { return null; }
+      if (!api) return;
+      var ctx = api();
+      if (ctx && ctx.chatId) chatTitle = ctx.chatId;
+    } catch (e) {}
   }
 
-  // 主窗口是否处于"聊天 UI 可见"状态(关闭聊天的兜底判定)
-  function isChatUiVisible() {
-    try {
-      // 1. 输入框可见
-      var ta = doc.querySelector('#send_textarea, textarea.input-message, #chat-input');
-      if (ta) {
-        var r = ta.getBoundingClientRect();
-        if (r.width > 0 && r.height > 0) return true;
-        if (ta.offsetParent !== null) return true;
+  // guardTimer: 每 15s 检查球在不在 DOM, 不在则重建(防被误删, 非卸球, 对齐轮回)
+  function startGuard() {
+    if (GS_PARENT.__hx_guard_timer__) clearInterval(GS_PARENT.__hx_guard_timer__);
+    GS_PARENT.__hx_guard_timer__ = setInterval(function () {
+      if (!doc.getElementById('hx-stat-ball')) {
+        log('guard: 球丢失, 重建');
+        mount();
       }
-      // 2. 聊天容器可见
-      var chat = doc.querySelector('#chat, #chat-container');
-      if (chat) {
-        var cr = chat.getBoundingClientRect();
-        if (cr.width > 0 && cr.height > 0 && chat.offsetParent !== null) return true;
-      }
-      // 3. 聊天消息列表存在
-      if (doc.querySelector('.mes, .mes_block')) {
-        var anyMes = doc.querySelector('.mes');
-        if (anyMes && anyMes.offsetParent !== null) return true;
-      }
-      return false;
-    } catch (e) { return true; }  // 不确定时保守返回可见,避免误卸
-  }
-
-  // syncMount 状态节流:连续相同状态 5 次后转静默,避免 30+ 行轮询日志
-  var _hx_state = '';
-  var _hx_stateReps = 0;
-  function syncMount() {
-    try {
-      var ballExists = !!doc.getElementById('hx-stat-ball');
-      var ctx = getContextSafe();
-      var chatId = (ctx && ctx.chatId) || '';
-      var characterId = (ctx && ctx.characterId) || '';
-      var uiVisible = isChatUiVisible();
-      var state = (ballExists ? '1' : '0') + '|' + (chatId || '-') + '|' + (characterId || '-') + '|' + (uiVisible ? '1' : '0');
-      var changed = (state !== _hx_state);
-      if (!changed) {
-        _hx_stateReps++;
-        if (_hx_stateReps > 5) return;  // 静默期不打印、不处理
-      } else {
-        _hx_stateReps = 0;
-        _hx_state = state;
-      }
-      // 调试日志(只在状态变化或前 5 次重复时打)
-      if (changed || _hx_stateReps <= 5) {
-        log('syncMount: ball=' + ballExists + ', chatId=' + chatId + ', characterId=' + characterId + ', uiVisible=' + uiVisible);
-      }
-      if (!ctx) return;  // 不确定 → 保持现状
-      // UI 可见性 — 关闭聊天/切到角色管理页时即使 chatId 还在也要卸球
-      if (!chatId || !characterId || !uiVisible) {
-        if (ballExists) { log('syncMount: 无活跃聊天/UI不可见,卸载球'); unmount(); }
-        return;
-      }
-      // 用 chatId 包含本卡关键字判断本卡 — chatId 形如 "催眠助理·环晓科技 - 2026-07-22@..."
-      if (chatId.indexOf(CARD_KEY) === -1 && chatId.indexOf('环晓') === -1) {
-        // 明确是其他角色 → 立即卸
-        if (ballExists) { log('syncMount: 其他角色(chatId=' + chatId + '),卸载球'); unmount(); }
-        return;
-      }
-      // 本卡聊天活跃
-      if (!ballExists) {
-        log('syncMount: 本卡聊天(chatId=' + chatId + ')活跃,挂载球');
-        setTimeout(mount, 50);
-      } else {
-        // 球已存在 → hash 校验
-        var data = getStatData();
-        if (data) {
-          try {
-            var hash = JSON.stringify(data);
-            if (hash !== lastDataHash) { lastDataHash = hash; render(); }
-          } catch (e) {}
-        }
-      }
-    } catch (e) {
-      try { GS_PARENT.console.warn('[HX-Float] syncMount 异常', e && e.message); } catch (e2) {}
-    }
+    }, 15000);
   }
 
   // 「破解模式」状态 — 开启时允许强行修改只读字段/对象/数值
@@ -417,78 +342,8 @@
     try { setVar('__hx_hack_mode', on ? true : false); } catch (e) {}
   }
 
-  // 「关闭聊天」信号独立处理 — Tavern 此时 CHAT_CHANGED payload 为 undefined;
-  // 但 QR2 模块传给 onChatChanged 的 payload 实际经常是字符串/undefined 不一,
-  // 统一走 syncMount 让 syncMount 内部基于 getContext 真实数据判断
-  function onChatChanged(payload) {
-    try { log('CHAT_CHANGED 触发, payload type=' + (typeof payload) + ', val=' + (typeof payload === 'string' ? payload.slice(0, 60) : String(payload).slice(0, 60))); } catch (e) {}
-    // 关闭聊天信号(payload=undefined):酒馆切回角色列表/欢迎页时,立即卸球
-    if (typeof payload === 'undefined' || payload === null) {
-      if (doc.getElementById('hx-stat-ball')) {
-        log('CHAT_CHANGED=undefined → 立即卸球');
-        unmount();
-      }
-    }
-    // 统一走 syncMount 让 syncMount 内部基于 getContext 真实数据判断(重新挂球/切角色判断)
-    setTimeout(syncMount, 80);
-  }
-
-  // ===== 6. 启动 =====
-  function bindMvuListener() {
-    try {
-      var mvu = getMvu();
-      if (!mvu || !mvu.events || !mvu.events.VARIABLE_UPDATE_ENDED) return false;
-      var evt = mvu.events.VARIABLE_UPDATE_ENDED;
-      // 优先 GS_PARENT.eventOn(注入到主窗口作用域),次之当前 iframe 内
-      var eon = (typeof GS_PARENT.eventOn === 'function') ? GS_PARENT.eventOn : (typeof eventOn === 'function' ? eventOn : null);
-      if (eon) { eon(evt, debouncedRender); return true; }
-    } catch (e) {}
-    return false;
-  }
-
-  // 主动监听 #sheld 移除:关闭聊天时酒馆把聊天 shell 从 DOM 摘掉,
-  // 不依赖 eventOn / isChatUiVisible 也能立即卸球
-  function bindShellObserver() {
-    try {
-      if (GS_PARENT.__hx_observer_inited__) return;
-      GS_PARENT.__hx_observer_inited__ = true;
-      var sel = '#sheld, #chat, .mes_block, #chat-container';
-      var tryObserve = function () {
-        var target = doc.body;
-        if (!target || !doc.querySelector('#sheld, #chat, .mes_block, #chat-container')) return false;
-        var obs = new MutationObserver(function (muts) {
-          for (var i = 0; i < muts.length; i++) {
-            var m = muts[i];
-            if (m.type === 'childList' && m.removedNodes && m.removedNodes.length) {
-              for (var j = 0; j < m.removedNodes.length; j++) {
-                var n = m.removedNodes[j];
-                if (n && n.nodeType === 1 && n.id === 'sheld') {
-                  if (doc.getElementById('hx-stat-ball')) {
-                    log('MutationObserver: #sheld 移除 → 立即卸球');
-                    unmount();
-                  }
-                  return;
-                }
-              }
-            }
-          }
-        });
-        obs.observe(target, { childList: true, subtree: true });
-        GS_PARENT.__hx_observer__ = obs;
-        return true;
-      };
-      if (!tryObserve()) {
-        var w = setInterval(function () { if (tryObserve()) { clearInterval(w); } }, 500);
-        setTimeout(function () { clearInterval(w); }, 10000);
-      }
-    } catch (e) { try { GS_PARENT.console.warn('[HX-Float] observer 绑定失败', e && e.message); } catch (e2) {} }
-  }
-
   function init() {
-    log('init 开始');
-    try {
-      log('init: GS_PARENT===window.parent=' + (GS_PARENT === window.parent) + ', body=' + !!doc.body + ', ST.getContext=' + (typeof (GS_PARENT.SillyTavern && GS_PARENT.SillyTavern.getContext)));
-    } catch (e) {}
+    log('init 开始(常驻模式, 对齐轮回)');
     if (!doc.body) {
       var wait = setInterval(function () {
         if (doc.body) { clearInterval(wait); init(); }
@@ -496,54 +351,42 @@
       setTimeout(function () { clearTimeout(wait); clearInterval(wait); }, 10000);
       return;
     }
-
-    // ===== v2.3.11 关键: 不再"球已存在则跳过" — 强制 unmount+mount =====
-    // 旧球 fab.onclick 闭包引用旧版 IIFE 内的 curTab/getStatData 等,
-    // 新版脚本即使执行了也根本绑不上去,造成"球在但点不动"
-    unmount();
-    setTimeout(mount, 50);
-
-    // ===== IIFE 幂等闸 — 防脚本被酒馆注入多次时 eventOn/setInterval 累积 =====
-    if (!GS_PARENT.__hx_mvu_bound__) {
-      GS_PARENT.__hx_mvu_bound__ = true;
-      if (bindMvuListener()) log('已监听 VARIABLE_UPDATE_ENDED');
-      else log('MVU 事件对象未就绪,2s 后重试');
-      setTimeout(function () {
-        if (bindMvuListener()) log('补监听 VARIABLE_UPDATE_ENDED 成功');
-      }, 2000);
-    } else {
-      log('MVU listener 已绑定过,跳过');
-    }
-    if (!GS_PARENT.__hx_tavern_bound__) {
-      GS_PARENT.__hx_tavern_bound__ = true;
+    // 常驻挂载(不判挂/卸)
+    mount();
+    syncTitle();
+    // 事件绑定(GS_PARENT.__hx_bound__ 防多版本重复注册)
+    if (!GS_PARENT.__hx_bound__) {
+      GS_PARENT.__hx_bound__ = true;
+      var eon = (typeof GS_PARENT.eventOn === 'function') ? GS_PARENT.eventOn : (typeof eventOn === 'function' ? eventOn : null);
       try {
         if (typeof tavern_events !== 'undefined') {
-          var eon = (typeof GS_PARENT.eventOn === 'function') ? GS_PARENT.eventOn : (typeof eventOn === 'function' ? eventOn : null);
-          if (eon) {
-            if (tavern_events.CHAT_CHANGED) eon(tavern_events.CHAT_CHANGED, onChatChanged);
-            if (tavern_events.MESSAGE_DELETED) eon(tavern_events.MESSAGE_DELETED, debouncedRender);
-            if (tavern_events.MESSAGE_SWIPED) eon(tavern_events.MESSAGE_SWIPED, debouncedRender);
-            log('已监听 CHAT_CHANGED/MESSAGE_DELETED/MESSAGE_SWIPED');
-          } else {
-            log('eventOn 不可用,完全靠 syncMount 兜底');
-          }
+          if (tavern_events.CHAT_CHANGED) eon(tavern_events.CHAT_CHANGED, debouncedRefresh);
+          if (tavern_events.MESSAGE_DELETED) eon(tavern_events.MESSAGE_DELETED, debouncedRefresh);
+          if (tavern_events.MESSAGE_SWIPED) eon(tavern_events.MESSAGE_SWIPED, debouncedRefresh);
+          log('已监听 CHAT_CHANGED/MESSAGE_DELETED/MESSAGE_SWIPED → debouncedRefresh');
+        }
+      } catch (e) {}
+      // MVU 变量更新结束 → 刷新
+      try {
+        var mvu = getMvu();
+        if (mvu && mvu.events && mvu.events.VARIABLE_UPDATE_ENDED && eon) {
+          eon(mvu.events.VARIABLE_UPDATE_ENDED, debouncedRefresh);
+          log('已监听 VARIABLE_UPDATE_ENDED → debouncedRefresh');
         }
       } catch (e) {}
     } else {
-      log('tavern 事件已绑定过,跳过');
+      log('事件已绑定过, 跳过');
     }
-    if (!GS_PARENT.__hx_observer_bound__) {
-      GS_PARENT.__hx_observer_bound__ = true;
-      bindShellObserver();
-    }
-    // 兜底轮询(3s):同样防止 setInterval 累积
-    if (GS_PARENT.__hx_interval_id__) { clearInterval(GS_PARENT.__hx_interval_id__); log('清除旧 setInterval'); }
-    GS_PARENT.__hx_interval_id__ = setInterval(syncMount, 3000);
+    // guardTimer 兜底(防球被误删, 非卸球)
+    startGuard();
     try { GS_PARENT.__悬浮球状态栏_loaded__ = true; } catch (e) { window.__悬浮球状态栏_loaded__ = true; }
+    log('init 完成(常驻)');
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+  // ===== 启动 =====
+  preClean();  // IIFE 顶部预清理旧实例
+  if (doc.readyState === 'loading') {
+    doc.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
