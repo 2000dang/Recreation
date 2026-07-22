@@ -1,4 +1,4 @@
-/* 催眠助理·环晓科技 — 悬浮球状态栏 v2.3.9
+/* 催眠助理·环晓科技 — 悬浮球状态栏 v2.3.10
  *
  * 关键修复:
  *   1. 锁定 window.parent.document 作为操作主窗口 → position:fixed/z-index 在主视口生效
@@ -11,6 +11,7 @@
  *   7. syncMount 加 !isChatUiVisible() 兜底 → 关闭聊天/切角色管理页时可靠卸球
  *   8. onChatChanged 收到 payload=undefined 立即 unmount → 关闭聊天不残留
  *   9. 加 🔓 破解模式开关(panel 顶部 toolbar)→ 开启后对象字段也可 JSON 编辑
+ *   10. 破解模式文案对齐世界观：开启即取得环晓科技员工系统最高管理员(ROOT)权限
  */
 (function () {
   'use strict';
@@ -204,7 +205,7 @@
     if (hackOn) {
       var tip = doc.createElement('div');
       tip.className = 'hx-hack-tip';
-      tip.textContent = '⚡ 已解锁所有字段(对象也可编辑,双击修改)';
+      tip.textContent = '⚡ 破解模式已开启：已获得环晓科技员工系统最高权限(ROOT)，并解锁全部面板字段(对象可双击编辑)';
       panel.appendChild(tip);
     }
     // ===== 6 个分类 Tab =====
