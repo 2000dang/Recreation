@@ -66,7 +66,7 @@ const boolPreprocess = (def = false) => z.preprocess(v => {
     return def;
 }, z.boolean()).prefault(def);
 const safeTags = (def = []) => z.preprocess(v => Array.isArray(v) ? v.filter(i => 'string' === typeof i) : def, z.array(z.string())).prefault(def).transform(arr => _.uniq(arr));
-const E_rank = z.enum(['实习生','初级专员','中级专员','高级专员','主管','副组长','组长','副总监','总监']);
+const E_rank = z.enum(['实习工程师','助理工程师','工程师','高级工程师','资深工程师','技术专家','高级技术专家','首席专家','技术总监','副总裁','总裁']);
 const E_assistantType = z.enum(['实习助理','正式助理','组长助理']);
 
 /* 单个助理 */
@@ -102,7 +102,7 @@ export const Schema = z.object({
   }).prefault({}),
   主角状态: z.object({
     工号: safeStr('HX-0001'),
-    职级: E_rank.prefault('实习生'),
+    职级: E_rank.prefault('助理工程师'),
     贡献点: clampNum(5, 0, Infinity),
     精神状态: clampNum(100, 0, 100),
     身体状况: safeStr('健康'),
@@ -232,7 +232,7 @@ entries.append(E(9999, '[InitVar]世界初始设定', '''环境与系统:
 
 主角状态:
   工号: HX-0001
-  职级: 实习生
+  职级: 助理工程师
   贡献点: 5
   精神状态: 100
   身体状况: 健康
@@ -309,7 +309,7 @@ entries.append(E(99997, '[mvu_update]变量更新规则', '''variables_update_ru
     贡献点: { type: number, check: [消耗必精确扣减，获取必增加；余额不足时操作被拒，不得扣减；破解模式开启时锁∞] }
     精神状态: { type: number, range: 0~100, check: [惊悚/囚禁/暴力扣减，休息/正面互动恢复] }
     个人金钱: { type: number, check: [消费扣减，收入增加] }
-    催眠权限等级: { type: number, check: [职级提升时自动提升：正式1/副组长2/组长3/副总监4/总监5] }
+    催眠权限等级: { type: number, check: [职级提升时自动提升: 助理工程师1/工程师2/高级工程师3/资深工程师4/技术专家5/高级技术专家6/首席专家7/技术总监8/副总裁9/总裁10] }
     破解模式: { type: boolean, check: [默认false；开启后忽略贡献点/职级/权限，贡献点显示∞] }
     已解锁成就: { type: array, check: [达成时添加，附带贡献点奖励] }
   助理管理:
