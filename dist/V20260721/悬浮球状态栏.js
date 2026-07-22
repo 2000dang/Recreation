@@ -199,7 +199,7 @@
       var mo = new MutationObserver(debouncedRender);
       mo.observe(document.body, { childList: true, subtree: true });
     }
-    window.__hx_float_loaded__ = true;
+    try { (window.parent || window).__悬浮球状态栏_loaded__ = true; } catch(e) { window.__悬浮球状态栏_loaded__ = true; }
   }
 
   if (document.readyState === 'loading') {

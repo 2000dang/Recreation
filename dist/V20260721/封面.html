@@ -404,15 +404,11 @@
                 <span class="dep-tag" id="dep-mvu-tag">SCANNING...</span>
             </div>
             <div class="dep-item">
-                <span class="dep-name">ZOD 防御 Schema</span>
-                <span class="dep-tag" id="dep-zod-tag">SCANNING...</span>
-            </div>
-            <div class="dep-item">
                 <span class="dep-name">辅助计算引擎</span>
                 <span class="dep-tag" id="dep-calc-tag">SCANNING...</span>
             </div>
             <div class="dep-item">
-                <span class="dep-name">悬浮球状态栏.</span>
+                <span class="dep-name">悬浮球状态栏</span>
                 <span class="dep-tag" id="dep-statusbar-tag">SCANNING...</span>
             </div>
             <div class="dep-summary" id="depSummary">等待模组响应...</div>
@@ -458,16 +454,12 @@
                 } catch (e) { return false; }
             });
 
-            allOk &= checkDep('zod', function () {
-                try { return !!(win.__hx_zod_loaded__); } catch (e) { return false; }
-            });
-
             allOk &= checkDep('calc', function () {
                 try { return !!(win.__辅助计算脚本_loaded__); } catch (e) { return false; }
             });
 
             allOk &= checkDep('statusbar', function () {
-                try { return !!(win.__hx_float_loaded__); } catch (e) { return false; }
+                try { return !!(win.__悬浮球状态栏_loaded__); } catch (e) { return false; }
             });
 
             var summary = document.getElementById('depSummary');
