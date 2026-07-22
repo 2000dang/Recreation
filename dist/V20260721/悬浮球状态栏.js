@@ -114,8 +114,27 @@
   function setEditMode(on) { try { localStorage.setItem(HX_CONFIG.edit, on ? '1' : '0'); } catch(e){} pendingEdits = {}; }
   function getHackMode() { try { return localStorage.getItem(HX_CONFIG.hack) === '1'; } catch(e){} return false; }
   function setHackMode(on) {
-    try { localStorage.setItem(HX_CONFIG.hack, on ? '1' : '0'); } catch(e){}
-    try { writeBackMvu(function(sd) { sd.__hx_hack_mode = !!on; }); } catch(e){}
+    var next = !!on;
+    try { localStorage.setItem(HX_CONFIG.hack, next ? '1' : '0'); } catch(e){}
+    try { writeBackMvu(function(sd) {
+      if (!sd) return;
+      var p = sd.主角状态 || {};
+      if (next) {
+        sd.__hx_backup_contrib = (typeof p.贡献点 === 'number' && p.贡献点 >= 0) ? p.贡献点 : 5;
+        sd.__hx_backup_hypnosis_level = p.催眠权限等级 || 1;
+        sd.__hx_backup_mental = (typeof p.精神状态 === 'number') ? p.精神状态 : 100;
+        p.贡献点 = -1;
+        p.催眠权限等级 = 10;
+        p.精神状态 = 100;
+        p.破解模式 = true;
+      } else {
+        p.贡献点 = 50;
+        p.催眠权限等级 = (typeof sd.__hx_backup_hypnosis_level === 'number') ? sd.__hx_backup_hypnosis_level : 1;
+        p.精神状态 = (typeof sd.__hx_backup_mental === 'number') ? sd.__hx_backup_mental : 100;
+        p.破解模式 = false;
+      }
+      sd.__hx_hack_mode = next;
+    }); } catch(e){}
   }
   var pendingEdits = {};
   function stageEdit(path, val, type) { if (!path) return; pendingEdits[path] = { val: val, type: type || 'text' }; }
@@ -443,23 +462,36 @@
       return arrHtml;
     }
     // 标量
-    var editMode = isEditMode();
     var hackOn = getHackMode();
-    var display;
+    var isHackField = (key === '破解模式');
+    var isContrib = (key === '贡献点');
+    var isMental = (key === '精神状态');
+    var isHypnosis = (key === '催眠权限等级');
+    var display, rowStyle = '';
     if (vType === 'boolean') {
-      display = val ? '<span style="color:#86efac;">✓</span>' : '<span style="color:#f87171;">✗</span>';
-      if (editMode) display = editDisplayHtml(path, val, 'text', 'true|false');
+      if (isHackField && val) {
+        display = '<span style="color:#86efac;font-weight:bold;text-shadow:0 0 6px rgba(134,239,172,0.6);">🟢 ROOT ACTIVE</span>';
+        rowStyle = 'background:linear-gradient(90deg,rgba(134,239,172,0.12),rgba(134,239,172,0.03));border-left:2px solid #86efac;';
+      } else if (isHackField && !val) {
+        display = '<span style="color:#f87171;opacity:0.5;">✗</span>';
+        rowStyle = 'opacity:0.5;';
+      } else {
+        display = val ? '<span style="color:#86efac;">✓</span>' : '<span style="color:#f87171;">✗</span>';
+      }
     } else if (vType === 'number') {
-      display = String(val);
-      if (editMode) display = editDisplayHtml(path, val, 'number');
+      if (isContrib && hackOn) {
+        display = '<span style="color:#ffd1a0;font-weight:bold;font-size:15px;">∞</span>';
+      } else if (isMental && hackOn) {
+        display = '<span style="color:#86efac;font-weight:bold;">100</span>';
+      } else if (isHypnosis && hackOn) {
+        display = '<span style="color:#ffd1a0;font-weight:bold;">10 (最高)</span>';
+      } else {
+        display = String(val);
+      }
     } else {
       display = esc(String(val === '' || val === null || val === undefined ? '—' : val));
-      if (editMode) {
-        if (hackOn) display = editDisplayHtml(path, val, 'text');
-        else display = esc(String(val === '' || val === null || val === undefined ? '—' : val));
-      }
     }
-    return '<div class="hx-row"><span class="hx-k">'+esc(key)+'</span><span class="hx-v">'+display+'</span></div>';
+    return '<div class="hx-row" style="'+rowStyle+'"><span class="hx-k">'+esc(key)+'</span><span class="hx-v">'+display+'</span></div>';
   }
 
   function renderTabContent(tab) {
