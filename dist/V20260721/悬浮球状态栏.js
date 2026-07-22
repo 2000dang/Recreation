@@ -1,12 +1,12 @@
-/* 催眠助理·环晓科技 — 悬浮球状态栏 v2.3.7
+/* 催眠助理·环晓科技 — 悬浮球状态栏 v2.3.8
  *
  * 关键修复(对齐 轮回 终端 v2 模式):
  *   1. 锁定 window.parent.document 作为操作主窗口 → position:fixed/z-index 在主视口生效
  *   2. 所有 DOM 操作走 doc=parent.document → render() 能找到 ball/panel 节点
  *   3. prompt() 走 GS_PARENT.prompt() → 避免 about:srcdoc 内不可见
  *   4. mount() 强制重建 → 避免重新导入后旧 ball 残留导致 click handler 仍是旧脚本
- *   5. init() 无条件主动挂球(不依赖 getContext),syncMount 负责按 getContext 真实数据
- *      决定挂/卸;fab.onclick 动态查 panel 避免闭包陈旧引用
+ *   5. init() 无条件主动挂球(不依赖 getContext),syncMount 用 window.parent.SillyTavern.getContext
+ *      真实判断本卡/其他角色/无聊天;fab.onclick 动态查 panel 避免闭包陈旧引用
  */
 (function () {
   'use strict';
@@ -262,53 +262,58 @@
   }
 
   // ===== 5. 生命周期：跟随本卡聊天 =====
-  function getCurrent() {
+  // 关键:getContext 挂在 window.parent.SillyTavern.getContext (非 window.parent.getContext)
+  function getContextSafe() {
     try {
-      var getCtx = (typeof GS_PARENT.getContext === 'function') ? GS_PARENT.getContext : null;
-      var ctx = getCtx ? getCtx() : null;
-      if (!ctx) return null;
-      return {
-        chatId: ctx.chatId,
-        characterId: ctx.characterId,
-        name: (ctx.character && ctx.character.name) || ''
-      };
+      var win = GS_PARENT || window;
+      var api = (win.SillyTavern && typeof win.SillyTavern.getContext === 'function') ? win.SillyTavern.getContext
+               : (typeof win.getContext === 'function' ? win.getContext : null);
+      if (!api) return null;
+      return api();
     } catch (e) { return null; }
   }
 
-  function isOurCard() {
+  // 主窗口是否处于"聊天 UI 可见"状态(关闭聊天的兜底判定)
+  function isChatUiVisible() {
     try {
-      var cur = getCurrent();
-      if (!cur) return false;                    // 取不到上下文 → 当作非本卡
-      if (!cur.chatId) return false;             // 没开聊天 → 不是本卡
-      if (!cur.characterId) return false;
-      if (!cur.name) return false;
-      return cur.name.indexOf(CARD_KEY) !== -1 || cur.name.indexOf('环晓') !== -1;
-    } catch (e) {
+      var ta = doc.querySelector('#send_textarea, textarea.input-message');
+      if (ta && ta.offsetParent !== null) return true;
+      var chat = doc.querySelector('#chat');
+      if (chat && chat.offsetParent !== null && chat.querySelector('.mes')) return true;
       return false;
-    }
+    } catch (e) { return true; }  // 不确定时保守返回可见,避免误卸
   }
 
   function syncMount() {
     try {
       var ballExists = !!doc.getElementById('hx-stat-ball');
-      var cur = getCurrent();
-      // 调试日志:始终打,便于定位
-      try {
-        log('syncMount: ball=' + ballExists + ', cur=' + (cur ? JSON.stringify({chatId: cur.chatId, characterId: cur.characterId, name: cur.name}) : 'null'));
-      } catch (e) {}
-      if (!cur || !cur.chatId || !cur.characterId) {
-        // 无活跃聊天 → 卸球
-        if (ballExists) { log('syncMount: 无活跃聊天,卸载球'); unmount(); }
+      var ctx = getContextSafe();
+      if (!ctx) {
+        log('syncMount: 上下文取不到,保持现状 ball=' + ballExists);
+        return;  // 不确定 → 保持现状
+      }
+      var chatId = ctx.chatId;
+      var characterId = ctx.characterId;
+      var name = (ctx.character && ctx.character.name) || '';
+      log('syncMount: ball=' + ballExists + ', chatId=' + chatId + ', characterId=' + characterId + ', name=' + name);
+      if (!chatId || !characterId) {
+        // 无活跃聊天 → 关闭聊天/回列表(用聊天UI可见性兜底,避免动画瞬态误卸)
+        if (ballExists && !isChatUiVisible()) {
+          log('syncMount: 无活跃聊天且聊天UI不可见,卸载球');
+          unmount();
+        } else if (ballExists) {
+          log('syncMount: 无活跃聊天但UI可见,暂留');
+        }
         return;
       }
-      if (cur.name.indexOf(CARD_KEY) === -1 && cur.name.indexOf('环晓') === -1) {
-        // 切到其他角色 → 卸球
-        if (ballExists) { log('syncMount: 当前聊天(' + cur.name + ')非本卡,卸载球'); unmount(); }
+      if (name.indexOf(CARD_KEY) === -1 && name.indexOf('环晓') === -1) {
+        // 明确是其他角色 → 立即卸
+        if (ballExists) { log('syncMount: 其他角色(' + name + '),卸载球'); unmount(); }
         return;
       }
       // 本卡聊天活跃
       if (!ballExists) {
-        log('syncMount: 本卡聊天(' + cur.name + ')活跃,挂载球');
+        log('syncMount: 本卡聊天(' + name + ')活跃,挂载球');
         setTimeout(mount, 50);
       } else {
         // 球已存在 → hash 校验
@@ -349,7 +354,7 @@
   function init() {
     log('init 开始');
     try {
-      log('init: GS_PARENT===window.parent=' + (GS_PARENT === window.parent) + ', body=' + !!doc.body + ', hasGetCtx=' + (typeof GS_PARENT.getContext));
+      log('init: GS_PARENT===window.parent=' + (GS_PARENT === window.parent) + ', body=' + !!doc.body + ', ST.getContext=' + (typeof (GS_PARENT.SillyTavern && GS_PARENT.SillyTavern.getContext)));
     } catch (e) {}
     if (!doc.body) {
       var wait = setInterval(function () {
