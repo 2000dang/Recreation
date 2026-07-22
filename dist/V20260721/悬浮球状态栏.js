@@ -1,17 +1,25 @@
-/* 催眠助理·环晓科技 — 悬浮球状态栏 v2.3.10
+/* 催眠助理·环晓科技 — 悬浮球状态栏 v2.3.11
  *
- * 关键修复:
- *   1. 锁定 window.parent.document 作为操作主窗口 → position:fixed/z-index 在主视口生效
- *   2. 所有 DOM 操作走 doc=parent.document → render() 能找到 ball/panel 节点
- *   3. prompt() 走 GS_PARENT.prompt() → 避免 about:srcdoc 内不可见
- *   4. mount() 强制重建 → 避免重新导入后旧 ball 残留
- *   5. 删除 doc 全局 closeOnOutside 监听器 → 避免陈旧引用导致 panel 误关
- *      (panel 内所有 click 加 stopPropagation,关闭仅靠 fab 再次点击)
- *   6. syncMount 用 chatId.indexOf 判本卡 → 主窗口下 ctx.name 为空绕开
- *   7. syncMount 加 !isChatUiVisible() 兜底 → 关闭聊天/切角色管理页时可靠卸球
- *   8. onChatChanged 收到 payload=undefined 立即 unmount → 关闭聊天不残留
- *   9. 加 🔓 破解模式开关(panel 顶部 toolbar)→ 开启后对象字段也可 JSON 编辑
- *   10. 破解模式文案对齐世界观：开启即取得环晓科技员工系统最高管理员(ROOT)权限
+ * 关键修复(v2.3.10→v2.3.11):
+ *   11. init() 不再"球已存在则跳过"→ 强制 unmount+mount,旧球 handler 来自旧版本
+ *       会导致 fab 点击无反应 + 30+ 次轮询日志;新版必须重建
+ *   12. IIFE 幂等闸(GS_PARENT.__hx_*_bound__ / __hx_interval_id__)→ 防止脚本被
+ *       酒馆注入多次时 eventOn/setInterval 累积触发
+ *   13. 主动挂 MutationObserver 监听 #sheld 移除 → 关闭聊天立即卸球(不依赖
+ *       isChatUiVisible 的误判,也不依赖 eventOn)
+ *   14. syncMount 加状态节流:连续相同状态 5 次后转静默,避免 30+ 行轮询日志
+ *
+ * 关键修复(累计):
+ *   1. 锁定 window.parent.document 作为操作主窗口
+ *   2. 所有 DOM 操作走 doc=parent.document
+ *   3. prompt() 走 GS_PARENT.prompt()
+ *   4. mount() 强制重建(避免旧球残留)
+ *   5. 删除 doc 全局 closeOnOutside 监听器
+ *   6. syncMount 用 chatId 判本卡
+ *   7. syncMount 加 !isChatUiVisible() 兜底
+ *   8. onChatChanged 收到 payload=undefined 立即 unmount
+ *   9. 加 🔓 破解模式开关(panel 顶部 toolbar)
+ *   10. 破解模式文案对齐世界观:开启即取得环晓科技员工系统最高管理员(ROOT)权限
  */
 (function () {
   'use strict';
@@ -339,22 +347,32 @@
     } catch (e) { return true; }  // 不确定时保守返回可见,避免误卸
   }
 
+  // syncMount 状态节流:连续相同状态 5 次后转静默,避免 30+ 行轮询日志
+  var _hx_state = '';
+  var _hx_stateReps = 0;
   function syncMount() {
     try {
       var ballExists = !!doc.getElementById('hx-stat-ball');
       var ctx = getContextSafe();
-      if (!ctx) {
-        log('syncMount: 上下文取不到,保持现状 ball=' + ballExists);
-        return;  // 不确定 → 保持现状
-      }
-      var chatId = ctx.chatId;
-      var characterId = ctx.characterId;
-      // 关键:用 chatId 判本卡,不用 ctx.name(主窗口下 ctx.name 经常是空字符串)
-      log('syncMount: ball=' + ballExists + ', chatId=' + chatId + ', characterId=' + characterId);
-      // UI 可见性 — 关闭聊天/切到角色管理页时即使 chatId 还在也要卸球
+      var chatId = (ctx && ctx.chatId) || '';
+      var characterId = (ctx && ctx.characterId) || '';
       var uiVisible = isChatUiVisible();
+      var state = (ballExists ? '1' : '0') + '|' + (chatId || '-') + '|' + (characterId || '-') + '|' + (uiVisible ? '1' : '0');
+      var changed = (state !== _hx_state);
+      if (!changed) {
+        _hx_stateReps++;
+        if (_hx_stateReps > 5) return;  // 静默期不打印、不处理
+      } else {
+        _hx_stateReps = 0;
+        _hx_state = state;
+      }
+      // 调试日志(只在状态变化或前 5 次重复时打)
+      if (changed || _hx_stateReps <= 5) {
+        log('syncMount: ball=' + ballExists + ', chatId=' + chatId + ', characterId=' + characterId + ', uiVisible=' + uiVisible);
+      }
+      if (!ctx) return;  // 不确定 → 保持现状
+      // UI 可见性 — 关闭聊天/切到角色管理页时即使 chatId 还在也要卸球
       if (!chatId || !characterId || !uiVisible) {
-        // 无活跃聊天 / 上下文残缺 / UI 不可见 → 卸球(防"关闭聊天球还在")
         if (ballExists) { log('syncMount: 无活跃聊天/UI不可见,卸载球'); unmount(); }
         return;
       }
@@ -428,6 +446,44 @@
     return false;
   }
 
+  // 主动监听 #sheld 移除:关闭聊天时酒馆把聊天 shell 从 DOM 摘掉,
+  // 不依赖 eventOn / isChatUiVisible 也能立即卸球
+  function bindShellObserver() {
+    try {
+      if (GS_PARENT.__hx_observer_inited__) return;
+      GS_PARENT.__hx_observer_inited__ = true;
+      var sel = '#sheld, #chat, .mes_block, #chat-container';
+      var tryObserve = function () {
+        var target = doc.body;
+        if (!target || !doc.querySelector('#sheld, #chat, .mes_block, #chat-container')) return false;
+        var obs = new MutationObserver(function (muts) {
+          for (var i = 0; i < muts.length; i++) {
+            var m = muts[i];
+            if (m.type === 'childList' && m.removedNodes && m.removedNodes.length) {
+              for (var j = 0; j < m.removedNodes.length; j++) {
+                var n = m.removedNodes[j];
+                if (n && n.nodeType === 1 && n.id === 'sheld') {
+                  if (doc.getElementById('hx-stat-ball')) {
+                    log('MutationObserver: #sheld 移除 → 立即卸球');
+                    unmount();
+                  }
+                  return;
+                }
+              }
+            }
+          }
+        });
+        obs.observe(target, { childList: true, subtree: true });
+        GS_PARENT.__hx_observer__ = obs;
+        return true;
+      };
+      if (!tryObserve()) {
+        var w = setInterval(function () { if (tryObserve()) { clearInterval(w); } }, 500);
+        setTimeout(function () { clearInterval(w); }, 10000);
+      }
+    } catch (e) { try { GS_PARENT.console.warn('[HX-Float] observer 绑定失败', e && e.message); } catch (e2) {} }
+  }
+
   function init() {
     log('init 开始');
     try {
@@ -440,32 +496,49 @@
       setTimeout(function () { clearTimeout(wait); clearInterval(wait); }, 10000);
       return;
     }
-    // 无条件主动挂球,不依赖 getContext 判断(避免 init 时上下文未就绪导致静默不挂)
-    if (!doc.getElementById('hx-stat-ball')) {
-      log('init: 主动挂载球');
-      setTimeout(mount, 50);
+
+    // ===== v2.3.11 关键: 不再"球已存在则跳过" — 强制 unmount+mount =====
+    // 旧球 fab.onclick 闭包引用旧版 IIFE 内的 curTab/getStatData 等,
+    // 新版脚本即使执行了也根本绑不上去,造成"球在但点不动"
+    unmount();
+    setTimeout(mount, 50);
+
+    // ===== IIFE 幂等闸 — 防脚本被酒馆注入多次时 eventOn/setInterval 累积 =====
+    if (!GS_PARENT.__hx_mvu_bound__) {
+      GS_PARENT.__hx_mvu_bound__ = true;
+      if (bindMvuListener()) log('已监听 VARIABLE_UPDATE_ENDED');
+      else log('MVU 事件对象未就绪,2s 后重试');
+      setTimeout(function () {
+        if (bindMvuListener()) log('补监听 VARIABLE_UPDATE_ENDED 成功');
+      }, 2000);
     } else {
-      log('init: 球已存在,跳过初次挂载');
+      log('MVU listener 已绑定过,跳过');
     }
-    // 监听 MVU 变量更新(初次可能未就绪,2s 后再补一次)
-    if (bindMvuListener()) log('已监听 VARIABLE_UPDATE_ENDED');
-    else log('MVU 事件对象未就绪,2s 后重试');
-    setTimeout(function () {
-      if (bindMvuListener()) log('补监听 VARIABLE_UPDATE_ENDED 成功');
-    }, 2000);
-    // 监听酒馆事件
-    try {
-      if (typeof tavern_events !== 'undefined') {
-        var eon = (typeof GS_PARENT.eventOn === 'function') ? GS_PARENT.eventOn : (typeof eventOn === 'function' ? eventOn : null);
-        if (eon) {
-          if (tavern_events.CHAT_CHANGED) eon(tavern_events.CHAT_CHANGED, onChatChanged);
-          if (tavern_events.MESSAGE_DELETED) eon(tavern_events.MESSAGE_DELETED, debouncedRender);
-          if (tavern_events.MESSAGE_SWIPED) eon(tavern_events.MESSAGE_SWIPED, debouncedRender);
+    if (!GS_PARENT.__hx_tavern_bound__) {
+      GS_PARENT.__hx_tavern_bound__ = true;
+      try {
+        if (typeof tavern_events !== 'undefined') {
+          var eon = (typeof GS_PARENT.eventOn === 'function') ? GS_PARENT.eventOn : (typeof eventOn === 'function' ? eventOn : null);
+          if (eon) {
+            if (tavern_events.CHAT_CHANGED) eon(tavern_events.CHAT_CHANGED, onChatChanged);
+            if (tavern_events.MESSAGE_DELETED) eon(tavern_events.MESSAGE_DELETED, debouncedRender);
+            if (tavern_events.MESSAGE_SWIPED) eon(tavern_events.MESSAGE_SWIPED, debouncedRender);
+            log('已监听 CHAT_CHANGED/MESSAGE_DELETED/MESSAGE_SWIPED');
+          } else {
+            log('eventOn 不可用,完全靠 syncMount 兜底');
+          }
         }
-      }
-    } catch (e) {}
-    // 兜底轮询(3s):负责"切到其他角色"卸球 + 数据变更刷新
-    setInterval(syncMount, 3000);
+      } catch (e) {}
+    } else {
+      log('tavern 事件已绑定过,跳过');
+    }
+    if (!GS_PARENT.__hx_observer_bound__) {
+      GS_PARENT.__hx_observer_bound__ = true;
+      bindShellObserver();
+    }
+    // 兜底轮询(3s):同样防止 setInterval 累积
+    if (GS_PARENT.__hx_interval_id__) { clearInterval(GS_PARENT.__hx_interval_id__); log('清除旧 setInterval'); }
+    GS_PARENT.__hx_interval_id__ = setInterval(syncMount, 3000);
     try { GS_PARENT.__悬浮球状态栏_loaded__ = true; } catch (e) { window.__悬浮球状态栏_loaded__ = true; }
   }
 
