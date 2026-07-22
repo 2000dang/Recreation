@@ -57,9 +57,20 @@
     } catch (e) { console.warn('[悬浮球] 写回失败', e && e.message); }
   }
 
+  function getHost() {
+    // 优先把悬浮球挂到酒馆主窗口（window.parent），让 position:fixed 在主视口生效
+    try {
+      if (window.parent && window.parent.document && window.parent.document.body) {
+        return { doc: window.parent.document, win: window.parent, ok: true };
+      }
+    } catch (e) {}
+    return { doc: document, win: window, ok: false };
+  }
+
   function ensureStyle() {
-    if (document.getElementById('hx-stat-style')) return;
-    var st = document.createElement('style');
+    var host = getHost();
+    if (host.doc.getElementById('hx-stat-style')) return;
+    var st = host.doc.createElement('style');
     st.id = 'hx-stat-style';
     st.textContent = [
       '#hx-stat-ball{position:fixed;top:70px;right:16px;z-index:2147483647;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;pointer-events:none;}',
@@ -77,7 +88,7 @@
       '#hx-stat-ball .hx-sub{padding-left:14px;}',
       '#hx-stat-ball .hx-edit{background:#2a2440;border:1px solid #6d5bb0;color:#fff;border-radius:4px;width:120px;font-size:12px;}'
     ].join('');
-    document.head.appendChild(st);
+    host.doc.head.appendChild(st);
   }
 
   function renderCell(k, v, path) {
@@ -173,23 +184,24 @@
   }
 
   function mount() {
-    if (document.getElementById('hx-stat-ball')) { render(); return true; }
-    if (!document.body) { log('document.body 尚未就绪，延迟挂载'); return false; }
+    var host = getHost();
+    if (host.doc.getElementById('hx-stat-ball')) { render(); return true; }
+    if (!host.doc.body) { log('body 尚未就绪，延迟挂载'); return false; }
     try {
       ensureStyle();
-      var root = document.createElement('div');
+      var root = host.doc.createElement('div');
       root.id = 'hx-stat-ball';
-      var fab = document.createElement('div');
+      var fab = host.doc.createElement('div');
       fab.className = 'hx-fab';
       fab.textContent = '🌙';
       fab.title = '环晓科技状态栏';
-      var panel = document.createElement('div');
+      var panel = host.doc.createElement('div');
       panel.className = 'hx-panel';
       fab.onclick = function () { panel.classList.toggle('open'); if (panel.classList.contains('open')) render(); };
       root.appendChild(fab);
       root.appendChild(panel);
-      document.body.appendChild(root);
-      log('悬浮球已挂载');
+      host.doc.body.appendChild(root);
+      log('悬浮球已挂载 host=' + (host.ok ? 'window.parent' : 'current'));
       render();
       return true;
     } catch (e) {
@@ -221,7 +233,10 @@
     }
     if (typeof MutationObserver !== 'undefined') {
       var mo = new MutationObserver(debouncedRender);
-      mo.observe(document.body || document.documentElement, { childList: true, subtree: true });
+      try {
+        var host = getHost();
+        mo.observe(host.doc.body || host.doc.documentElement, { childList: true, subtree: true });
+      } catch (e) {}
     }
     try { (window.parent || window).__悬浮球状态栏_loaded__ = true; } catch(e) { window.__悬浮球状态栏_loaded__ = true; }
   }
