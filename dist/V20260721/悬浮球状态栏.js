@@ -1,12 +1,16 @@
-/* 催眠助理·环晓科技 — 悬浮球状态栏 v2.3.8
+/* 催眠助理·环晓科技 — 悬浮球状态栏 v2.3.9
  *
- * 关键修复(对齐 轮回 终端 v2 模式):
+ * 关键修复:
  *   1. 锁定 window.parent.document 作为操作主窗口 → position:fixed/z-index 在主视口生效
  *   2. 所有 DOM 操作走 doc=parent.document → render() 能找到 ball/panel 节点
  *   3. prompt() 走 GS_PARENT.prompt() → 避免 about:srcdoc 内不可见
- *   4. mount() 强制重建 → 避免重新导入后旧 ball 残留导致 click handler 仍是旧脚本
- *   5. init() 无条件主动挂球(不依赖 getContext),syncMount 用 window.parent.SillyTavern.getContext
- *      真实判断本卡/其他角色/无聊天;fab.onclick 动态查 panel 避免闭包陈旧引用
+ *   4. mount() 强制重建 → 避免重新导入后旧 ball 残留
+ *   5. 删除 doc 全局 closeOnOutside 监听器 → 避免陈旧引用导致 panel 误关
+ *      (panel 内所有 click 加 stopPropagation,关闭仅靠 fab 再次点击)
+ *   6. syncMount 用 chatId.indexOf 判本卡 → 主窗口下 ctx.name 为空绕开
+ *   7. syncMount 加 !isChatUiVisible() 兜底 → 关闭聊天/切角色管理页时可靠卸球
+ *   8. onChatChanged 收到 payload=undefined 立即 unmount → 关闭聊天不残留
+ *   9. 加 🔓 破解模式开关(panel 顶部 toolbar)→ 开启后对象字段也可 JSON 编辑
  */
 (function () {
   'use strict';
@@ -84,7 +88,14 @@
       '#hx-stat-ball .hx-row{display:flex;justify-content:space-between;gap:8px;padding:3px 11px;line-height:1.55;}',
       '#hx-stat-ball .hx-k{color:#a99fd0;}',
       '#hx-stat-ball .hx-v{color:#fff;text-align:right;cursor:pointer;max-width:58%;word-break:break-all;}',
-      '#hx-stat-ball .hx-sub{padding-left:14px;}'
+      '#hx-stat-ball .hx-sub{padding-left:14px;}',
+      '#hx-stat-ball .hx-toolbar{display:flex;align-items:center;justify-content:space-between;padding:7px 11px;border-bottom:1px solid rgba(155,109,255,.25);font-size:12px;color:#a99fd0;background:rgba(155,109,255,.06);}',
+      '#hx-stat-ball .hx-hack-label{font-weight:600;letter-spacing:0.5px;}',
+      '#hx-stat-ball .hx-hack-switch{position:relative;width:36px;height:18px;border-radius:9px;background:rgba(155,109,255,.18);cursor:pointer;transition:background .15s;flex-shrink:0;}',
+      '#hx-stat-ball .hx-hack-switch.on{background:rgba(255,170,80,.6);}',
+      '#hx-stat-ball .hx-hack-knob{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .18s ease;box-shadow:0 1px 3px rgba(0,0,0,.3);}',
+      '#hx-stat-ball .hx-hack-switch.on .hx-hack-knob{left:20px;}',
+      '#hx-stat-ball .hx-hack-tip{padding:6px 11px;font-size:11px;color:#ffb84d;background:rgba(255,170,80,.10);border-bottom:1px solid rgba(255,170,80,.25);}'
     ].join('');
     doc.head.appendChild(st);
   }
@@ -100,16 +111,32 @@
     if (typeof v === 'boolean') {
       vEl.textContent = v ? '✓' : '✗';
       vEl.title = '单击切换';
-      vEl.onclick = (function (cur, p) { return function () { setVar(p, !cur); }; })(v, path);
+      vEl.onclick = (function (cur, p) { return function (ev) { try { if (ev && ev.stopPropagation) ev.stopPropagation(); if (ev && ev.preventDefault) ev.preventDefault(); } catch (e) {} setVar(p, !cur); }; })(v, path);
     } else if (typeof v === 'object' && v !== null) {
       vEl.textContent = '{…}';
-      vEl.title = '对象不可编辑';
-      vEl.style.cursor = 'default';
+      if (getHackMode()) {
+        // 破解模式:对象也允许编辑
+        vEl.style.cursor = 'pointer';
+        vEl.title = '破解模式:双击以 JSON 文本编辑该对象';
+        vEl.ondblclick = (function (kName, p, cur) {
+          return function (ev) { try { if (ev && ev.stopPropagation) ev.stopPropagation(); if (ev && ev.preventDefault) ev.preventDefault(); } catch (e) {}
+            var def = JSON.stringify(cur, null, 2);
+            var nv = null;
+            try { nv = GS_PARENT.prompt('⚡ 破解模式 - 修改 ' + kName + ' (JSON 格式):', def); } catch (e) { nv = prompt('修改 ' + kName + ' (JSON 格式):', def); }
+            if (nv === null) return;
+            try { var parsed = JSON.parse(nv); setVar(p, parsed); }
+            catch (err) { try { GS_PARENT.alert('JSON 解析失败:' + err.message); } catch (e) { alert('JSON 解析失败:' + err.message); } }
+          };
+        })(k, path, v);
+      } else {
+        vEl.title = '对象不可编辑(开启 🔓 破解模式后可编辑)';
+        vEl.style.cursor = 'default';
+      }
     } else {
       vEl.textContent = (v === '' || v === null || v === undefined) ? '—' : String(v);
       vEl.title = '双击编辑';
       vEl.ondblclick = (function (kName, p) {
-        return function () {
+        return function (ev) { try { if (ev && ev.stopPropagation) ev.stopPropagation(); if (ev && ev.preventDefault) ev.preventDefault(); } catch (e) {}
           var nv = null;
           try { nv = GS_PARENT.prompt('修改 ' + kName + '：', vEl.textContent === '—' ? '' : vEl.textContent); } catch (e) { nv = prompt('修改 ' + kName + '：', vEl.textContent === '—' ? '' : vEl.textContent); }
           if (nv === null) return;
@@ -154,13 +181,40 @@
     var panel = root.querySelector('.hx-panel');
     if (!panel) return;
     panel.innerHTML = '';
+    var hackOn = getHackMode();
+    // ===== 破解模式开关 =====
+    var tb = doc.createElement('div');
+    tb.className = 'hx-toolbar';
+    tb.innerHTML =
+      '<span class="hx-hack-label">🔓 破解模式</span>' +
+      '<span class="hx-hack-switch' + (hackOn ? ' on' : '') + '" data-on="' + (hackOn ? '1' : '0') + '"><span class="hx-hack-knob"></span></span>';
+    panel.appendChild(tb);
+    (function () {
+      var sw = tb.querySelector('.hx-hack-switch');
+      if (!sw) return;
+      sw.onclick = function (ev) {
+        try { if (ev && ev.stopPropagation) ev.stopPropagation(); if (ev && ev.preventDefault) ev.preventDefault(); } catch (e) {}
+        var on = sw.getAttribute('data-on') === '1';
+        setHackMode(!on);
+        log('破解模式 → ' + (!on ? 'ON' : 'OFF'));
+        render();
+      };
+    })();
+    // hack 模式提示条
+    if (hackOn) {
+      var tip = doc.createElement('div');
+      tip.className = 'hx-hack-tip';
+      tip.textContent = '⚡ 已解锁所有字段(对象也可编辑,双击修改)';
+      panel.appendChild(tip);
+    }
+    // ===== 6 个分类 Tab =====
     var tabs = doc.createElement('div');
     tabs.className = 'hx-tabs';
     CATEGORIES.forEach(function (c) {
       var t = doc.createElement('div');
       t.className = 'hx-tab' + (c.key === curTab ? ' active' : '');
       t.textContent = c.icon + c.key;
-      t.onclick = (function (k) { return function () { curTab = k; render(); }; })(c.key);
+      t.onclick = (function (k) { return function (ev) { try { if (ev && ev.stopPropagation) ev.stopPropagation(); } catch (e) {} curTab = k; render(); }; })(c.key);
       tabs.appendChild(t);
     });
     panel.appendChild(tabs);
@@ -196,16 +250,7 @@
     } catch (e) { try { GS_PARENT.console.warn('[HX-Float] 卸载异常', e && e.message); } catch (e2) {} }
   }
 
-  function closeOnOutside(e) {
-    try {
-      var root = doc.getElementById('hx-stat-ball');
-      if (!root) return;
-      if (!root.contains(e.target)) {
-        var panel = root.querySelector('.hx-panel');
-        if (panel) panel.classList.remove('open');
-      }
-    } catch (e) {}
-  }
+  function closeOnOutside(e) { /* 关闭逻辑改为 fab 再次点击;不挂全局 listener,避免陈旧引用导致 panel 误关 */ }
 
   function mount() {
     if (!doc.body) { log('body 未就绪'); return false; }
@@ -242,11 +287,6 @@
       root.appendChild(panel);
       doc.body.appendChild(root);
       mountedFlag = true;
-      // 点击其他位置关闭 (只挂一次)
-      if (!closeListenerAdded) {
-        doc.addEventListener('click', closeOnOutside);
-        closeListenerAdded = true;
-      }
       log('悬浮球已挂载');
       render();
       return true;
@@ -276,10 +316,24 @@
   // 主窗口是否处于"聊天 UI 可见"状态(关闭聊天的兜底判定)
   function isChatUiVisible() {
     try {
-      var ta = doc.querySelector('#send_textarea, textarea.input-message');
-      if (ta && ta.offsetParent !== null) return true;
-      var chat = doc.querySelector('#chat');
-      if (chat && chat.offsetParent !== null && chat.querySelector('.mes')) return true;
+      // 1. 输入框可见
+      var ta = doc.querySelector('#send_textarea, textarea.input-message, #chat-input');
+      if (ta) {
+        var r = ta.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) return true;
+        if (ta.offsetParent !== null) return true;
+      }
+      // 2. 聊天容器可见
+      var chat = doc.querySelector('#chat, #chat-container');
+      if (chat) {
+        var cr = chat.getBoundingClientRect();
+        if (cr.width > 0 && cr.height > 0 && chat.offsetParent !== null) return true;
+      }
+      // 3. 聊天消息列表存在
+      if (doc.querySelector('.mes, .mes_block')) {
+        var anyMes = doc.querySelector('.mes');
+        if (anyMes && anyMes.offsetParent !== null) return true;
+      }
       return false;
     } catch (e) { return true; }  // 不确定时保守返回可见,避免误卸
   }
@@ -296,14 +350,11 @@
       var characterId = ctx.characterId;
       // 关键:用 chatId 判本卡,不用 ctx.name(主窗口下 ctx.name 经常是空字符串)
       log('syncMount: ball=' + ballExists + ', chatId=' + chatId + ', characterId=' + characterId);
-      if (!chatId || !characterId) {
-        // 无活跃聊天 → 关闭聊天/回列表(用聊天UI可见性兜底,避免动画瞬态误卸)
-        if (ballExists && !isChatUiVisible()) {
-          log('syncMount: 无活跃聊天且聊天UI不可见,卸载球');
-          unmount();
-        } else if (ballExists) {
-          log('syncMount: 无活跃聊天但UI可见,暂留');
-        }
+      // UI 可见性 — 关闭聊天/切到角色管理页时即使 chatId 还在也要卸球
+      var uiVisible = isChatUiVisible();
+      if (!chatId || !characterId || !uiVisible) {
+        // 无活跃聊天 / 上下文残缺 / UI 不可见 → 卸球(防"关闭聊天球还在")
+        if (ballExists) { log('syncMount: 无活跃聊天/UI不可见,卸载球'); unmount(); }
         return;
       }
       // 用 chatId 包含本卡关键字判断本卡 — chatId 形如 "催眠助理·环晓科技 - 2026-07-22@..."
@@ -331,11 +382,35 @@
     }
   }
 
+  // 「破解模式」状态 — 开启时允许强行修改只读字段/对象/数值
+  // 状态写入 MVU 的 stat_data.__hx_hack_mode(持久化跨对话) + localStorage(快速读取)
+  function getHackMode() {
+    try {
+      var ls = GS_PARENT.localStorage && GS_PARENT.localStorage.getItem('hx_hack_mode');
+      if (ls === '1') return true;
+      var d = getStatData();
+      if (d && d.__hx_hack_mode === true) return true;
+    } catch (e) {}
+    return false;
+  }
+  function setHackMode(on) {
+    try { if (GS_PARENT.localStorage) GS_PARENT.localStorage.setItem('hx_hack_mode', on ? '1' : '0'); } catch (e) {}
+    try { setVar('__hx_hack_mode', on ? true : false); } catch (e) {}
+  }
+
   // 「关闭聊天」信号独立处理 — Tavern 此时 CHAT_CHANGED payload 为 undefined;
   // 但 QR2 模块传给 onChatChanged 的 payload 实际经常是字符串/undefined 不一,
   // 统一走 syncMount 让 syncMount 内部基于 getContext 真实数据判断
   function onChatChanged(payload) {
     try { log('CHAT_CHANGED 触发, payload type=' + (typeof payload) + ', val=' + (typeof payload === 'string' ? payload.slice(0, 60) : String(payload).slice(0, 60))); } catch (e) {}
+    // 关闭聊天信号(payload=undefined):酒馆切回角色列表/欢迎页时,立即卸球
+    if (typeof payload === 'undefined' || payload === null) {
+      if (doc.getElementById('hx-stat-ball')) {
+        log('CHAT_CHANGED=undefined → 立即卸球');
+        unmount();
+      }
+    }
+    // 统一走 syncMount 让 syncMount 内部基于 getContext 真实数据判断(重新挂球/切角色判断)
     setTimeout(syncMount, 80);
   }
 
