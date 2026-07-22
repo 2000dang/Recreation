@@ -344,12 +344,6 @@
       if (isEditMode()) setEditMode(false);
       renderAll();
     });
-    // 设置(编辑模式)
-    $panel.off('click.hxSettings').on('click.hxSettings', '.hx-icon-btn.settings', function() {
-      var newEdit = !isEditMode();
-      setEditMode(newEdit);
-      renderAll();
-    });
     // 破解模式
     $panel.off('click.hxHack').on('click.hxHack', '.hx-hack-toggle', function(e) {
       e.stopPropagation();
@@ -496,7 +490,7 @@
     var sd = getStatData();
     var $panel = $('#hx-stat-panel');
     if (!sd) {
-      $panel.html('<div class="hx-topbar"><div class="hx-tl-info"><div class="hx-tl-title">终端未响应</div></div><div class="hx-tl-actions"><div class="hx-icon-btn refresh" title="刷新数据">🔄</div><div class="hx-icon-btn settings'+(isEditMode()?' edit-on':'')+'" title="编辑模式">⚙️</div><div class="hx-icon-btn close" title="关闭">✕</div></div></div><div class="hx-empty"><div style="font-size:36px;opacity:0.6;animation:hxPulse 2s infinite;">📡</div><div style="margin-top:10px;">变量尚未初始化...</div></div>');
+      $panel.html('<div class="hx-topbar"><div class="hx-tl-info"><div class="hx-tl-title">终端未响应</div></div><div class="hx-tl-actions"><div class="hx-icon-btn refresh" title="刷新数据">🔄</div><div class="hx-icon-btn close" title="关闭">✕</div></div></div><div class="hx-empty"><div style="font-size:36px;opacity:0.6;animation:hxPulse 2s infinite;">📡</div><div style="margin-top:10px;">变量尚未初始化...</div></div>');
       return;
     }
     // 提取 chat title
@@ -517,7 +511,6 @@
     html += '<div class="hx-tl-actions">';
     html += '<div class="hx-hack-toggle'+(hackOn?' on':'')+'"><span class="hx-hack-badge">🔓</span></div>';
     html += '<div class="hx-icon-btn refresh" title="刷新数据">🔄</div>';
-    html += '<div class="hx-icon-btn settings'+(editMode?' edit-on':'')+'" title="编辑模式">⚙️</div>';
     html += '<div class="hx-icon-btn close" title="关闭">✕</div>';
     html += '</div></div>';
     // 破解模式提示
