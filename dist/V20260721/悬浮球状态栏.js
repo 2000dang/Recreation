@@ -294,8 +294,8 @@
       }
       var chatId = ctx.chatId;
       var characterId = ctx.characterId;
-      var name = (ctx.character && ctx.character.name) || '';
-      log('syncMount: ball=' + ballExists + ', chatId=' + chatId + ', characterId=' + characterId + ', name=' + name);
+      // 关键:用 chatId 判本卡,不用 ctx.name(主窗口下 ctx.name 经常是空字符串)
+      log('syncMount: ball=' + ballExists + ', chatId=' + chatId + ', characterId=' + characterId);
       if (!chatId || !characterId) {
         // 无活跃聊天 → 关闭聊天/回列表(用聊天UI可见性兜底,避免动画瞬态误卸)
         if (ballExists && !isChatUiVisible()) {
@@ -306,14 +306,15 @@
         }
         return;
       }
-      if (name.indexOf(CARD_KEY) === -1 && name.indexOf('环晓') === -1) {
+      // 用 chatId 包含本卡关键字判断本卡 — chatId 形如 "催眠助理·环晓科技 - 2026-07-22@..."
+      if (chatId.indexOf(CARD_KEY) === -1 && chatId.indexOf('环晓') === -1) {
         // 明确是其他角色 → 立即卸
-        if (ballExists) { log('syncMount: 其他角色(' + name + '),卸载球'); unmount(); }
+        if (ballExists) { log('syncMount: 其他角色(chatId=' + chatId + '),卸载球'); unmount(); }
         return;
       }
       // 本卡聊天活跃
       if (!ballExists) {
-        log('syncMount: 本卡聊天(' + name + ')活跃,挂载球');
+        log('syncMount: 本卡聊天(chatId=' + chatId + ')活跃,挂载球');
         setTimeout(mount, 50);
       } else {
         // 球已存在 → hash 校验
