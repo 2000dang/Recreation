@@ -608,8 +608,6 @@
     var fraction = assistant['派系'] || '-';
     var mentalState = assistant['心理状态'] || '-';
     var events = assistant['经历事件'];
-    var hiddenLike = assistant['隐藏好感'] || '-';
-    var belong = assistant['归属'] || '-';
     var height = assistant['身高'] || '-';
     var figure = assistant['身材'] || '-';
     var relationships = assistant['人际关系'] || '-';
@@ -628,12 +626,10 @@
     html += '<div style="margin-bottom:12px;"><div style="font-size:11px;color:#9b8fc0;margin-bottom:4px;">亲密度</div>';
     html += '<div style="font-size:14px;margin-bottom:2px;">'+intimacyBar+'</div>';
     html += '<div style="font-size:12px;color:'+barColor+';">'+intimacy+'/100</div></div>';
-    // 派系/心理/好感/归属 四列网格
+    // 派系/心理 两列网格
     html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">';
     html += '<div style="padding:6px 8px;background:rgba(155,109,255,0.06);border-radius:6px;"><div style="font-size:10px;color:#7d709f;">派系</div><div style="font-size:13px;color:#e8e3f5;">'+esc(fraction)+'</div></div>';
     html += '<div style="padding:6px 8px;background:rgba(155,109,255,0.06);border-radius:6px;"><div style="font-size:10px;color:#7d709f;">心理状态</div><div style="font-size:13px;color:#e8e3f5;">'+esc(mentalState)+'</div></div>';
-    html += '<div style="padding:6px 8px;background:rgba(155,109,255,0.06);border-radius:6px;"><div style="font-size:10px;color:#7d709f;">隐藏好感</div><div style="font-size:13px;color:#f0a0d0;">'+esc(hiddenLike)+'</div></div>';
-    html += '<div style="padding:6px 8px;background:rgba(155,109,255,0.06);border-radius:6px;"><div style="font-size:10px;color:#7d709f;">当前归属</div><div style="font-size:13px;color:#e8e3f5;">'+esc(belong)+'</div></div>';
     html += '</div>';
     // 身体数据(身高/身材/罩杯/改造状态)
     html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">';
