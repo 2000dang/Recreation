@@ -752,6 +752,12 @@ RG_LIST = [
  RG('选项按钮', r'<option>\s*([\s\S]*?)\s*<\/option>',
     '<button style="padding:6px 14px;border:1px solid #5fd0ff;background:rgba(95,208,255,.1);color:#5fd0ff;border-radius:6px;cursor:pointer;">$1</button>'),
  RG('隐藏状态栏标记', r'<status_current_variables>([\s\S]*?)<\/status_current_variables>', '$1'),
+ # MVU 解析输出隐藏(AI弱模型会输出额外分析, 不应让用户看到)
+ RG('隐藏<UpdateVariable>块', r'<UpdateVariable>[\s\S]*?<\/UpdateVariable>', ''),
+ RG('隐藏<Analysis>块', r'<Analysis>[\s\S]*?<\/Analysis>', ''),
+ RG('隐藏MVU分析要点列表', r'(?:^[ \t]*•[ \t]*[^\n]*\n?){2,}', ''),
+ RG('隐藏MVU分析关键词行', r'^[ \t]*(?:Time elapsed|Dramatic updates|Protagonist|Assistant|System)[ \t]*:[ \t]*[^\n]*\n?', ''),
+ RG('隐藏裸JSONPatch', r'(?:\{\s*"op"\s*:\s*"[a-z]+"[\s\S]*?\n\}[ \t]*\n?)+', ''),
 ]
 
 # ============ 5. 组装 extensions ============

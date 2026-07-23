@@ -594,7 +594,6 @@
     var sd = getStatData();
     if (!sd) return;
     var path = base + '.' + name;
-    // 从 stat_data 读取对应助理数据
     var assistant = {};
     try {
       var parts = path.split('.');
@@ -604,13 +603,20 @@
     } catch(e) {}
 
     var title = esc(name) + ' · 关系维度';
-    // 关系指标：亲密度/派系/心理状态/经历事件
+    // 关系指标
     var intimacy = assistant['亲密度'] || 50;
     var fraction = assistant['派系'] || '-';
     var mentalState = assistant['心理状态'] || '-';
     var events = assistant['经历事件'];
     var hiddenLike = assistant['隐藏好感'] || '-';
     var belong = assistant['归属'] || '-';
+    var height = assistant['身高'] || '-';
+    var figure = assistant['身材'] || '-';
+    var relationships = assistant['人际关系'] || '-';
+    var modStatus = assistant['改造状态'] || '-';
+    var cup = assistant['罩杯'] || '-';
+    var marriage = assistant['婚姻状态'] || '-';
+    var pastEvents = assistant['过往经历事件'];
 
     var intimacyBar = '';
     var barColor = intimacy > 70 ? '#86efac' : intimacy > 30 ? '#ffd1a0' : '#f87171';
@@ -629,11 +635,29 @@
     html += '<div style="padding:6px 8px;background:rgba(155,109,255,0.06);border-radius:6px;"><div style="font-size:10px;color:#7d709f;">隐藏好感</div><div style="font-size:13px;color:#f0a0d0;">'+esc(hiddenLike)+'</div></div>';
     html += '<div style="padding:6px 8px;background:rgba(155,109,255,0.06);border-radius:6px;"><div style="font-size:10px;color:#7d709f;">当前归属</div><div style="font-size:13px;color:#e8e3f5;">'+esc(belong)+'</div></div>';
     html += '</div>';
-    // 经历事件
-    html += '<div style="margin-bottom:8px;"><div style="font-size:11px;color:#9b8fc0;margin-bottom:4px;">经历事件</div>';
-    if (events && Array.isArray(events) && events.length > 0) {
+    // 身体数据(身高/身材/罩杯/改造状态)
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">';
+    html += '<div style="padding:6px 8px;background:rgba(134,239,172,0.06);border-radius:6px;"><div style="font-size:10px;color:#7d709f;">身高</div><div style="font-size:13px;color:#e8e3f5;">'+esc(height)+'</div></div>';
+    html += '<div style="padding:6px 8px;background:rgba(134,239,172,0.06);border-radius:6px;"><div style="font-size:10px;color:#7d709f;">身材</div><div style="font-size:13px;color:#e8e3f5;">'+esc(figure)+'</div></div>';
+    html += '<div style="padding:6px 8px;background:rgba(134,239,172,0.06);border-radius:6px;"><div style="font-size:10px;color:#7d709f;">罩杯</div><div style="font-size:13px;color:#e8e3f5;">'+esc(cup)+'</div></div>';
+    html += '<div style="padding:6px 8px;background:rgba(134,239,172,0.06);border-radius:6px;"><div style="font-size:10px;color:#7d709f;">改造状态</div><div style="font-size:13px;color:#e8e3f5;">'+esc(modStatus)+'</div></div>';
+    html += '</div>';
+    // 人际关系(主要是公司)
+    html += '<div style="margin-bottom:8px;"><div style="font-size:11px;color:#9b8fc0;margin-bottom:4px;">人际关系（公司）</div>';
+    html += '<div style="padding:6px 8px;background:rgba(155,109,255,0.06);border-radius:6px;font-size:12px;color:#e8e3f5;line-height:1.6;">'+esc(relationships)+'</div>';
+    html += '</div>';
+    // 婚姻状态
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">';
+    html += '<div style="padding:6px 8px;background:rgba(155,109,255,0.06);border-radius:6px;"><div style="font-size:10px;color:#7d709f;">婚姻状态</div><div style="font-size:13px;color:#e8e3f5;">'+esc(marriage)+'</div></div>';
+    html += '<div style="padding:6px 8px;background:rgba(155,109,255,0.04);border-radius:6px;"><div style="font-size:10px;color:#7d709f;">经历事件</div><div style="font-size:13px;color:#e8e3f5;">'+(events && Array.isArray(events)?events.length+' 项':'暂无')+'</div></div>';
+    html += '</div>';
+    // 过往经历事件(叙述在公司的事件)
+    html += '<div style="margin-bottom:8px;"><div style="font-size:11px;color:#9b8fc0;margin-bottom:4px;">过往经历事件（公司内）</div>';
+    if (pastEvents && typeof pastEvents === 'string' && pastEvents.length > 0) {
+      html += '<div style="padding:8px;background:rgba(155,109,255,0.04);border-radius:6px;font-size:12px;color:#e8e3f5;line-height:1.7;white-space:pre-wrap;">'+esc(pastEvents)+'</div>';
+    } else if (pastEvents && Array.isArray(pastEvents) && pastEvents.length > 0) {
       html += '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
-      events.forEach(function(ev) {
+      pastEvents.forEach(function(ev) {
         html += '<span style="padding:2px 8px;background:rgba(134,239,172,0.1);border:1px solid rgba(134,239,172,0.3);border-radius:12px;font-size:11px;color:#86efac;">'+esc(ev)+'</span>';
       });
       html += '</div>';
@@ -641,8 +665,17 @@
       html += '<div style="font-size:11px;color:#7d709f;">暂无记录</div>';
     }
     html += '</div>';
+    // 经历事件(本次会话)
+    if (events && Array.isArray(events) && events.length > 0) {
+      html += '<div style="margin-bottom:8px;"><div style="font-size:11px;color:#9b8fc0;margin-bottom:4px;">本次会话经历事件</div>';
+      html += '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
+      events.forEach(function(ev) {
+        html += '<span style="padding:2px 8px;background:rgba(134,239,172,0.1);border:1px solid rgba(134,239,172,0.3);border-radius:12px;font-size:11px;color:#86efac;">'+esc(ev)+'</span>';
+      });
+      html += '</div></div>';
+    }
     // 提示
-    html += '<div style="font-size:10px;color:#7d709f;margin-top:10px;padding:6px;background:rgba(155,109,255,0.04);border-radius:6px;">💡 以上关系数据由 AI 在剧情中动态写入(亲密度随互动变化；派系/心理状态由关键事件触发)。点击面板刷新按钮可同步最新数值。</div>';
+    html += '<div style="font-size:10px;color:#7d709f;margin-top:10px;padding:6px;background:rgba(155,109,255,0.04);border-radius:6px;">💡 以上关系数据由 AI 在剧情中动态写入。身高/身材/罩杯/改造/婚姻/人际关系/过往事件 — 这些字段只展示在关系维度弹窗里，不在外围列表显示。</div>';
     showModal(title, html);
   }
 
@@ -654,13 +687,28 @@
     if (val && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date)) {
       // 判断是否在「助理管理」路径下。如果是, 助理名可点击弹出关系维度弹窗
       var isAssistantName = (basePath === '助理管理.实习助理' || basePath === '助理管理.正式助理' || basePath === '助理管理.组长助理' || basePath === '助理管理.主任助理' || basePath === '助理管理.总监助理' || basePath === '助理管理.高等助理·辅骑' || basePath === '助理管理.特等助理·主骑');
+      // 外围(助理级)只显示: 在场, 催眠状态, 情绪(条件), 好感度
+      var OUTER_FIELDS = ['在场','催眠状态','情绪','好感度'];
       var nameHtml = isAssistantName
         ? '<span class="hx-k hx-assist-name" data-base="'+esc(basePath)+'" data-name="'+esc(key)+'" style="cursor:pointer;color:#86cfff;text-decoration:underline;text-decoration-style:dotted;">'+esc(key)+'</span>'
         : '<span class="hx-k">'+esc(key)+'</span>';
       var html = '<div class="hx-sub"><div class="hx-row">'+nameHtml+'</div>';
-      Object.keys(val).forEach(function(kk) {
-        html += renderField(kk, val[kk], path);
-      });
+      if (isAssistantName) {
+        // 情绪只在 在场=true 时显示
+        var present = val['在场'];
+        var filteredKeys = Object.keys(val).filter(function(kk) {
+          if (OUTER_FIELDS.indexOf(kk) === -1) return false;
+          if (kk === '情绪' && !present) return false;
+          return true;
+        });
+        filteredKeys.forEach(function(kk) {
+          html += renderField(kk, val[kk], path);
+        });
+      } else {
+        Object.keys(val).forEach(function(kk) {
+          html += renderField(kk, val[kk], path);
+        });
+      }
       html += '</div>';
       return html;
     }
@@ -679,6 +727,7 @@
     var isContrib = (key === '贡献点');
     var isMental = (key === '精神状态');
     var isHypnosis = (key === '催眠权限等级');
+    var isFavor = (key === '好感度' && vType === 'number');
     var display, rowStyle = '';
     if (vType === 'boolean') {
       if (isHackField && val) {
@@ -697,6 +746,12 @@
         display = '<span style="color:#86efac;font-weight:bold;">100</span>';
       } else if (isHypnosis && hackOn) {
         display = '<span style="color:#ffd1a0;font-weight:bold;">10 (最高)</span>';
+      } else if (isFavor) {
+        // 好感度进度条样式(参考关系维度的亲密度)
+        var max = 100;
+        var pct = Math.max(0, Math.min(100, (val / max) * 100));
+        var c = val > 70 ? '#86efac' : val > 30 ? '#ffd1a0' : '#f87171';
+        display = '<div style="display:inline-block;width:120px;height:6px;background:rgba(155,109,255,0.15);border-radius:3px;vertical-align:middle;margin-right:6px;"><div style="height:100%;width:'+pct+'%;background:'+c+';border-radius:3px;"></div></div><span style="font-size:11px;color:'+c+';">'+val+'/100</span>';
       } else {
         display = String(val);
       }
