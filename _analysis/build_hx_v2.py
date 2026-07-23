@@ -269,7 +269,7 @@ entries.append(E(9999, '[InitVar]世界初始设定', '''环境与系统:
 剧情进度:
   当前阶段: 入职初期
   已触发事件: []
-''', const=True, pos='after_char', eid=9999))
+''', const=True, pos='after_char', eid=9999, enabled=False))
 
 entries.append(E(99996, '[variables]当前变量', '''<%_
 ;(() => {
@@ -735,7 +735,7 @@ RG_LIST = [
     '</head>\n<body>\n<script>\n(function () {\n'
     "  var base = '%s';\n" % CDN +
     "  var file = '开局.html';\n" +
-    "  var url = base + '/' + encodeURIComponent(file) + '?v=2';\n" +
+    "  var url = base + '/' + encodeURIComponent(file) + '?v=3';\n" +
     "  fetch(url, { cache: 'no-store' })\n"
     "    .then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.text(); })\n"
     "    .then(function (h) {\n"
