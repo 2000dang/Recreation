@@ -468,22 +468,61 @@
 
   // ===== 15.5 公司地图 =====
   var BUILDING = [
-    {floor:'B2',name:'地下停车场',type:'parking'},
+    {floor:'B2',name:'地下停车场·娄琛雨Model S',type:'parking'},
     {floor:'B1',name:'数据中心·Sisterhood机密',type:'secret'},
-    {floor:'1F',name:'大厅前台·门禁',type:'public'},
+    {floor:'1F',name:'大厅前台·门禁·旋转门',type:'public'},
+    {floor:'2F',name:'普通办公区',type:'office'},
+    {floor:'3F',name:'保安部办公室',type:'office'},
     {floor:'4F',name:'待分配中心·面试间',type:'office'},
-    {floor:'6F',name:'公共食堂·社交中心',type:'dining'},
-    {floor:'8F',name:'研发部·天台吸烟区',type:'office'},
-    {floor:'9F',name:'女员工专用层(泳池/健身)',type:'restricted'},
-    {floor:'12F',name:'主任办公室·母婴室',type:'office'},
-    {floor:'13F',name:'人力资源·行政部',type:'office'},
-    {floor:'17F',name:'第三医务室·改造手术',type:'medical'},
-    {floor:'22F',name:'实习助理区·白丝制服',type:'restricted'},
-    {floor:'23F',name:'正式助理区',type:'restricted'},
-    {floor:'24F',name:'辅骑/主骑候补区',type:'restricted'},
-    {floor:'25F',name:'总裁办公室',type:'office'},
-    {floor:'26F',name:'隐藏层·行为观察实验室',type:'secret'},
-    {floor:'28F',name:'人体实验室·姜舞主场',type:'secret'}
+    {floor:'5F',name:'健身房(男性)',type:'office'},
+    {floor:'6F',name:'公共食堂·800平·社交中心',type:'dining'},
+    {floor:'7F',name:'普通正式员工办公室(704室)',type:'office'},
+    {floor:'8F',name:'研发部·组长办公室·天台吸烟区',type:'office'},
+    {floor:'9F',name:'女员工专用层·泳池·健身·图书馆',type:'restricted'},
+    {floor:'10F',name:'普通办公区',type:'office'},
+    {floor:'11F',name:'母婴室(通用)',type:'office'},
+    {floor:'12F',name:'主任办公室(1205室)·母婴室·男卫',type:'office'},
+    {floor:'13F',name:'人力资源·财务·后勤·行政部',type:'office'},
+    {floor:'14F',name:'普通业务部门',type:'office'},
+    {floor:'15F',name:'普通业务部门',type:'office'},
+    {floor:'16F',name:'母婴室(高层领导)·关欣妍驻点',type:'office'},
+    {floor:'17F',name:'第三医务室·改造手术·蒋玲护士',type:'medical'},
+    {floor:'18F',name:'普通业务部门',type:'office'},
+    {floor:'19F',name:'赛道·擂台·女子运动会场地',type:'restricted'},
+    {floor:'20F',name:'运营副总监办公室·江天炜旧所',type:'office'},
+    {floor:'21F',name:'高管大会议室·大型母婴室(黄总专用)',type:'office'},
+    {floor:'22F',name:'实习助理区·白丝蓝色制服',type:'restricted'},
+    {floor:'23F',name:'副总经理办公室·张鹏远旧所',type:'restricted'},
+    {floor:'24F',name:'辅骑/主骑候补区·技术总监',type:'restricted'},
+    {floor:'25F',name:'大型会议室·高管年会',type:'office'},
+    {floor:'26F',name:'总裁办公室接待室·黄总办公区',type:'office'},
+    {floor:'27F',name:'会议室·姐妹会陵东分部·行为观察实验室',type:'secret'},
+    {floor:'28F',name:'人体实验室·姜舞主场·周凝跳楼处',type:'secret'},
+    {floor:'30F',name:'大型数据中心',type:'secret'},
+    {floor:'32F',name:'孵化室·天台(周凝跳楼处)',type:'secret'}
+  ];
+  // 外部地点(当不在公司时显示)
+  var EXTERNAL_LOCATIONS = [
+    {name:'城中村出租屋(江潮初住所)',icon:'🏚️'},
+    {name:'城中村二层小楼(姐妹会安全屋)',icon:'🏠'},
+    {name:'娄琛雨江景房(27层·200平)',icon:'🌆'},
+    {name:'秦燕霞住宅(城北新建小区)',icon:'🏢'},
+    {name:'市郊废弃烂尾楼(审讯点)',icon:'🏚️'},
+    {name:'市郊私人会所(项明涵安全屋)',icon:'🏛️'},
+    {name:'陵江大酒店(520号房·姐妹会任务)',icon:'🏨'},
+    {name:'市精神病院(江潮精神鉴定)',icon:'🏥'},
+    {name:'市第一看守所(刑拘37天)',icon:'⛓️'},
+    {name:'度假村酒店(娄琛雨被轮奸现场)',icon:'🏖️'},
+    {name:'市郊女德班(女性《女诫》培训)',icon:'📖'},
+    {name:'步行街(东陵江畔)',icon:'🛍️'},
+    {name:'城中村菜市场',icon:'🥬'},
+    {name:'养老院/福利宿舍楼(姐妹会关联)',icon:'🏚️'},
+    {name:'项明涵市郊别墅',icon:'🏡'},
+    {name:'陵东市第三中学(高中母校)',icon:'🏫'},
+    {name:'陵东师范学院(卫璎母校)',icon:'🎨'},
+    {name:'陵东大学(卫璎·张雪弟弟)',icon:'🎓'},
+    {name:'省城(姐妹会更大分部)',icon:'🏙️'},
+    {name:'东南亚(江潮父母遇害地)',icon:'🌏'}
   ];
   function showMap() {
     var sd = getStatData();
@@ -499,33 +538,42 @@
     var isOutside = !curFloor || curFloor.indexOf('层') === -1 && curFloor.indexOf('F') === -1 && curFloor.indexOf('楼') === -1;
     var html = '';
     if (isOutside) {
-      html += '<div style="text-align:center;padding:30px 10px;">';
-      html += '<div style="font-size:36px;margin-bottom:12px;">📍</div>';
+      // 公司外部: 显示📍当前位置 + 推断可能的外部地点
+      html += '<div style="text-align:center;padding:12px 0 6px 0;">';
+      html += '<div style="font-size:36px;margin-bottom:8px;">📍</div>';
       html += '<div style="font-size:16px;color:#ffb84d;font-weight:bold;margin-bottom:6px;">当前位置（公司外部）</div>';
-      if (curFloor || curLoc) html += '<div style="font-size:13px;color:#a99fd0;">'+esc(curFloor||'')+' '+esc(curLoc||'')+'</div>';
-      if (curScene) html += '<div style="font-size:12px;color:#7d709f;margin-top:4px;">场景：'+esc(curScene)+'</div>';
-      html += '<div style="margin-top:20px;font-size:11px;color:#7d709f;">进入环晓科技大厦后显示公司内部楼层地图</div>';
+      if (curLoc) html += '<div style="font-size:13px;color:#a99fd0;margin-bottom:2px;">位置: '+esc(curLoc)+'</div>';
+      if (curScene) html += '<div style="font-size:12px;color:#7d709f;margin-bottom:2px;">场景: '+esc(curScene)+'</div>';
+      html += '</div>';
+      // 显示外部地点列表
+      html += '<div style="font-size:11px;color:#7d709f;margin:8px 0 4px 0;text-align:center;">— 外部地点 —</div>';
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;max-height:42vh;overflow-y:auto;">';
+      EXTERNAL_LOCATIONS.forEach(function(loc) {
+        var isMatch = curLoc && curLoc.indexOf(loc.name.replace(/[()（）\d-]/g,'').slice(0,6)) >= 0;
+        var bg = isMatch?'background:rgba(134,239,172,0.15);border:1px solid rgba(134,239,172,0.4);':'background:rgba(155,109,255,0.06);';
+        html += '<div style="padding:5px 8px;border-radius:5px;'+bg+'font-size:11px;color:#a99fd0;">';
+        html += '<span style="font-size:14px;">'+loc.icon+'</span> '+esc(loc.name)+(isMatch?' <span style="color:#86efac;font-size:10px;">← 可能</span>':'');
+        html += '</div>';
+      });
       html += '</div>';
     } else {
-      html += '<div style="text-align:center;margin-bottom:10px;font-size:14px;color:#b39dff;font-weight:bold;">📍 环晓科技总部 · 25层写字楼</div>';
+      html += '<div style="text-align:center;margin-bottom:10px;font-size:14px;color:#b39dff;font-weight:bold;">📍 环晓科技总部 · 25层写字楼(含隐藏层至32F)</div>';
       // 楼层地图
-      html += '<div style="display:flex;flex-direction:column;gap:3px;max-height:50vh;overflow-y:auto;">';
-      var seen = {};
+      html += '<div style="display:flex;flex-direction:column;gap:2px;max-height:50vh;overflow-y:auto;">';
       BUILDING.forEach(function(b) {
-        var label = b.name || '';
         var icon = b.type==='secret'?'🔒':b.type==='restricted'?'🚫':b.type==='medical'?'🏥':b.type==='dining'?'🍽️':b.type==='parking'?'🅿️':'🏢';
         var isCurrent = floorNum && (b.floor === floorNum);
         var bg = isCurrent?'background:linear-gradient(90deg,rgba(134,239,172,0.25),rgba(134,239,172,0.08));border-left:3px solid #86efac;':'background:rgba(155,109,255,0.04);';
-        html += '<div style="display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:6px;'+bg+'">';
-        html += '<div style="width:36px;text-align:center;font-weight:bold;font-size:12px;color:'+(isCurrent?'#86efac':'#b39dff')+';">'+b.floor+'</div>';
-        html += '<div style="font-size:11px;color:'+(isCurrent?'#d5f0e0':'#a99fd0')+';">'+icon+' '+esc(label)+'</div>';
-        if (isCurrent) html += '<div style="font-size:10px;color:#86efac;margin-left:auto;">← 当前位置</div>';
+        html += '<div style="display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:5px;'+bg+'">';
+        html += '<div style="width:34px;text-align:center;font-weight:bold;font-size:11px;color:'+(isCurrent?'#86efac':'#b39dff')+';">'+b.floor+'</div>';
+        html += '<div style="font-size:11px;color:'+(isCurrent?'#d5f0e0':'#a99fd0')+';flex:1;">'+icon+' '+esc(b.name)+'</div>';
+        if (isCurrent) html += '<div style="font-size:9px;color:#86efac;">← 当前</div>';
         html += '</div>';
       });
       html += '</div>';
       // 当前详情
       if (curFloor || curLoc || curScene) {
-        html += '<div style="margin-top:12px;padding:10px;background:rgba(134,239,172,0.06);border-radius:8px;font-size:11px;color:#a99fd0;line-height:1.8;">';
+        html += '<div style="margin-top:10px;padding:8px;background:rgba(134,239,172,0.06);border-radius:8px;font-size:11px;color:#a99fd0;line-height:1.7;">';
         if (curFloor) html += '<b>楼层：</b>'+esc(curFloor)+'　';
         if (curLoc) html += '<b>位置：</b>'+esc(curLoc)+'　';
         if (curScene) html += '<b>场景：</b>'+esc(curScene);
