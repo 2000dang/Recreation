@@ -32,12 +32,8 @@ data['creator_notes'] = ('MVU框架角色卡 v2（重构版）。引擎：ZOD防
                         '设定继承自《催眠助理（李志峰的催眠后宫）》。')
 data['talkativeness'] = 0.5
 # 开场向导作为 swipe 1（封面「确认接入」按钮切换到此），镜像 轮回战场 结构
-_ag = S.get('alternate_greetings', [])
-if not isinstance(_ag, list):
-    _ag = []
-if '【开局】' not in _ag:
-    _ag = ['【开局】'] + list(_ag)
-data['alternate_greetings'] = _ag
+# 只保留「【开局】」占位, 其他历史开场白全部移除
+data['alternate_greetings'] = ['【开局】']
 data['group_only_greetings'] = S.get('group_only_greetings', [])
 # 镜像 轮回战场：first_mes 仅放封面标记，由【封面】正则内联注入完整封面 HTML
 data['first_mes'] = '【封面】'
@@ -257,6 +253,11 @@ entries.append(E(9999, '[InitVar]世界初始设定', '''环境与系统:
   正式助理: {}
   组长助理: {}
 
+# 空间位置规则(防止AI方向搞反):
+# {{user}}的实习助理在办公室时, 必须站在{{user}}的前方({{user}}正面对着助理的背部),
+# 助理背对{{user}}, 不得回头(注视前方面向门口/窗户)。
+# 即: {{user}}在助理后方, 助理在{{user}}前方, 助理后脑勺/后背正对{{user}}的视线。
+
 催眠系统:
   当前剧本: 无
   剧本消耗累计: 0
@@ -269,7 +270,7 @@ entries.append(E(9999, '[InitVar]世界初始设定', '''环境与系统:
 剧情进度:
   当前阶段: 入职初期
   已触发事件: []
-''', const=True, pos='after_char', eid=9999, enabled=False))
+''', const=True, pos='after_char', eid=9999))
 
 entries.append(E(99996, '[variables]当前变量', '''<%_
 ;(() => {
