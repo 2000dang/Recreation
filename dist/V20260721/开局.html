@@ -244,7 +244,7 @@
         };
     }
 
-    // === MVU 同步（使用 _.set 深层写入 + replaceMvuData，对齐 轮回战场 模式）===
+    // === MVU 同步（_.set 深层写入 + replaceMvuData）===
     function syncMVU(d) {
         try {
             var win = window.parent || window;

@@ -1,6 +1,6 @@
 /* 催眠助理·环晓科技 — 悬浮球状态栏 v3.0.0
  * 
- * 基于轮回卡「主神终端」源码重构，保留其核心交互框架：
+ * 悬浮球核心交互框架：
  *   - preClean (IIFE 启动清理旧实例, 防多版本并存)
  *   - 球+面板挂主窗口 body + 拖拽系统 (setupDragEngines)
  *   - 面板开关 (togglePanel) + 防抖刷新 (debouncedRefresh)
@@ -17,7 +17,7 @@
   'use strict';
   try { console.log('%c[环晓·终端] ⚡ 悬浮球状态栏 v3.0 接入中...', 'color:#b39dff;font-weight:bold'); } catch (e) {}
 
-  // ===== 1. 锁定主窗口 (来自轮回) =====
+  // ===== 1. 锁定主窗口  =====
   var GS_PARENT = (function () {
     try { if (window.parent && window.parent !== window && window.parent.document && window.parent.document.body) return window.parent; } catch (e) {}
     try { if (window.top && window.top !== window && window.top.document && window.top.document.body) return window.top; } catch (e) {}
@@ -50,7 +50,7 @@
   // ===== 4. 受保护(只读)字段 =====
   function isReadonlyPath(path) { return false; }  // 破解模式下允许改所有字段
 
-  // ===== 5. 预清理旧实例 (来自轮回) =====
+  // ===== 5. 预清理旧实例  =====
   function hxPreClean() {
     try {
       if ($) {
@@ -63,7 +63,7 @@
   }
   hxPreClean();
 
-  // ===== 6. MVU 读写 (来自轮回) =====
+  // ===== 6. MVU 读写  =====
   function getMvuGlobal() {
     try { if (typeof GS_PARENT.Mvu !== 'undefined') return GS_PARENT; } catch (e) {}
     try { if (typeof window.Mvu !== 'undefined') return window; } catch (e) {}
@@ -103,7 +103,7 @@
     } catch (e) { console.error('[环晓·终端] 写回MVU失败:', e); return false; }
   }
 
-  // ===== 7. 工具函数 (来自轮回) =====
+  // ===== 7. 工具函数  =====
   function esc(s) { if (s === null || s === undefined) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function safeNum(v, def) { var n = Number(v); return Number.isFinite(n) ? n : (def || 0); }
   function safeStr(v, def) { return (v === null || v === undefined) ? (def || '') : String(v); }
@@ -141,7 +141,7 @@
   var pendingEdits = {};
   function stageEdit(path, val, type) { if (!path) return; pendingEdits[path] = { val: val, type: type || 'text' }; }
 
-  // ===== 8. 编辑模式 HTML 生成器 (来自轮回) =====
+  // ===== 8. 编辑模式 HTML 生成器  =====
   function editDisplayInner(val) {
     var vs = (val === null || val === undefined) ? '' : (Array.isArray(val) ? val.join(',') : String(val));
     return (vs === '' ? '<span class="hx-ed-ph">空</span>' : esc(vs));
@@ -258,7 +258,7 @@
     document.head.appendChild(styleEl);
   }
 
-  // ===== 10. 面板开关 (来自轮回) =====
+  // ===== 10. 面板开关  =====
   function togglePanel() {
     var $panel = $('#hx-stat-panel');
     var $ball = $('#hx-stat-ball');
@@ -283,7 +283,7 @@
     }
   }
 
-  // ===== 11. 拖拽系统 (来自轮回, 仅球可拖) =====
+  // ===== 11. 拖拽系统 (仅球可拖) =====
   function setupDragEngine() {
     var $ball = $('#hx-stat-ball');
     var $panel = $('#hx-stat-panel');
@@ -367,7 +367,7 @@
     $m.off('click.hxModalBg').on('click.hxModalBg', function(e) { if (e.target === this) $('#hx-stat-modal').removeClass('open'); });
   }
 
-  // ===== 14. UI 事件绑定 (来自轮回) =====
+  // ===== 14. UI 事件绑定  =====
   function bindUIEvents() {
     var $panel = $('#hx-stat-panel');
     // 关闭
@@ -782,7 +782,7 @@
     renderTabContent(curTab);
   }
 
-  // ===== 17. 生命周期 (来自轮回) =====
+  // ===== 17. 生命周期  =====
   var debouncedRefresh = null;
   function setupDebouncedRefresh() {
     var win = getMvuGlobal();
@@ -828,7 +828,7 @@
       }
     } catch(e){}
     setupDebouncedRefresh();
-    // 守卫定时器: 15s 检查球存在(来自轮回)
+    // 守卫定时器: 15s 检查球存在
     window.__hx_guard_timer__ = setInterval(function() {
       if (!document.getElementById('hx-stat-ball') || !document.getElementById('hx-stat-panel')) {
         initHxDOM();

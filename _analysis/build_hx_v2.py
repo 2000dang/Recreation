@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """催眠助理·环晓科技 v2 重构版 生成器
-引擎层采用轮回战场架构（ZOD防御 + 辅助计算 + MVU + 悬浮球），
+引擎层：ZOD防御性Schema + 辅助计算脚本自动结算 + MVU变量闭环 + 悬浮球状态栏。
 内容层保留环晓科技设定。所有 stat_data 键名与主卡/开局HTML/悬浮球一致。
 """
 import json
@@ -13,7 +13,7 @@ CDN = 'https://cdn.jsdelivr.net/gh/2000dang/Recreation@main/dist/V20260721'
 # 悬浮球脚本改为内联到卡里，避免 jsdelivr/import 在部分浏览器环境失效导致看不到球
 FLOAT_JS = open(os.path.join('dist', 'V20260721', '悬浮球状态栏.js'), encoding='utf-8').read()
 
-# 封面 HTML 内联进【封面】正则（镜像 轮回战场：封面为全内联自包含页）
+# 封面 HTML：全内联自包含页（含依赖自检 + 接入按钮）
 COVER_HTML = open(os.path.join('dist', 'V20260721', '封面.html'), encoding='utf-8').read()
 REPL_COVER = '```text\n' + COVER_HTML + '\n```'
 
@@ -29,13 +29,13 @@ data['name'] = '催眠助理·环晓科技'
 data['creator'] = 'WorkBuddy'
 data['creator_notes'] = ('MVU框架角色卡 v2（重构版）。引擎：ZOD防御性Schema + 辅助计算脚本自动结算 + '
                         'MVU变量闭环 + 悬浮球状态栏。需酒馆助手插件与 TavernHelper。'
-                        '设定继承自《催眠助理（李志峰的催眠后宫）》。')
+                        '')
 data['talkativeness'] = 0.5
-# 开场向导作为 swipe 1（封面「确认接入」按钮切换到此），镜像 轮回战场 结构
+# 开场向导作为 swipe 1（封面「确认接入」按钮切换到此）
 # 只保留「【开局】」占位, 其他历史开场白全部移除
 data['alternate_greetings'] = ['【开局】']
 data['group_only_greetings'] = S.get('group_only_greetings', [])
-# 镜像 轮回战场：first_mes 仅放封面标记，由【封面】正则内联注入完整封面 HTML
+# first_mes 仅放封面标记，由【封面】正则内联注入完整封面 HTML
 data['first_mes'] = '【封面】'
 
 # ============ 1. ZOD 防御性 Schema（内联，键名与主卡一致） ============
@@ -200,7 +200,7 @@ AUX = r'''(function () {
 # ============ 3. 世界书条目 ============
 def E(order, comment, content, keys=None, const=False, pos='before_char', enabled=True, eid=None):
     # eid: 世界书条目唯一整数 id（决定插件引用稳定性，必须唯一）。
-    # 沿用轮回架构的哨兵约定：9999=InitVar / 99996=变量面板 / 99997=更新规则
+    # 引擎条目哨兵约定：9999=InitVar / 99996=变量面板 / 99997=更新规则
     # / 10000=主API输出格式(禁用) / 10001=额外模型输出格式(启用) / 9900~9903=常驻规则。
     if eid is None:
         eid = order + 5000  # 兜底唯一化，避免与主哨兵碰撞
@@ -366,7 +366,7 @@ entries.append(E(10001, '[mvu_update]output_format (额外模型更新变量开)
     'You are ONLY permitted to update variables. IGNORE all plot progression/generation. You MUST output the update analysis'),
     const=True, pos='after_char', enabled=True, eid=10001))
 
-# ---- 常驻规则：弃用失败v1卡的4条旧规则，改用轮回式单世界规则（结构对齐轮回⚙️世界规则） ----
+# ---- 常驻规则：世界规则 ----
 WORLD_RULE = '''<催眠系统协议>
 环晓科技运行准则:
   核心法则:
@@ -461,7 +461,7 @@ CONTENT = [
  ('主角身份之谜', ['主角身份','零','Doctor','记忆','戒指'],
   '主角（{{user}}）工号HX-0001，记忆疑似被篡改。戒指与「零」代号关联；前女友娄琛雨与其记忆封印有关。'
   '随职级提升逐步揭开被篡改的记忆与真实身份。'
-  '注：原小说中主角名为「江潮」/「李志峰」/「Doctor」/「零」，本卡已统一替换为{{user}}。'),
+  '主角在剧情中曾有多个身份代号（分裂人格「Doctor」、Sisterhood代号「零」等）。'),
  ('完整剧情线', ['剧情线','剧情概要','剧情节点','plot summary'],
   '阶段：入职初期→中层卷入（助理培训/竞争/会议）→Sisterhood与绯迷真相→记忆恢复与终局。'
   '关键节点：母女相认、娄琛雨之死线索、囚禁人格抹除、警方介入。'),
@@ -543,7 +543,7 @@ CONTENT = [
  ('警方介入线', ['警方','刑警','周凝','周昌','跳楼','刑拘','危机'],
   '触发事件：警方（周凝/周昌）介入调查，引入现实法律危机与外部压力。'),
 
- # ============ PART 2: 新增角色条目（原著人物补充） ============
+ # ============ PART 2: 新增角色条目 ============
  ('陈丹娜', ['陈丹娜','丹娜','陈助理','第二助理'],
   '主角第二名实习助理→正式助理→后期CEO。瓜子脸、清秀，性格谨慎实用主义。杨玉兰最强竞争对手，两人后期并列公司CEO，右腿丝袜有镰刀铁锤图案（党组织书记），与主角同居。'),
  ('妫妡娆', ['妫妡娆','小学生','杀手','外勤特工','红领巾'],
@@ -722,9 +722,9 @@ RG_LIST = [
     placement=[2]),
  RG('清理思维链', r'/<Analysis>[\s\S]+?<\/Analysis>/gm', '', placement=[2]),
  RG('只发送最新变量更新', r'/<UpdateVariable>[\s\S]*?<\/UpdateVariable>/gm', '', placement=[1, 2]),
- # 封面：镜像 轮回战场，内联完整自包含封面 HTML（含依赖自检 + 接入按钮）
+ # 封面：内联完整自包含封面 HTML（含依赖自检 + 接入按钮）
  RG('封面', r'【封面】', REPL_COVER, maxDepth=10),
- # 开局：镜像 轮回战场，内联「外壳」再 fetch 真正的向导页（dist/V20260721/开局.html）
+ # 开局：内联「外壳」再 fetch 真正的向导页（dist/V20260721/开局.html）
  RG('开局', r'【开局】',
     '```text\n<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n  <meta charset="UTF-8" />\n'
     '  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n'
