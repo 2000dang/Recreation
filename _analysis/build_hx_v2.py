@@ -30,6 +30,11 @@ data['creator'] = 'WorkBuddy'
 data['creator_notes'] = ('MVU框架角色卡 v2（重构版）。引擎：ZOD防御性Schema + 辅助计算脚本自动结算 + '
                         'MVU变量闭环 + 悬浮球状态栏。需酒馆助手插件与 TavernHelper。'
                         '')
+data['system_prompt'] = (data.get('system_prompt','') +
+    '\n11. **变量更新输出格式**: 每轮回复末尾只输出<UpdateVariable>块（包含<JSONPatch>）。'
+    '禁止在消息正文中输出任何变量解析原文、额外模型分析原文（如"Time elapsed"、"Dramatic updates"、'
+    '"Protagonist:"、"Assistant (xxx):"、"System:"等裸文本分析）——这些只保留在变量更新 AI 内部，不得出现在角色卡回复流中。'
+    '违者将破坏叙事连贯性，属于严重错误。')
 data['talkativeness'] = 0.5
 # 开场向导作为 swipe 1（封面「确认接入」按钮切换到此）
 # 只保留「【开局】」占位, 其他历史开场白全部移除
