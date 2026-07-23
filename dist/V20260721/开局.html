@@ -169,7 +169,7 @@
         </div>
         <div class="field">
             <label>职级（开局仅开放3级，后续游戏中晋升）</label>
-            <select id="f-rank">
+            <select id="f-rank" onchange="syncRankToPerm()">
                 <option selected>助理工程师</option>
                 <option>工程师</option>
                 <option>高级工程师</option>
@@ -194,8 +194,8 @@
             <input id="f-money" type="number" value="5000" />
         </div>
         <div class="field">
-            <label>催眠权限等级</label>
-            <select id="f-perm">
+            <label>催眠权限等级（自动联动 Step 1 职级，不可修改）</label>
+            <select id="f-perm" disabled style="background:rgba(155,109,255,0.05);color:#a99fd0;cursor:not-allowed;opacity:0.7;">
                 <option value="1">Lv.1 助理工程师</option>
                 <option value="2">Lv.2 工程师</option>
                 <option value="3">Lv.3 高级工程师</option>
@@ -207,7 +207,7 @@
                 <option value="9">Lv.9 副总裁</option>
                 <option value="10">Lv.10 总裁</option>
             </select>
-            <div class="hint">对应职级: 1-10 依次映射. 开启破解模式后由悬浮窗临时提升到 10.</div>
+            <div class="hint">催眠权限等级与职级自动联动 1:1。开启破解模式后由悬浮窗临时提升到 10。</div>
         </div>
         <div class="err" id="err-2"></div>
         <div class="nav">
@@ -239,6 +239,20 @@
             var d = $('dot-' + i); if (d) d.classList.toggle('active', i === n);
         }
     };
+    // 职级→催眠权限等级 自动联动 (1:1 映射)
+    var RANK_TO_PERM = {
+        '助理工程师': 1, '工程师': 2, '高级工程师': 3, '资深工程师': 4,
+        '技术专家': 5, '高级技术专家': 6, '首席专家': 7, '技术总监': 8,
+        '副总裁': 9, '总裁': 10
+    };
+    window.syncRankToPerm = function () {
+        var rank = $('f-rank').value;
+        var perm = RANK_TO_PERM[rank] || 1;
+        var sel = $('f-perm');
+        if (sel) { sel.value = String(perm); }
+    };
+    // 初始化时调用一次 (确保默认职级对应的催眠权限)
+    try { window.syncRankToPerm(); } catch (e) {}
     window.next = function (n) {
         if (n === 2 && !$('f-name').value.trim()) {
             $('err-1').textContent = '请填写姓名 / 代号'; return;
