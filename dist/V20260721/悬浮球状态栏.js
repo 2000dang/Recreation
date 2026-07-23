@@ -396,6 +396,12 @@
     $panel.off('click.hxMap').on('click.hxMap', '.hx-map-btn', function() {
       showMap();
     });
+    // 助理名点击→关系维度
+    $panel.off('click.hxAssistName').on('click.hxAssistName', '.hx-assist-name', function() {
+      var base = $(this).data('base');
+      var name = $(this).data('name');
+      showAssistRelation(base, name);
+    });
     // Tab 切换
     $panel.off('click.hxTab').on('click.hxTab', '.hx-tab-btn', function() {
       var tab = $(this).data('tab');
@@ -583,13 +589,75 @@
     showModal('🗺️ 环晓科技 · 公司地图', html);
   }
 
-  // ===== 15. 渲染字段项 =====
+  // ===== 16. 助理关系维度弹窗 =====
+  function showAssistRelation(base, name) {
+    var sd = getStatData();
+    if (!sd) return;
+    var path = base + '.' + name;
+    // 从 stat_data 读取对应助理数据
+    var assistant = {};
+    try {
+      var parts = path.split('.');
+      var cur = sd;
+      parts.forEach(function(p) { cur = cur && cur[p]; });
+      assistant = cur || {};
+    } catch(e) {}
+
+    var title = esc(name) + ' · 关系维度';
+    // 关系指标：亲密度/派系/心理状态/经历事件
+    var intimacy = assistant['亲密度'] || 50;
+    var fraction = assistant['派系'] || '-';
+    var mentalState = assistant['心理状态'] || '-';
+    var events = assistant['经历事件'];
+    var hiddenLike = assistant['隐藏好感'] || '-';
+    var belong = assistant['归属'] || '-';
+
+    var intimacyBar = '';
+    var barColor = intimacy > 70 ? '#86efac' : intimacy > 30 ? '#ffd1a0' : '#f87171';
+    for (var i = 1; i <= 10; i++) {
+      intimacyBar += '<span style="color:'+(i*10<=intimacy?barColor:'#444')+';font-size:14px;">█</span>';
+    }
+    var html = '';
+    // 亲密进度条
+    html += '<div style="margin-bottom:12px;"><div style="font-size:11px;color:#9b8fc0;margin-bottom:4px;">亲密度</div>';
+    html += '<div style="font-size:14px;margin-bottom:2px;">'+intimacyBar+'</div>';
+    html += '<div style="font-size:12px;color:'+barColor+';">'+intimacy+'/100</div></div>';
+    // 派系/心理/好感/归属 四列网格
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">';
+    html += '<div style="padding:6px 8px;background:rgba(155,109,255,0.06);border-radius:6px;"><div style="font-size:10px;color:#7d709f;">派系</div><div style="font-size:13px;color:#e8e3f5;">'+esc(fraction)+'</div></div>';
+    html += '<div style="padding:6px 8px;background:rgba(155,109,255,0.06);border-radius:6px;"><div style="font-size:10px;color:#7d709f;">心理状态</div><div style="font-size:13px;color:#e8e3f5;">'+esc(mentalState)+'</div></div>';
+    html += '<div style="padding:6px 8px;background:rgba(155,109,255,0.06);border-radius:6px;"><div style="font-size:10px;color:#7d709f;">隐藏好感</div><div style="font-size:13px;color:#f0a0d0;">'+esc(hiddenLike)+'</div></div>';
+    html += '<div style="padding:6px 8px;background:rgba(155,109,255,0.06);border-radius:6px;"><div style="font-size:10px;color:#7d709f;">当前归属</div><div style="font-size:13px;color:#e8e3f5;">'+esc(belong)+'</div></div>';
+    html += '</div>';
+    // 经历事件
+    html += '<div style="margin-bottom:8px;"><div style="font-size:11px;color:#9b8fc0;margin-bottom:4px;">经历事件</div>';
+    if (events && Array.isArray(events) && events.length > 0) {
+      html += '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
+      events.forEach(function(ev) {
+        html += '<span style="padding:2px 8px;background:rgba(134,239,172,0.1);border:1px solid rgba(134,239,172,0.3);border-radius:12px;font-size:11px;color:#86efac;">'+esc(ev)+'</span>';
+      });
+      html += '</div>';
+    } else {
+      html += '<div style="font-size:11px;color:#7d709f;">暂无记录</div>';
+    }
+    html += '</div>';
+    // 提示
+    html += '<div style="font-size:10px;color:#7d709f;margin-top:10px;padding:6px;background:rgba(155,109,255,0.04);border-radius:6px;">💡 以上关系数据由 AI 在剧情中动态写入(亲密度随互动变化；派系/心理状态由关键事件触发)。点击面板刷新按钮可同步最新数值。</div>';
+    showModal(title, html);
+  }
+
+  // ===== 16.1 渲染字段项 =====
   function renderField(key, val, basePath) {
     var path = basePath + '.' + key;
     var vType = typeof val;
     // 对象嵌套(<2层): 展开子字段
     if (val && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date)) {
-      var html = '<div class="hx-sub"><div class="hx-row"><span class="hx-k">'+esc(key)+'</span></div>';
+      // 判断是否在「助理管理」路径下。如果是, 助理名可点击弹出关系维度弹窗
+      var isAssistantName = (basePath === '助理管理.实习助理' || basePath === '助理管理.正式助理' || basePath === '助理管理.组长助理' || basePath === '助理管理.主任助理' || basePath === '助理管理.总监助理' || basePath === '助理管理.高等助理·辅骑' || basePath === '助理管理.特等助理·主骑');
+      var nameHtml = isAssistantName
+        ? '<span class="hx-k hx-assist-name" data-base="'+esc(basePath)+'" data-name="'+esc(key)+'" style="cursor:pointer;color:#86cfff;text-decoration:underline;text-decoration-style:dotted;">'+esc(key)+'</span>'
+        : '<span class="hx-k">'+esc(key)+'</span>';
+      var html = '<div class="hx-sub"><div class="hx-row">'+nameHtml+'</div>';
       Object.keys(val).forEach(function(kk) {
         html += renderField(kk, val[kk], path);
       });
