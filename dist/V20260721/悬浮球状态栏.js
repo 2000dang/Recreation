@@ -392,6 +392,10 @@
       setTheme(next);
       renderAll();
     });
+    // 公司地图
+    $panel.off('click.hxMap').on('click.hxMap', '.hx-map-btn', function() {
+      showMap();
+    });
     // Tab 切换
     $panel.off('click.hxTab').on('click.hxTab', '.hx-tab-btn', function() {
       var tab = $(this).data('tab');
@@ -460,6 +464,75 @@
     var disp = editDisplayInner(val);
     $wrap.attr('data-path', path).attr('data-type', type);
     $wrap.removeClass('editing').html(disp + '<span class="hx-ed-ico">✎</span>');
+  }
+
+  // ===== 15.5 公司地图 =====
+  var BUILDING = [
+    {floor:'B2',name:'地下停车场',type:'parking'},
+    {floor:'B1',name:'数据中心·Sisterhood机密',type:'secret'},
+    {floor:'1F',name:'大厅前台·门禁',type:'public'},
+    {floor:'4F',name:'待分配中心·面试间',type:'office'},
+    {floor:'6F',name:'公共食堂·社交中心',type:'dining'},
+    {floor:'8F',name:'研发部·天台吸烟区',type:'office'},
+    {floor:'9F',name:'女员工专用层(泳池/健身)',type:'restricted'},
+    {floor:'12F',name:'主任办公室·母婴室',type:'office'},
+    {floor:'13F',name:'人力资源·行政部',type:'office'},
+    {floor:'17F',name:'第三医务室·改造手术',type:'medical'},
+    {floor:'22F',name:'实习助理区·白丝制服',type:'restricted'},
+    {floor:'23F',name:'正式助理区',type:'restricted'},
+    {floor:'24F',name:'辅骑/主骑候补区',type:'restricted'},
+    {floor:'25F',name:'总裁办公室',type:'office'},
+    {floor:'26F',name:'隐藏层·行为观察实验室',type:'secret'},
+    {floor:'28F',name:'人体实验室·姜舞主场',type:'secret'}
+  ];
+  function showMap() {
+    var sd = getStatData();
+    var env = (sd && sd['环境与系统']) || {};
+    var curFloor = env['当前楼层'] || '';
+    var curLoc = env['当前位置'] || '';
+    var curScene = env['当前场景'] || '';
+    // 提取楼层数字
+    var floorNum = '';
+    var m = curFloor.match(/(\d+)/);
+    if (m) floorNum = m[1]+'F';
+    // 判断是否在室内
+    var isOutside = !curFloor || curFloor.indexOf('层') === -1 && curFloor.indexOf('F') === -1 && curFloor.indexOf('楼') === -1;
+    var html = '';
+    if (isOutside) {
+      html += '<div style="text-align:center;padding:30px 10px;">';
+      html += '<div style="font-size:36px;margin-bottom:12px;">📍</div>';
+      html += '<div style="font-size:16px;color:#ffb84d;font-weight:bold;margin-bottom:6px;">当前位置（公司外部）</div>';
+      if (curFloor || curLoc) html += '<div style="font-size:13px;color:#a99fd0;">'+esc(curFloor||'')+' '+esc(curLoc||'')+'</div>';
+      if (curScene) html += '<div style="font-size:12px;color:#7d709f;margin-top:4px;">场景：'+esc(curScene)+'</div>';
+      html += '<div style="margin-top:20px;font-size:11px;color:#7d709f;">进入环晓科技大厦后显示公司内部楼层地图</div>';
+      html += '</div>';
+    } else {
+      html += '<div style="text-align:center;margin-bottom:10px;font-size:14px;color:#b39dff;font-weight:bold;">📍 环晓科技总部 · 25层写字楼</div>';
+      // 楼层地图
+      html += '<div style="display:flex;flex-direction:column;gap:3px;max-height:50vh;overflow-y:auto;">';
+      var seen = {};
+      BUILDING.forEach(function(b) {
+        var label = b.name || '';
+        var icon = b.type==='secret'?'🔒':b.type==='restricted'?'🚫':b.type==='medical'?'🏥':b.type==='dining'?'🍽️':b.type==='parking'?'🅿️':'🏢';
+        var isCurrent = floorNum && (b.floor === floorNum);
+        var bg = isCurrent?'background:linear-gradient(90deg,rgba(134,239,172,0.25),rgba(134,239,172,0.08));border-left:3px solid #86efac;':'background:rgba(155,109,255,0.04);';
+        html += '<div style="display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:6px;'+bg+'">';
+        html += '<div style="width:36px;text-align:center;font-weight:bold;font-size:12px;color:'+(isCurrent?'#86efac':'#b39dff')+';">'+b.floor+'</div>';
+        html += '<div style="font-size:11px;color:'+(isCurrent?'#d5f0e0':'#a99fd0')+';">'+icon+' '+esc(label)+'</div>';
+        if (isCurrent) html += '<div style="font-size:10px;color:#86efac;margin-left:auto;">← 当前位置</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+      // 当前详情
+      if (curFloor || curLoc || curScene) {
+        html += '<div style="margin-top:12px;padding:10px;background:rgba(134,239,172,0.06);border-radius:8px;font-size:11px;color:#a99fd0;line-height:1.8;">';
+        if (curFloor) html += '<b>楼层：</b>'+esc(curFloor)+'　';
+        if (curLoc) html += '<b>位置：</b>'+esc(curLoc)+'　';
+        if (curScene) html += '<b>场景：</b>'+esc(curScene);
+        html += '</div>';
+      }
+    }
+    showModal('🗺️ 环晓科技 · 公司地图', html);
   }
 
   // ===== 15. 渲染字段项 =====
@@ -565,6 +638,7 @@
     html += '<div class="hx-tl-actions">';
     html += '<div class="hx-hack-toggle'+(hackOn?' on':'')+'"><span class="hx-hack-badge">🔓</span></div>';
     html += '<div class="hx-icon-btn hx-theme-btn" title="切换主题(暗/亮)">'+(getTheme()==='light'?'☀️':'🌙')+'</div>';
+    html += '<div class="hx-icon-btn hx-map-btn" title="公司地图">🗺️</div>';
     html += '<div class="hx-icon-btn refresh" title="刷新数据">🔄</div>';
     html += '<div class="hx-icon-btn close" title="关闭">✕</div>';
     html += '</div></div>';
