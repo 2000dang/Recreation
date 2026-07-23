@@ -270,6 +270,29 @@
             win._.set(ps, '个人金钱', d.money);
             win._.set(ps, '催眠权限等级', d.perm);
 
+            // 助理管理: 写入杨玉兰初始数据(环境与系统/催眠系统等由 InitVar 提供)
+            if (!cloned.stat_data['助理管理']) cloned.stat_data['助理管理'] = {};
+            var am = cloned.stat_data['助理管理'];
+            if (!am['实习助���']) am['实习助理'] = {};
+            if (!am['实习助理']['杨玉兰']) am['实习助理']['杨玉兰'] = {};
+            var yll = am['实习助理']['杨玉兰'];
+            win._.set(yll, '类型', '实习助理');
+            win._.set(yll, '在场', true);
+            win._.set(yll, '状态', '正常');
+            win._.set(yll, '情绪', '不耐烦');
+            win._.set(yll, '催眠状态', '未被催眠');
+            win._.set(yll, '三围', '85/60/88');
+            win._.set(yll, '罩杯', 'D');
+            win._.set(yll, '改造状态', '无');
+            win._.set(yll, '归属', '{{user}}的助理');
+            win._.set(yll, '亲密度', 5);
+            win._.set(yll, '派系', '初始');
+            win._.set(yll, '心理状态', '警惕');
+            win._.set(yll, '隐藏好感', '无');
+            win._.set(yll, '经历事件', ['入职报到']);
+            if (!am['正式助理']) am['正式助理'] = {};
+            if (!am['组长助理']) am['组长助理'] = {};
+
             win.Mvu.replaceMvuData(cloned, { type: 'message', message_id: 'latest' });
             try { win.Mvu.replaceMvuData(cloned, { type: 'chat' }); } catch (e2) {}
             try {

@@ -261,7 +261,7 @@
           "keys": [],
           "constant": true,
           "position": "after_char",
-          "enabled": true,
+          "enabled": false,
           "priority": 0,
           "id": 9999,
           "use_regex": false,

@@ -265,7 +265,7 @@ entries.append(E(9999, '[InitVar]世界初始设定', '''环境与系统:
 剧情进度:
   当前阶段: 入职初期
   已触发事件: []
-''', const=True, pos='after_char', eid=9999))
+''', const=True, pos='after_char', eid=9999, enabled=False))
 
 entries.append(E(99996, '[variables]当前变量', '''<%_
 ;(() => {
