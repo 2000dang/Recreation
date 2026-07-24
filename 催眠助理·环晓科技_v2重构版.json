@@ -104,9 +104,9 @@
           ]
         },
         {
-          "scriptName": "[美化]变量分析折叠",
-          "findRegex": "(?:^[ \\t]*\\*[ \\t]*[^\\n]*\\n){1,}[\\s\\S]*?\\n\\s*\\[\\s*\\{[^[]*\\}\\s*\\][\\s\\S]*?(?=\\n\\s*\\n|\\Z)",
-          "replaceString": "<details><summary>变量喵(额外模型解析)</summary>\n$&\n</details>",
+          "scriptName": "[美化]额外模型解析折叠",
+          "findRegex": "\\/\\*[\\s\\S]*?\\*\\/[\\s\\S]*?\\[[\\s\\S]*?\\]",
+          "replaceString": "<details><summary>变量喵(额外模型解析)</summary>\n\n$&\n</details>",
           "trimStrings": [],
           "disabled": false,
           "prompt": "",
@@ -118,9 +118,9 @@
           ]
         },
         {
-          "scriptName": "[美化]裸变量列表折叠",
-          "findRegex": "((?:^[ \\t]*\\*[ \\t]*[^\\n]*\\n){1,})(?:[\\s\\S]*?\\n\\s*)?(\\[\\s*(?:\\{[^{}]*\\}\\s*,?\\s*)*\\][\\s\\S]*?)(?=\\n\\s*\\n|\\Z)",
-          "replaceString": "<details><summary>变量喵</summary>\n\n$1\n$2\n</details>",
+          "scriptName": "[美化]裸JSON数组折叠",
+          "findRegex": "^\\s*\\[\\s*(?:\\{[^{}]*\\}\\s*,?\\s*)+\\][\\s\\S]*?(?=\\n\\s*\\n|\\Z)",
+          "replaceString": "<details><summary>变量喵(JSON)</summary>\n\n$&\n</details>",
           "trimStrings": [],
           "disabled": false,
           "prompt": "",

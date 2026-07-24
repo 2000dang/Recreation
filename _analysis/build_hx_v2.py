@@ -730,15 +730,15 @@ RG_LIST = [
     placement=[2]),
  RG('清理思维链', r'/<Analysis>[\s\S]+?<\/Analysis>/gm', '', placement=[2]),
  RG('只发送最新变量更新', r'/<update(?:variable)?>(?:(?!.*<\/update(?:variable)?>).*$|.*<\/update(?:variable)?>)/gsi', '', placement=[1, 2]),
- # 额外模型解析的裸文本格式(无XML包裹): * 项目列表 + JSON数组, 折叠为变量喵
- RG('[美化]变量分析折叠',
-    r'(?:^[ \t]*\*[ \t]*[^\n]*\n){1,}[\s\S]*?\n\s*\[\s*\{[^[]*\}\s*\][\s\S]*?(?=\n\s*\n|\Z)',
-    '<details><summary>变量喵(额外模型解析)</summary>\n$&\n</details>',
+ # 额外模型解析的裸文本格式: /* C风格注释块 */ + JSON数组
+ RG('[美化]额外模型解析折叠',
+    r'\/\*[\s\S]*?\*\/[\s\S]*?\[[\s\S]*?\]',
+    '<details><summary>变量喵(额外模型解析)</summary>\n\n$&\n</details>',
     placement=[2]),
- # 单独匹配: 多个 * 项目 + JSON数组(简化版)
- RG('[美化]裸变量列表折叠',
-    r'((?:^[ \t]*\*[ \t]*[^\n]*\n){1,})(?:[\s\S]*?\n\s*)?(\[\s*(?:\{[^{}]*\}\s*,?\s*)*\][\s\S]*?)(?=\n\s*\n|\Z)',
-    '<details><summary>变量喵</summary>\n\n$1\n$2\n</details>',
+ # 单独JSON数组(无注释块): 当AI只输出 [...] 时
+ RG('[美化]裸JSON数组折叠',
+    r'^\s*\[\s*(?:\{[^{}]*\}\s*,?\s*)+\][\s\S]*?(?=\n\s*\n|\Z)',
+    '<details><summary>变量喵(JSON)</summary>\n\n$&\n</details>',
     placement=[2]),
  # 封面：内联完整自包含封面 HTML（含依赖自检 + 接入按钮）
  RG('封面', r'【封面】', REPL_COVER, maxDepth=10),
