@@ -718,15 +718,15 @@ def RG(name, find, repl, disabled=False, placement=None, maxDepth=None):
 
 RG_LIST = [
  RG('[无美化]变量折叠',
-    r'/<UpdateVariable(?:variable)?>(?!.*<\/UpdateVariable(?:variable)?>)\s*([\s\S]*?)\s*$/gsi',
-    '<details style="margin:8px auto;max-width:80%;border:1px solid rgba(95,208,255,.3);border-radius:10px;background:rgba(14,20,32,.6);"><summary style="cursor:pointer;padding:8px 14px;color:#5fd0ff;">🌙 变量推演中…</summary><div style="padding:8px 14px;color:#9fb3c8;white-space:pre-wrap;max-height:300px;overflow:auto;">$1</div></details>',
+    r'/<update(?:variable)?>(?!.*<\/update(?:variable)?>)\s*([\s\S]*?)\s*$/gsi',
+    '<details><summary>变量喵</summary>\n$1\n</details>',
     placement=[1, 2]),
  RG('[无美化]变量折叠完成',
-    r'/<UpdateVariable(?:variable)?>\s*([\s\S]*?)\s*<\/UpdateVariable(?:variable)?>/gsi',
-    '<details style="margin:8px auto;max-width:80%;border:1px solid rgba(251,191,36,.35);border-radius:10px;background:rgba(14,20,32,.6);"><summary style="cursor:pointer;padding:8px 14px;color:#fde68a;">🌕 变量已结算</summary><div style="padding:8px 14px;color:#9fb3c8;white-space:pre-wrap;max-height:300px;overflow:auto;">$1</div></details>',
+    r'/<update(?:variable)?>\s*([\s\S]*?)\s*<\/update(?:variable)?>/gsi',
+    '<details>\n<summary>变量更新中{{random::.::..::...}}</summary>\n$1\n</details>',
     placement=[2]),
  RG('清理思维链', r'/<Analysis>[\s\S]+?<\/Analysis>/gm', '', placement=[2]),
- RG('只发送最新变量更新', r'/<UpdateVariable>[\s\S]*?<\/UpdateVariable>/gm', '', placement=[1, 2]),
+ RG('只发送最新变量更新', r'/<update(?:variable)?>(?:(?!.*<\/update(?:variable)?>).*$|.*<\/update(?:variable)?>)/gsi', '', placement=[1, 2]),
  # 封面：内联完整自包含封面 HTML（含依赖自检 + 接入按钮）
  RG('封面', r'【封面】', REPL_COVER, maxDepth=10),
  # 开局：内联「外壳」再 fetch 真正的向导页（dist/V20260721/开局.html）

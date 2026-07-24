@@ -47,8 +47,8 @@
       "regex_scripts": [
         {
           "scriptName": "[无美化]变量折叠",
-          "findRegex": "/<UpdateVariable(?:variable)?>(?!.*<\\/UpdateVariable(?:variable)?>)\\s*([\\s\\S]*?)\\s*$/gsi",
-          "replaceString": "<details style=\"margin:8px auto;max-width:80%;border:1px solid rgba(95,208,255,.3);border-radius:10px;background:rgba(14,20,32,.6);\"><summary style=\"cursor:pointer;padding:8px 14px;color:#5fd0ff;\">🌙 变量推演中…</summary><div style=\"padding:8px 14px;color:#9fb3c8;white-space:pre-wrap;max-height:300px;overflow:auto;\">$1</div></details>",
+          "findRegex": "/<update(?:variable)?>(?!.*<\\/update(?:variable)?>)\\s*([\\s\\S]*?)\\s*$/gsi",
+          "replaceString": "<details><summary>变量喵</summary>\n$1\n</details>",
           "trimStrings": [],
           "disabled": false,
           "prompt": "",
@@ -62,8 +62,8 @@
         },
         {
           "scriptName": "[无美化]变量折叠完成",
-          "findRegex": "/<UpdateVariable(?:variable)?>\\s*([\\s\\S]*?)\\s*<\\/UpdateVariable(?:variable)?>/gsi",
-          "replaceString": "<details style=\"margin:8px auto;max-width:80%;border:1px solid rgba(251,191,36,.35);border-radius:10px;background:rgba(14,20,32,.6);\"><summary style=\"cursor:pointer;padding:8px 14px;color:#fde68a;\">🌕 变量已结算</summary><div style=\"padding:8px 14px;color:#9fb3c8;white-space:pre-wrap;max-height:300px;overflow:auto;\">$1</div></details>",
+          "findRegex": "/<update(?:variable)?>\\s*([\\s\\S]*?)\\s*<\\/update(?:variable)?>/gsi",
+          "replaceString": "<details>\n<summary>变量更新中{{random::.::..::...}}</summary>\n$1\n</details>",
           "trimStrings": [],
           "disabled": false,
           "prompt": "",
@@ -90,7 +90,7 @@
         },
         {
           "scriptName": "只发送最新变量更新",
-          "findRegex": "/<UpdateVariable>[\\s\\S]*?<\\/UpdateVariable>/gm",
+          "findRegex": "/<update(?:variable)?>(?:(?!.*<\\/update(?:variable)?>).*$|.*<\\/update(?:variable)?>)/gsi",
           "replaceString": "",
           "trimStrings": [],
           "disabled": false,
