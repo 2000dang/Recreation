@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""催眠助理·环晓科技 v2 重构版 生成器
+"""催眠助理·环晓科技 v2.1 完善版 生成器
 引擎层：ZOD防御性Schema + 辅助计算脚本自动结算 + MVU变量闭环 + 悬浮球状态栏。
 内容层保留环晓科技设定。所有 stat_data 键名与主卡/开局HTML/悬浮球一致。
 """
@@ -7,7 +7,7 @@ import json
 import os
 
 SRC = '催眠助理·环晓科技 v1重构版.json'
-OUT = '催眠助理·环晓科技_v2重构版.json'
+OUT = '催眠助理·环晓科技_v2.1完善版.json'
 CDN = 'https://cdn.jsdelivr.net/gh/2000dang/Recreation@main/dist/V20260721'
 
 # 悬浮球脚本改为内联到卡里，避免 jsdelivr/import 在部分浏览器环境失效导致看不到球
@@ -25,7 +25,7 @@ TOP = ['name','description','personality','scenario','system_prompt',
        'post_history_instructions','mes_example','tags','creator','creator_notes',
        'character_version','avatar','spec','spec_version','talkativeness','creatorcomment']
 data = {k: S[k] for k in TOP if k in S}
-data['name'] = '催眠助理·环晓科技'
+data['name'] = '催眠助理·环晓科技_v2.1完善版'
 data['creator'] = 'WorkBuddy'
 data['creator_notes'] = ('MVU框架角色卡 v2（重构版）。引擎：ZOD防御性Schema + 辅助计算脚本自动结算 + '
                         'MVU变量闭环 + 悬浮球状态栏。需酒馆助手插件与 TavernHelper。'
