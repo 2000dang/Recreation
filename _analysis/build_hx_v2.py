@@ -399,8 +399,8 @@ Force_Structured_Output:
     </UpdateVariable>
 </Format>'''
 
-entries.append(E(10000, '[mvu_update]output_format (主API)', OUT_MAIN, const=True, pos='after_char', enabled=False, eid=10000))
-entries.append(E(10001, '[mvu_update]output_format (额外模型更新变量开)', OUT_EXTRA, const=True, pos='after_char', enabled=True, eid=10001))
+entries.append(E(10000, '[mvu_update]output_format (主API)', OUT_MAIN, const=True, pos='after_char', enabled=True, eid=10000))
+entries.append(E(10001, '[mvu_update]output_format (额外模型更新变量开)', OUT_EXTRA, const=True, pos='after_char', enabled=False, eid=10001))
 
 # ---- 常驻规则：世界规则 ----
 WORLD_RULE = '''<催眠系统协议>
