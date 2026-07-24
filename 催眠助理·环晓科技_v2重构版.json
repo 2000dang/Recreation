@@ -119,7 +119,7 @@
         },
         {
           "scriptName": "[美化]裸JSON数组折叠",
-          "findRegex": "^\\s*\\[\\s*(?:\\{[^{}]*\\}\\s*,?\\s*)+\\][\\s\\S]*?(?=\\n\\s*\\n|\\Z)",
+          "findRegex": "\\[\\s*(?:\\{[^{}]*\\}\\s*,?\\s*)+\\][\\s\\S]*?(?=\\n\\s*\\n|\\Z|$)",
           "replaceString": "<details><summary>变量喵(JSON)</summary>\n\n$&\n</details>",
           "trimStrings": [],
           "disabled": false,

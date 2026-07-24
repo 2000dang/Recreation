@@ -761,9 +761,9 @@ RG_LIST = [
     r'\/\*[\s\S]*?\*\/[\s\S]*?\[[\s\S]*?\]',
     '<details><summary>变量喵(额外模型解析)</summary>\n\n$&\n</details>',
     placement=[2]),
- # 单独JSON数组(无注释块): 当AI只输出 [...] 时
+ # 单独JSON数组(无注释块, 不强制^锚点): AI正文+空行+JSON也能匹配
  RG('[美化]裸JSON数组折叠',
-    r'^\s*\[\s*(?:\{[^{}]*\}\s*,?\s*)+\][\s\S]*?(?=\n\s*\n|\Z)',
+    r'\[\s*(?:\{[^{}]*\}\s*,?\s*)+\][\s\S]*?(?=\n\s*\n|\Z|$)',
     '<details><summary>变量喵(JSON)</summary>\n\n$&\n</details>',
     placement=[2]),
  # 封面：内联完整自包含封面 HTML（含依赖自检 + 接入按钮）
