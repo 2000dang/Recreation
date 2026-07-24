@@ -34,7 +34,10 @@ data['system_prompt'] = (data.get('system_prompt','') +
     '\n11. **变量更新输出格式**: 每轮回复末尾只输出<UpdateVariable>块（包含<JSONPatch>）。'
     '禁止在消息正文中输出任何变量解析原文、额外模型分析原文（如"Time elapsed"、"Dramatic updates"、'
     '"Protagonist:"、"Assistant (xxx):"、"System:"等裸文本分析）——这些只保留在变量更新 AI 内部，不得出现在角色卡回复流中。'
-    '违者将破坏叙事连贯性，属于严重错误。')
+    '违者将破坏叙事连贯性，属于严重错误。'
+    '\n12. **助理职级变更·原子迁移**: 当女助理的职级变更时（如实习助理晋升正式助理、或降级），务必在一次UpdateVariable操作中同时完成：'
+    '从旧类别remove该助理 + 在新类别insert该助理（含原名全部字段）。严禁分两次操作（仅insert未remove），'
+    '否则会导致同一助理在多个类别中重复出现，悬浮球面板将只显示最先匹配的那个，其他副本被忽略。')
 data['talkativeness'] = 0.5
 # 开场向导作为 swipe 1（封面「确认接入」按钮切换到此）
 # 只保留「【开局】」占位, 其他历史开场白全部移除

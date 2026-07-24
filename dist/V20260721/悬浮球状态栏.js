@@ -26,6 +26,7 @@
   var $ = (GS_PARENT.jQuery || GS_PARENT.$ || window.jQuery || window.$);
   var document = GS_PARENT.document;
   var _ = (GS_PARENT._ || window._);
+  var _dedupAssistants = {}; // 助理管理去重(同一助理名只在第一个类别中出现)
 
   // ===== 2. 缓存配置 =====
   var HX_CONFIG = {
@@ -683,6 +684,9 @@
     if (val && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date)) {
       // 判断是否在「助理管理」路径下。如果是, 助理名可点击弹出关系维度弹窗
       var isAssistantName = (basePath === '助理管理.实习助理' || basePath === '助理管理.正式助理' || basePath === '助理管理.组长助理' || basePath === '助理管理.主任助理' || basePath === '助理管理.总监助理' || basePath === '助理管理.高等助理·辅骑' || basePath === '助理管理.特等助理·主骑');
+      // 去重: 同一助理名跨类别只渲染一次
+      if (isAssistantName && _dedupAssistants[key]) return '';
+      if (isAssistantName) _dedupAssistants[key] = true;
       // 外围(助理级)只显示: 在场, 催眠状态, 情绪(条件), 好感度
       var OUTER_FIELDS = ['在场','催眠状态','情绪','好感度'];
       var nameHtml = isAssistantName
@@ -761,6 +765,7 @@
   function renderTabContent(tab) {
     var $content = $('#hx-tab-content');
     if (!$content.length) return;
+    if (tab === '助理管理') _dedupAssistants = {};
     var sd = getStatData();
     if (!sd || !sd[tab]) {
       $content.html('<div class="hx-empty">'+CATEGORIES.find(function(c){return c.key===tab;}).icon+' '+tab+'：暂无数据</div>');
