@@ -756,21 +756,6 @@ RG_LIST = [
     placement=[2]),
  RG('清理思维链', r'/<Analysis>[\s\S]+?<\/Analysis>/gm', '', placement=[2]),
  RG('只发送最新变量更新', r'/<update(?:variable)?>(?:(?!.*<\/update(?:variable)?>).*$|.*<\/update(?:variable)?>)/gsi', '', placement=[1, 2]),
- # 额外模型解析的裸文本格式: /* C风格注释块 */ + JSON数组
- RG('[美化]额外模型解析折叠',
-    r'\/\*[\s\S]*?\*\/[\s\S]*?\[[\s\S]*?\]',
-    '<details><summary>变量喵(额外模型解析)</summary>\n\n$&\n</details>',
-    placement=[2]),
- # 单独JSON数组(无注释块, 不强制^锚点): AI正文+空行+JSON也能匹配
- RG('[美化]裸JSON数组折叠',
-    r'\[\s*(?:\{[^{}]*\}\s*,?\s*)+\][\s\S]*?(?=\n\s*\n|\Z|$)',
-    '<details><summary>变量喵(JSON)</summary>\n\n$&\n</details>',
-    placement=[2]),
- # 编号列表 + JSON数组整体折叠: 1./2./3. + ○ 项目 + [...]
- RG('[美化]变量分析整体折叠',
-    r'(?:^[ \t]*\d+\.[^\n]*\n[\s\S]*?)\[[\s\S]*?\]',
-    '<details><summary>变量喵(整体折叠)</summary>\n\n$&\n</details>',
-    placement=[2]),
  # 封面：内联完整自包含封面 HTML（含依赖自检 + 接入按钮）
  RG('封面', r'【封面】', REPL_COVER, maxDepth=10),
  # 开局：内联「外壳」再 fetch 真正的向导页（dist/V20260721/开局.html）
