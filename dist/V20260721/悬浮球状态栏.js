@@ -604,7 +604,7 @@
 
     var title = esc(name) + ' · 关系维度';
     // 关系指标
-    var intimacy = assistant['亲密度'] || 50;
+    var intimacy = Math.max(0, assistant['好感度'] || 5);
     var fraction = assistant['派系'] || '-';
     var mentalState = assistant['心理状态'] || '-';
     var events = assistant['经历事件'];
@@ -623,7 +623,7 @@
     }
     var html = '';
     // 亲密进度条
-    html += '<div style="margin-bottom:12px;"><div style="font-size:11px;color:#9b8fc0;margin-bottom:4px;">亲密度</div>';
+    html += '<div style="margin-bottom:12px;"><div style="font-size:11px;color:#9b8fc0;margin-bottom:4px;">好感度</div>';
     html += '<div style="font-size:14px;margin-bottom:2px;">'+intimacyBar+'</div>';
     html += '<div style="font-size:12px;color:'+barColor+';">'+intimacy+'/100</div></div>';
     // 派系/心理 两列网格
@@ -743,11 +743,12 @@
       } else if (isHypnosis && hackOn) {
         display = '<span style="color:#ffd1a0;font-weight:bold;">10 (最高)</span>';
       } else if (isFavor) {
-        // 好感度进度条样式(参考关系维度的亲密度)
+        // 好感度进度条样式(截断≥0)
+        var vFloor = Math.max(0, val);
         var max = 100;
-        var pct = Math.max(0, Math.min(100, (val / max) * 100));
-        var c = val > 70 ? '#86efac' : val > 30 ? '#ffd1a0' : '#f87171';
-        display = '<div style="display:inline-block;width:120px;height:6px;background:rgba(155,109,255,0.15);border-radius:3px;vertical-align:middle;margin-right:6px;"><div style="height:100%;width:'+pct+'%;background:'+c+';border-radius:3px;"></div></div><span style="font-size:11px;color:'+c+';">'+val+'/100</span>';
+        var pct = Math.max(0, Math.min(100, (vFloor / max) * 100));
+        var c = vFloor > 70 ? '#86efac' : vFloor > 30 ? '#ffd1a0' : '#f87171';
+        display = '<div style="display:inline-block;width:120px;height:6px;background:rgba(155,109,255,0.15);border-radius:3px;vertical-align:middle;margin-right:6px;"><div style="height:100%;width:'+pct+'%;background:'+c+';border-radius:3px;"></div></div><span style="font-size:11px;color:'+c+';">'+vFloor+'/100</span>';
       } else {
         display = String(val);
       }
