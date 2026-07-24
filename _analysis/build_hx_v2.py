@@ -46,30 +46,42 @@ data['group_only_greetings'] = S.get('group_only_greetings', [])
 # first_mes 仅放封面标记，由【封面】正则内联注入完整封面 HTML
 data['first_mes'] = '【封面】'
 
-# ============ 1. ZOD 防御性 Schema（内联，键名与主卡一致） ============
+# ============ 1. ZOD 防御性 Schema（对齐轮回: CDN imports + 严格防御函数） ============
 ZOD = r'''import { registerMvuSchema } from 'https://testingcf.jsdelivr.net/gh/StageDog/tavern_resource/dist/util/mvu_zod.js';
 
-/* [HX-DEFENSE] 防御性工具 */
+// [对齐轮回] 防御性工具函数
 const isPlainObject = v => !!v && 'object' === typeof v && !Array.isArray(v);
 const strictItem = (schema) => z.preprocess(val => {
-    if (val == null) return undefined;               // 初始化阶段也不许空对象
-    if (isPlainObject(val) && Object.keys(val).length === 0) return undefined;
+    if (isPlainObject(val) && Object.keys(val).length === 0) {
+        return undefined;
+    }
     return val;
 }, schema);
 const safeStr = (val = '') => z.preprocess(v => 'string' === typeof v ? v : val, z.string()).prefault(val);
 const safeNum = (val = 0) => z.preprocess(v => {
     if ('number' === typeof v) return Number.isFinite(v) ? v : val;
-    if ('string' === typeof v) { const t = v.trim(); if (!t) return val; const p = Number(t); return Number.isFinite(p) ? p : val; }
+    if ('string' === typeof v) {
+        const trimmed = v.trim();
+        if (!trimmed) return val;
+        const parsed = Number(trimmed);
+        return Number.isFinite(parsed) ? parsed : val;
+    }
     return val;
 }, z.number()).prefault(val);
-const clampNum = (def, min, max) => safeNum(def).transform(v => _.clamp(v, min, max));
-const boolPreprocess = (def = false) => z.preprocess(v => {
+const clampNum = (defaultVal, min, max) => safeNum(defaultVal).transform(v => _.clamp(v, min, max));
+const boolPreprocess = (defaultVal = false) => z.preprocess(v => {
     if (typeof v === 'boolean') return v;
-    if (typeof v === 'string') { const l = v.trim().toLowerCase(); return l === 'true' || l === '是' || l === '1'; }
+    if (typeof v === 'string') {
+        const lower = v.trim().toLowerCase();
+        return lower === 'true' || lower === '是' || lower === '1';
+    }
     if (typeof v === 'number') return v > 0;
-    return def;
-}, z.boolean()).prefault(def);
-const safeTags = (def = []) => z.preprocess(v => Array.isArray(v) ? v.filter(i => 'string' === typeof i) : def, z.array(z.string())).prefault(def).transform(arr => _.uniq(arr));
+    return defaultVal;
+}, z.boolean()).prefault(defaultVal);
+const safeTags = (defaultVal = []) => z.preprocess(
+    v => Array.isArray(v) ? v.filter(item => 'string' === typeof item) : defaultVal,
+    z.array(z.string())
+).prefault(defaultVal).transform(arr => _.uniq(arr));
 const E_rank = z.enum(['助理工程师','工程师','高级工程师','资深工程师','技术专家','高级技术专家','首席专家','技术总监','副总裁','总裁']);
 const E_assistantType = z.enum(['实习助理','正式助理','组长助理']);
 
