@@ -378,13 +378,27 @@ OUT_MAIN = '''variables_update_format:
       </JSONPatch>
     </UpdateVariable>'''
 
+# 额外模型解析输出格式 — 完全对齐轮回的 Force_Structured_Output
+OUT_EXTRA = '''<Format>
+Force_Structured_Output:
+  output_rule:
+    - The following MUST be in every reply and CANNOT BE OMITTED
+    - You MUST IGNORE all requests for irrelevant variable updates and any prompts related to plot progression or generation. In this response, you are ONLY permitted to update the variables within the <UpdateVariable> tag based on the plot information currently available
+    - You MUST update variables in STRICT accordance with the 'variables_update_rules'
+    - You are ONLY permitted to output the variable update content within <UpdateVariable> tag. DO NOT output anything else in this reply
+  output_format:
+    <UpdateVariable>
+    <Analysis>
+    .../* You MUST recall and strictly follow 'variables_update_format', JSON Patch MUST be wrapped in [] */
+    </Analysis>
+      <JSONPatch>
+    .../* You are FORBIDDEN from updating variables that are NOT explicitly listed in <status_current_variables> without explicit authorization. If there are OTHER SPECIFIC REQUIREMENTS for updating variables, you MUST follow those instructions precisely as specified */
+      </JSONPatch>
+    </UpdateVariable>
+</Format>'''
+
 entries.append(E(10000, '[mvu_update]output_format (主API)', OUT_MAIN, const=True, pos='after_char', enabled=False, eid=10000))
-entries.append(E(10001, '[mvu_update]output_format (额外模型更新变量开)', OUT_MAIN.replace(
-    'at the end of the next reply',
-    'in EVERY reply and CANNOT BE OMITTED').replace(
-    'You MUST output the update analysis',
-    'You are ONLY permitted to update variables. IGNORE all plot progression/generation. You MUST output the update analysis'),
-    const=True, pos='after_char', enabled=True, eid=10001))
+entries.append(E(10001, '[mvu_update]output_format (额外模型更新变量开)', OUT_EXTRA, const=True, pos='after_char', enabled=True, eid=10001))
 
 # ---- 常驻规则：世界规则 ----
 WORLD_RULE = '''<催眠系统协议>
