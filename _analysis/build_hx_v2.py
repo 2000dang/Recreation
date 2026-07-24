@@ -766,6 +766,11 @@ RG_LIST = [
     r'\[\s*(?:\{[^{}]*\}\s*,?\s*)+\][\s\S]*?(?=\n\s*\n|\Z|$)',
     '<details><summary>变量喵(JSON)</summary>\n\n$&\n</details>',
     placement=[2]),
+ # 编号列表 + JSON数组整体折叠: 1./2./3. + ○ 项目 + [...]
+ RG('[美化]变量分析整体折叠',
+    r'(?:^[ \t]*\d+\.[^\n]*\n[\s\S]*?)\[[\s\S]*?\]',
+    '<details><summary>变量喵(整体折叠)</summary>\n\n$&\n</details>',
+    placement=[2]),
  # 封面：内联完整自包含封面 HTML（含依赖自检 + 接入按钮）
  RG('封面', r'【封面】', REPL_COVER, maxDepth=10),
  # 开局：内联「外壳」再 fetch 真正的向导页（dist/V20260721/开局.html）
