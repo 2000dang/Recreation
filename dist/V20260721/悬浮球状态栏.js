@@ -687,28 +687,17 @@
       // 去重: 同一助理名跨类别只渲染一次
       if (isAssistantName && _dedupAssistants[key]) return '';
       if (isAssistantName) _dedupAssistants[key] = true;
-      // 外围(助理级)只显示: 在场, 催眠状态, 情绪(条件), 好感度
-      var OUTER_FIELDS = ['在场','催眠状态','情绪','好感度'];
+      // 助理管理下助理对象只显示名字(其他字段如好感度/催眠状态/已出场等全部移到关系维度弹窗查看)
       var nameHtml = isAssistantName
         ? '<span class="hx-k hx-assist-name" data-base="'+esc(basePath)+'" data-name="'+esc(key)+'" style="cursor:pointer;color:#86cfff;text-decoration:underline;text-decoration-style:dotted;">'+esc(key)+'</span>'
         : '<span class="hx-k">'+esc(key)+'</span>';
-      var html = '<div class="hx-sub"><div class="hx-row">'+nameHtml+'</div>';
       if (isAssistantName) {
-        // 情绪只在 在场=true 时显示
-        var present = val['在场'];
-        var filteredKeys = Object.keys(val).filter(function(kk) {
-          if (OUTER_FIELDS.indexOf(kk) === -1) return false;
-          if (kk === '情绪' && !present) return false;
-          return true;
-        });
-        filteredKeys.forEach(function(kk) {
-          html += renderField(kk, val[kk], path);
-        });
-      } else {
-        Object.keys(val).forEach(function(kk) {
-          html += renderField(kk, val[kk], path);
-        });
+        return '<div class="hx-sub"><div class="hx-row">'+nameHtml+'</div></div>';
       }
+      var html = '<div class="hx-sub"><div class="hx-row">'+nameHtml+'</div>';
+      Object.keys(val).forEach(function(kk) {
+        html += renderField(kk, val[kk], path);
+      });
       html += '</div>';
       return html;
     }
