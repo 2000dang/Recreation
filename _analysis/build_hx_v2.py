@@ -586,13 +586,13 @@ def RG(name, find, repl, disabled=False, placement=None, maxDepth=None):
     return obj
 
 RG_LIST = [
- RG('[无美化]变量折叠',
+ RG('[无美化]催眠印记折叠',
     r'/<update(?:variable)?>(?!.*<\/update(?:variable)?>)\s*([\s\S]*?)\s*$/gsi',
-    '<details><summary>变量喵</summary>\n$1\n</details>',
+    '<details><summary>催眠印记</summary>\n$1\n</details>',
     placement=[1, 2]),
- RG('[无美化]变量折叠完成',
+ RG('[无美化]催眠印记更新中',
     r'/<update(?:variable)?>\s*([\s\S]*?)\s*<\/update(?:variable)?>/gsi',
-    '<details>\n<summary>变量更新中{{random::.::..::...}}</summary>\n$1\n</details>',
+    '<details>\n<summary>催眠印记更新中{{random::.::..::...}}</summary>\n$1\n</details>',
     placement=[2]),
  RG('清理思维链', r'/<Analysis>[\s\S]+?<\/Analysis>/gm', '', placement=[2]),
  RG('只发送最新变量更新', r'/<update(?:variable)?>(?:(?!.*<\/update(?:variable)?>).*$|.*<\/update(?:variable)?>)/gsi', '', placement=[1, 2]),

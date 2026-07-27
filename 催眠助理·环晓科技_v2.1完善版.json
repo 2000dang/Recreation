@@ -46,9 +46,9 @@
       "world": "",
       "regex_scripts": [
         {
-          "scriptName": "[无美化]变量折叠",
+          "scriptName": "[无美化]催眠印记折叠",
           "findRegex": "/<update(?:variable)?>(?!.*<\\/update(?:variable)?>)\\s*([\\s\\S]*?)\\s*$/gsi",
-          "replaceString": "<details><summary>变量喵</summary>\n$1\n</details>",
+          "replaceString": "<details><summary>催眠印记</summary>\n$1\n</details>",
           "trimStrings": [],
           "disabled": false,
           "prompt": "",
@@ -61,9 +61,9 @@
           ]
         },
         {
-          "scriptName": "[无美化]变量折叠完成",
+          "scriptName": "[无美化]催眠印记更新中",
           "findRegex": "/<update(?:variable)?>\\s*([\\s\\S]*?)\\s*<\\/update(?:variable)?>/gsi",
-          "replaceString": "<details>\n<summary>变量更新中{{random::.::..::...}}</summary>\n$1\n</details>",
+          "replaceString": "<details>\n<summary>催眠印记更新中{{random::.::..::...}}</summary>\n$1\n</details>",
           "trimStrings": [],
           "disabled": false,
           "prompt": "",
