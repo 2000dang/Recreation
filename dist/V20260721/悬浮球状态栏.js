@@ -683,7 +683,7 @@
     // 对象嵌套(<2层): 展开子字段
     if (val && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date)) {
       // 判断是否在「助理管理」路径下。如果是, 助理名可点击弹出关系维度弹窗
-      var isAssistantName = (basePath === '助理管理.实习助理' || basePath === '助理管理.正式助理' || basePath === '助理管理.组长助理' || basePath === '助理管理.主任助理' || basePath === '助理管理.总监助理' || basePath === '助理管理.高等助理·辅骑' || basePath === '助理管理.特等助理·主骑');
+      var isAssistantName = (basePath === '助理管理.实习助理' || basePath === '助理管理.正式助理' || basePath === '助理管理.组长助理' || basePath === '助理管理.主任助理' || basePath === '助理管理.总监助理' || basePath === '助理管理.高等助理·辅骑' || basePath === '助理管理.特等助理·主骑' || basePath === '助理管理.待分配助理');
       // 去重: 同一助理名跨类别只渲染一次
       if (isAssistantName && _dedupAssistants[key]) return '';
       if (isAssistantName) _dedupAssistants[key] = true;
