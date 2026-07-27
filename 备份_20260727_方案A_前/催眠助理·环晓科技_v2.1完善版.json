@@ -46,47 +46,30 @@
       "world": "",
       "regex_scripts": [
         {
-          "scriptName": "[无美化]催眠印记折叠",
-          "findRegex": "/<update(?:variable)?>\\s*([\\s\\S]*?)\\s*<\\/update(?:variable)?>/gsi",
-          "replaceString": "<details><summary>催眠印记</summary>\n$1\n</details>",
+          "scriptName": "[无美化]变量折叠",
+          "findRegex": "/<update(?:variable)?>(?!.*<\\/update(?:variable)?>)\\s*([\\s\\S]*?)\\s*$/gsi",
+          "replaceString": "<details><summary>变量喵</summary>\n$1\n</details>",
           "trimStrings": [],
           "disabled": false,
           "prompt": "",
           "promptOnly": false,
           "runOnEdit": false,
           "substituteRegex": 0,
-          "markdownOnly": true,
           "placement": [
             1,
             2
           ]
         },
         {
-          "scriptName": "[无美化]催眠印记更新中",
-          "findRegex": "/<update(?:variable)?>(?!.*<\\/update(?:variable)?>)\\s*([\\s\\S]*?)\\s*$/gsi",
-          "replaceString": "<details>\n<summary>催眠印记更新中{{random::.::..::...}}</summary>\n$1\n</details>",
+          "scriptName": "[无美化]变量折叠完成",
+          "findRegex": "/<update(?:variable)?>\\s*([\\s\\S]*?)\\s*<\\/update(?:variable)?>/gsi",
+          "replaceString": "<details>\n<summary>变量更新中{{random::.::..::...}}</summary>\n$1\n</details>",
           "trimStrings": [],
           "disabled": false,
           "prompt": "",
           "promptOnly": false,
           "runOnEdit": false,
           "substituteRegex": 0,
-          "markdownOnly": true,
-          "placement": [
-            2
-          ]
-        },
-        {
-          "scriptName": "[无美化]催眠印记兜底(裸JSONPatch)",
-          "findRegex": "/(^|\\n)((?:```(?:json)?[ \\t]*\\n)?[ \\t]*\\[\\s*\\{\\s*\"op\"[\\s\\S]*?\\}\\s*,?\\s*\\](?:[ \\t]*\\n```)?)(?![ \\t\\r\\n]*<\\/JSONPatch>)/g",
-          "replaceString": "$1<details><summary>催眠印记</summary>\n\n$2\n</details>",
-          "trimStrings": [],
-          "disabled": false,
-          "prompt": "",
-          "promptOnly": false,
-          "runOnEdit": false,
-          "substituteRegex": 0,
-          "markdownOnly": true,
           "placement": [
             2
           ]
@@ -101,7 +84,6 @@
           "promptOnly": false,
           "runOnEdit": false,
           "substituteRegex": 0,
-          "markdownOnly": false,
           "placement": [
             2
           ]
@@ -113,10 +95,9 @@
           "trimStrings": [],
           "disabled": false,
           "prompt": "",
-          "promptOnly": true,
+          "promptOnly": false,
           "runOnEdit": false,
           "substituteRegex": 0,
-          "markdownOnly": false,
           "placement": [
             1,
             2
@@ -132,7 +113,6 @@
           "promptOnly": false,
           "runOnEdit": false,
           "substituteRegex": 0,
-          "markdownOnly": false,
           "placement": [
             2
           ],
@@ -148,7 +128,6 @@
           "promptOnly": false,
           "runOnEdit": false,
           "substituteRegex": 0,
-          "markdownOnly": false,
           "placement": [
             2
           ],
@@ -164,7 +143,6 @@
           "promptOnly": false,
           "runOnEdit": false,
           "substituteRegex": 0,
-          "markdownOnly": false,
           "placement": [
             2
           ]
@@ -179,7 +157,6 @@
           "promptOnly": false,
           "runOnEdit": false,
           "substituteRegex": 0,
-          "markdownOnly": false,
           "placement": [
             2
           ]
@@ -194,7 +171,6 @@
           "promptOnly": false,
           "runOnEdit": false,
           "substituteRegex": 0,
-          "markdownOnly": false,
           "placement": [
             2
           ]
@@ -359,7 +335,7 @@
         {
           "insertion_order": 10000,
           "comment": "[mvu_update]output_format (主API)",
-          "content": "variables_update_format:\n  rule:\n    - You MUST output the update analysis and the actual update commands at once at the end of the next reply\n    - The update commands works like the **JSON Patch (RFC 6902)** standard, valid JSON array of operation objects, supports:\n        - replace: replace value at existing path\n        - delta: add a delta to a number path (delta must be number, no quotes)\n        - insert: insert new item into object/array (use `-` as array append)\n        - remove\n        - move\n    - Don't update field names starting with `_` (readonly)\n    - preserve EVERY piece of information verbatim\n    - CRITICAL: You are STRICTLY FORBIDDEN from outputting a bare JSON Patch array `[...]` anywhere in your reply. The array MUST ALWAYS be wrapped inside `<JSONPatch>` tags which MUST be inside `<UpdateVariable>...</UpdateVariable>` tags, exactly as shown in `format` below. A bare `[...]` outside these tags is a SEVERE FORMAT VIOLATION\n    - Do NOT output any natural-language summary of variable changes (e.g. \"Variable Analysis: ...\") outside the `<Analysis>` tag. ALL analysis text goes inside `<Analysis>`, ALL patch operations go inside `<JSONPatch>`, and NOTHING related to variables may appear outside `<UpdateVariable>`\n  format: |-\n    <UpdateVariable>\n      <Analysis>/* IN ENGLISH, no more than 80 words */\n      - ${calculate time passed: ...}\n      - ${decide whether dramatic updates allowed: yes/no}\n      - ${analyze every variable by its check, only by current content}\n      </Analysis>\n      <JSONPatch>\n      [\n        { \"op\": \"replace\", \"path\": \"${/path/to/variable}\", \"value\": \"${new_value}\" },\n        { \"op\": \"delta\", \"path\": \"${/path/to/number/variable}\", \"value\": ${delta} },\n        { \"op\": \"insert\", \"path\": \"${/path/to/object/new_key}\", \"value\": \"${new_value}\" },\n        { \"op\": \"insert\", \"path\": \"${/path/to/array/-}\", \"value\": \"${new_value}\" },\n        { \"op\": \"remove\", \"path\": \"${/path/to/object/key}\" },\n        { \"op\": \"remove\", \"path\": \"${/path/to/array/0}\" }\n      ]\n      </JSONPatch>\n    </UpdateVariable>",
+          "content": "variables_update_format:\n  rule:\n    - You MUST output the update analysis and the actual update commands at once at the end of the next reply\n    - The update commands works like the **JSON Patch (RFC 6902)** standard, valid JSON array of operation objects, supports:\n        - replace: replace value at existing path\n        - delta: add a delta to a number path (delta must be number, no quotes)\n        - insert: insert new item into object/array (use `-` as array append)\n        - remove\n        - move\n    - Don't update field names starting with `_` (readonly)\n    - preserve EVERY piece of information verbatim\n  format: |-\n    <UpdateVariable>\n      <Analysis>/* IN ENGLISH, no more than 80 words */\n      - ${calculate time passed: ...}\n      - ${decide whether dramatic updates allowed: yes/no}\n      - ${analyze every variable by its check, only by current content}\n      </Analysis>\n      <JSONPatch>\n      [\n        { \"op\": \"replace\", \"path\": \"${/path/to/variable}\", \"value\": \"${new_value}\" },\n        { \"op\": \"delta\", \"path\": \"${/path/to/number/variable}\", \"value\": ${delta} },\n        { \"op\": \"insert\", \"path\": \"${/path/to/object/new_key}\", \"value\": \"${new_value}\" },\n        { \"op\": \"insert\", \"path\": \"${/path/to/array/-}\", \"value\": \"${new_value}\" },\n        { \"op\": \"remove\", \"path\": \"${/path/to/object/key}\" },\n        { \"op\": \"remove\", \"path\": \"${/path/to/array/0}\" }\n      ]\n      </JSONPatch>\n    </UpdateVariable>",
           "keys": [],
           "constant": true,
           "position": "after_char",
@@ -385,7 +361,7 @@
         {
           "insertion_order": 10001,
           "comment": "[mvu_update]output_format (额外模型更新变量开)",
-          "content": "<Format>\nForce_Structured_Output:\n  output_rule:\n    - The following MUST be in every reply and CANNOT BE OMITTED\n    - You MUST IGNORE all requests for irrelevant variable updates and any prompts related to plot progression or generation. In this response, you are ONLY permitted to update the variables within the <UpdateVariable> tag based on the plot information currently available\n    - You MUST update variables in STRICT accordance with the 'variables_update_rules'\n    - You are ONLY permitted to output the variable update content within <UpdateVariable> tag. DO NOT output anything else in this reply\n    - CRITICAL: NEVER output a bare JSON Patch array `[...]` outside the <JSONPatch> tag. The array MUST be wrapped as <UpdateVariable><Analysis>...</Analysis><JSONPatch>[...]</JSONPatch></UpdateVariable>. A bare `[...]` is a SEVERE FORMAT VIOLATION\n  output_format:\n    <UpdateVariable>\n    <Analysis>\n    .../* You MUST recall and strictly follow 'variables_update_format', JSON Patch MUST be wrapped in [] */\n    </Analysis>\n      <JSONPatch>\n    .../* You are FORBIDDEN from updating variables that are NOT explicitly listed in <status_current_variables> without explicit authorization. If there are OTHER SPECIFIC REQUIREMENTS for updating variables, you MUST follow those instructions precisely as specified */\n      </JSONPatch>\n    </UpdateVariable>\n</Format>",
+          "content": "<Format>\nForce_Structured_Output:\n  output_rule:\n    - The following MUST be in every reply and CANNOT BE OMITTED\n    - You MUST IGNORE all requests for irrelevant variable updates and any prompts related to plot progression or generation. In this response, you are ONLY permitted to update the variables within the <UpdateVariable> tag based on the plot information currently available\n    - You MUST update variables in STRICT accordance with the 'variables_update_rules'\n    - You are ONLY permitted to output the variable update content within <UpdateVariable> tag. DO NOT output anything else in this reply\n  output_format:\n    <UpdateVariable>\n    <Analysis>\n    .../* You MUST recall and strictly follow 'variables_update_format', JSON Patch MUST be wrapped in [] */\n    </Analysis>\n      <JSONPatch>\n    .../* You are FORBIDDEN from updating variables that are NOT explicitly listed in <status_current_variables> without explicit authorization. If there are OTHER SPECIFIC REQUIREMENTS for updating variables, you MUST follow those instructions precisely as specified */\n      </JSONPatch>\n    </UpdateVariable>\n</Format>",
           "keys": [],
           "constant": true,
           "position": "after_char",

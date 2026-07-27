@@ -1,0 +1,1098 @@
+##############################
+# UPDATE_RULES (id=308993 ins=99997 cmt=[mvu_update]变量更新规则 enabled=True const=True pos=after_char)
+
+---
+<%_
+;(() => {
+const data = _.cloneDeep(getMessageVar('stat_data', { defaults: {} }));
+const isCombat = _.get(data, '系统状态.是否战斗中', false) === true;
+const isOneWorld = _.get(data, '设置.单一世界', false) === true;
+const isSpace = _.get(data, '系统状态.是否在主神空间', false) === true;
+if (data) { _%>
+variables_update_rules:
+  _复用:
+    位格品质: &E_quality F|E|D|C|B|A|S|SS|SSS
+    六维: &E_attr6 [力量, 敏捷, 体质, 精神, 感知, 魅力]
+
+
+  核心协议:
+    - &P_形态覆盖 "【形态加载与反噬】激活时读取[形态库]数据，期间伤害与消耗由本体HP/EP统一承担。主动解除或因重创被动打断(爆机)时，必须清空卡槽，并将该形态标记为冷却/破损，同时为本体添加[过载/虚弱/反噬]负面状态，严禁无缝连续变身。"
+    - &P_高频计数 "【Patch计数】击杀时使用局部路径直接对相应层级数值+1，严禁重写整个列表"
+    - &P_语义一致 "数值变化必须与叙事事件规模匹配，禁止单次跨越多个阶段"
+    - &P_状态同步 "所有世界状态必须与剧情实时同步"
+    - &P_实体参考 "按照<实体生成规则>、<品质效果数值规则>生成数值，禁止随意编造"
+    - &P_状态堆叠 "【覆盖与驱散校验】更新状态时严格查阅《状态协议》。同源同名刷新时间禁无限叠；高品质绝对压制并覆盖低品质，低级驱散无效"
+    - &P_战后清理 "【状态垃圾回收】脱战瞬间，必须强制 remove 所有[战斗状态]，保留[世界状态]。允许重度受伤/污染等战斗状态转化为长期世界状态"
+    - &P_字段剔除 "不属于当前分类的专属字段必须直接舍弃，严禁强行补全或写null占位。"
+    - &P_传闻通用 "总量≤3条, 为空补2条, 约60字/条, 不围绕<user>除非影响重大"
+
+  全局:
+    只读字段: [/主角/最终属性, /NPC/最终属性]
+    新节点硬约束: [insert=创建完整对象，不是局部patch；凡insert新节点，value必须覆盖目标节点type定义的全部字段；缺任一字段视为无效insert，输出前必须修复]
+    insert非空约束: ["insert时对象字段不得写{}；map/record类型至少给1个有效key；若节点有最小数量约束按该约束执行"]
+    通用约束: [更新字段能增量就不全量, 数值超range按上下限截断]
+    缺省原则: 数值类属性默认仅生成非0属性，未生成属性一律视为0
+    新物品路由与格式铁律:
+      - 标准流程: 每次insert新物品前，必须依次完成【分类→路径→Schema→量化→名称】五项校验
+      - 分类隔离: 可穿戴装备/工具必须写入装备列表；消耗品/材料/杂物必须写入背包道具。绝对禁止跨分类写入
+      - Schema对齐: 新生成对象必须严格满足Schema定义，全量包含必填字段；禁止缺失字段、生成未定义字段或遗漏默认字段
+      - 命名清洗: 新物品名称必须先完成规范化，再用于对象键、JSON Patch路径及CheckResult显示，三者名称必须完全一致；对象键禁止使用英文句点，口径类X.Ymm统一写作X·Y（例：5.56mm弹药→5·56弹药）
+
+  世界:
+    时间:
+      format: ${yyy}年-${mm}月-${dd}日-${时间段}
+      check:
+        - 时间段为[清晨, 上午, 中午, 下午, 傍晚, 入夜, 深夜, 凌晨, 黎明]
+        - *P_状态同步
+        - 若时间跨度较大，应说明跳跃原因
+    地点:
+      format: ${大陆方位}-${势力}-${聚落/地标}-${区位}-${详细位置}
+      check:
+        - *P_状态同步
+        - 按实际情况保留3~5层，从大到小排列
+    名称:
+      check:
+        - 所穿越的电影、同人、小说等世界的名称
+    难度:
+      check:
+        - 初始值锚定当前世界的综合评级（例：F-E）
+        - 当<世界因果与法则协议>进入更高侵蚀阶段时，难度同步提升
+        - 当前出现远超综合评级的剧情实体时，可临时提升难度
+        - 当前危机解除且法则恢复正常后，难度恢复至对应阶段
+        - 若本轮发生难度跃升，正文必须插入醒目的系统警报
+    法则:
+      type: string[]
+      check: 
+        - 初始按<世界因果与法则协议>生成1~10条当前世界生效的原生法则或压制规则
+        - 当世界因果的法则状态发生变化时，必须同步更新本变量
+        - 本变量仅记录当前已生效且正在影响世界的法则；失效法则必须移除，新增法则必须补充
+    货币: 
+      type: |-
+        {
+          体系: string; // 本世界货币体系或面额换算。例如：1上品灵石=100中品灵石=10000下品灵石
+          购买力基准: string; // 严格锚定《货币规则》，选择最符合当前世界日常经济体系的典型消费作为购买力锚点（如餐饮、住宿、补给、燃料、口粮等≈XX本地货币），用于衡量当地购买力，不代表固定汇率
+          经济波动: string; // 当前市场价格变化及原因。例如：因稳定值下降引发妖兽潮，基础物资上涨300%，高级法器停止流通
+        }
+      check: 
+        - 跨界时初始化当地货币体系与购买力基准
+        - 购买力基准仅用于锚定当地物价，不得生成跨世界汇率、兑换比例或空间币换算
+        - 物价必须与稳定值及世界局势挂钩
+        - 遵循双轨隔离，任务世界内绝对禁止NPC感知、使用或结算【空间币】
+        - 离开当前世界时清空货币数据，禁止带入下一世界
+    探索:
+      type: Map<string, object>
+      check:
+        - 发现新坐标或获取情报时更新
+        - 仅记录整体地标(如皇城/黑森林)，【严禁】记录子房间(如厨房/大门)，微观进展直接累加至主区域
+        - *P_语义一致
+      "[地点名]":
+        风险:
+          type: *E_quality
+        探索度:
+          type: number
+          range: 0~100
+          check: 
+            - 无知(0%):仅知名称方位; 浅尝(10%):到达外围/初见风貌; 熟悉(30%):掌握外围/接触原住民或普通怪物; 深入(60%):进入核心/发现核心机密或遭遇精英; 掌控(90%):击败区域首领/破坏区域核心; 核心(100%):彻底查明所有隐藏要素/发掘终极宝藏
+        描述: string; // 简述该区域当前探明或认为的表象描述
+    势力:
+      type: Map<string, object>
+      check:
+        - 接触新阵营或布告解锁时更新
+        - *P_语义一致
+      "[势力名]": 
+        实力:
+          type: *E_quality
+        领地:
+          type: string
+          check:
+            - 该势力掌控的核心区域或总部位置
+        描述:
+          type: string
+          check:
+            - 简述阵营倾向、行事作风或当前状态
+        声望:
+          type: number
+          range: -5000~10000
+          check: 
+            - 敌对(-5000):不死不休/全图追杀; 仇视(-1000):拒绝交易/极易引发流血冲突; 冷淡(0):漠不关心/无基础交情; 中立(500):正常交易与对话; 友好(2000):给予折扣/可接取内部委托; 崇敬(5000):核心盟友/共享机密与武装支援; 崇拜(10000):死忠/可调动该势力全部底蕴
+if (!isCombat && !isSpace) {
+    因果轨道:
+      type: |-
+        {
+          当前阶段: string; // 宏观阶段、篇章(世界默认轨道)
+          故事线: string;   // 必须用 " -> " 串联 3~5 个默认大事件节点，覆盖前后
+          下一节点: string; // 下一个大事件边界或检查点
+          偏移记录: {       // [结算日志] 仅在重大事件完成、关键剧情收束或战斗彻底结束后统一结算写入，绝非实时动作流水账
+            [事件名: string]: {
+              描述: string; // 剧情偏差说明及潜在后果
+              引发者: string; 
+              影响程度: number; // 原有因果链的偏移力度
+            }
+          }
+        }
+      check:
+        - 轨道定义：[当前阶段/故事线/下一节点] 仅记录世界原著宏观走向，禁止记录个人日常、常规战斗、普通交易、零碎对话、休息等事件
+        - 剧情推进：仅发生章节切换、地图切换、关键任务完成或重大剧情事件时更新故事线
+        - 偏差触发：仅当原著关键人物命运、重大事件、阵营格局或世界主线被实质改变时新增[偏移记录]
+        - 零偏移原则：影响程度=0时禁止新增任何偏移记录，轨道保持不变
+        - 数值锚定：[影响程度] 严格对标《世界因果与法则协议》刻度，轻微干涉强制记为0
+        - 累计原则：零散行为不得累计形成偏移，仅重大事件或连续行为共同改变世界主线时才允许记录
+        - 变量覆写：若[设置.世界超稳]=true，所有[影响程度]强制锁定为0
+}
+if (!isOneWorld && !isSpace) {
+    异端雷达:
+      当前模式: 
+        type: string
+      异端上限:
+        type: number
+      活跃余量: 
+        type: number
+        check: 
+          - 当前仍活跃于本世界的异端数量，≤异端上限
+          - 异端死亡、永久封印、遣返、离开当前世界后减少
+      check:
+        - 进入新世界时初始化，离开世界或清剿完毕时清零
+        - 后台仅做总数记录。登场的异端必须写进 [关系列表]，并在 [身份] 中严格标注其阵营(执行者/篡夺者/梦魇师/残魂)或身份(穿越者)
+        - AI禁止仅因活跃余量未满而主动生成异端
+}
+
+  任务:
+    列表:
+      type: |-
+        {
+          [任务名]: {
+            委托方: string;
+            简介: string;
+            目标: string;
+            奖励: string;
+            交付: string;
+            状态: string;
+          }
+        }
+      check:
+        - *P_状态同步
+        - 完成领奖或失败remove
+        - 仅在任务提交完成remove时同步发放一次奖励，避免重复
+        - 若任务存在情报欺诈、埋伏或超阶风险，隐藏真相记录真实情况。必须符合世界逻辑，严禁写在玩家面前
+        - 主神任务完成后状态改为[可结算]；等待<user>主动触发《任务结算程序》
+        - 本土任务完成后状态改为[可交付]；仅在完成交付后发放本土任务奖励
+if (isOneWorld) {
+        - 绝对禁止生成主神空间结算、返回主神的跨界逻辑
+}
+    击杀:
+      path: /任务/击杀/${位格品质}
+      type: number
+      check:
+        - 仅记录由<user>及其直接参与战斗的小队同伴、召唤物或可控单位主动造成的最终死亡结果
+        - *P_高频计数
+    贡献:
+      type: |-
+        {
+          [事件名: string]: {
+            剧情定性: string; // 简述玩家的具体行为(如: 刺杀反派、引发尸潮、挽救城邦)
+          }
+        }
+      check:
+        - 仅记录<user>亲自参与并对【世界.稳定】产生实质增减的重大事件，日常琐事不计入
+        - 必须与 [世界.因果轨道] 中引发者为 <user> 的事件保持绝对同步
+        - 本节点作为离开当前世界时，主神空间进行【最终评级与空间币结算】的唯一财务凭证，在离开世界前绝对禁止 remove 或篡改
+
+  主角:
+    种族: &race
+      check:
+        - 仅当角色的种族发生实质性变化时才更新
+    身份: &identity
+      type: Array<string>
+      check:
+        - *P_状态同步
+        - 可同时拥有多个身份
+        - 相似或重复的身份不记录
+    职业: &occupation
+      type: Array<string>
+      check:
+        - *P_状态同步
+        - 可同时拥有多个职业
+        - 相似或重复的职业不记录
+    ${资源值}: &resource
+      type: number
+      资源值: HP | EP
+      check:
+        - 随战斗、施法、行动消耗或治疗、休息恢复
+        - 根据装备、技能、道具、状态的效果更新
+        - ≤对应上限
+    THP: &thp
+      type: number
+      check:
+        - 护盾/临时生命写入，先扣除THP再扣除HP，不叠加
+        - 战斗结束清零
+    状态: &buff
+      type: |-
+        {
+          [状态名: string]: {
+            类型: '增益' | '减益' | '特殊';
+            品质: string;
+            持续: string;
+            来源: string;
+            原始属性: { [属性: string]: number };
+            效果: string;
+          }
+        }
+      check:
+        - 随角色获得、消除状态效果更新
+        - *P_状态堆叠
+        - 【时间衰减】战斗状态随轮次扣减；世界状态按 [世界.时间] 流逝结算
+        - 进脱战时自动换算时间单位
+        - *P_战后清理
+        - 持续归零或达成持续描述中的条件时，立刻 remove
+        - 是否战斗中为 true 时，则为战斗状态；否则为世界状态
+    血统: &bloodline
+      type: |-
+        {
+          [血统名: string]: {
+            品质: string;
+            标签: string[];
+            原始属性: { [基础属性: string]: number }; // 仅限 *E_attr6
+            效果: { [效果名: string]: string };
+            描述: string;
+          }
+        }
+      check:
+        - 随角色创建、剧情、变化更新
+        - *P_实体参考
+    技能: &skill
+      type: |-
+        {
+          [技能名: string]: {
+            品质: string;
+            类型: number; // 0-2 主动|被动|特殊
+            标签: string[];
+            效果: { [效果名: string]: string };
+            描述: string;
+            消耗: string;
+          }
+        }
+      check:
+        - 随角色学习、遗忘、升级技能更新
+        - *P_实体参考
+    装备: &equip
+      type: |-
+        {
+          [装备名: string]: {
+            品质: string;
+            类型: number; // 0-8
+            标签: string[];
+            原始属性: { [属性: string]: number };
+            效果: { [效果名: string]: string };
+            描述: string;
+            消耗: string;
+            状态: number;
+          }
+        }
+      check:
+        - *P_实体参考
+        - 由外部脚本处理穿戴/脱下逻辑，禁止直接修改状态
+    背包: &backpack
+      type: |-
+        {
+          [物品名称: string]: {
+            品质: string;
+            类型: string; // 同类型需复用且不得细分
+            数量: number;
+            标签: string[];
+            效果: { [效果名: string]: string };
+            描述: string;
+          }
+        }
+      check:
+        - 获得insert或+数量/使用丢弃-数量, =0时remove
+        - 可穿戴装备严禁放入, 道具不包括可穿戴装备
+    空间币:
+      type: number
+      check: 仅在空间交易及副本结算时更新，不可为负
+    形态库: &form
+      path: /主角/形态库/${形态名}
+      type: |-
+        {
+          [形态名: string]: {
+            品质: string;
+            消耗: string;
+            状态: string;
+            原始属性: {力量: number, 敏捷: number, 体质: number, 精神: number, 感知: number, 魅力: number, ATK: number, DEF: number, MATK: number, MDEF: number, AP: number}
+            效果: { [效果名: string]: string }
+            技能: *skill
+            描述: string;
+          }
+        }
+      check:
+        - 首次获取变身/附体/单兵机甲时 insert 持久化资产，平时休眠
+        - *P_实体参考
+        - 【受损与修复】形态的[状态]若为破损/大破，不会随时间自动恢复，必须通过基地设施修理|消耗特定材料修复|长休后方可再次激活
+    当前形态: &current_form
+      激活:
+        type: boolean
+        check: 
+          - 激活/穿戴时设为 true，解除/爆机时设为 false
+      名称:
+        type: string; // 必须是 [形态库] 中已存在的形态名
+        check: 
+          - *P_形态覆盖
+          - 【同调承伤机制】激活时，一切判定及承伤直接扣减本体HP/EP面板。若单次受到极高伤害，除了扣减HP外，AI应视情况更新形态库中该形态的[状态]为破损，甚至触发强制解除
+
+  资产:
+    type: Map<string, object>
+    check:
+      - *P_字段剔除
+      - 资产的添加、收益、建设升级必须以事件驱动，严禁无故凭空生成
+      - 允许同时存在多个不同资产，绝对禁止无故互相覆盖
+      - 固定地产禁止生成[能源]/[消耗单元]
+      - 载具与便携据点必须生成[能源]
+    "[资产名称]":
+      类型:
+        type: string // 固定地产 | 大型载具与要塞 | 便携式据点
+      主体规模:
+        type: number
+        range: 1~10
+        check: [表征物理体积与社会影响力]
+      完整度:
+        type: number
+        range: 0~100
+        check: [低于50%进入破损状态功能受限，归零则彻底损毁/瘫痪]
+      状态:
+        type: string // 当前的表象描述，如"炉火永不熄灭"
+      能源:
+        type: |-
+          {
+            类型: string;
+            当前: number;
+            上限: number;
+            描述: string; // 记录日常消耗规则与特定行为消耗
+          }
+        check: 
+          - 能源枯竭时，所有相关功能与DC加成强制失效
+      消耗单元:
+        type: |-
+          {
+            [单元名: string]: {
+              余量: number;
+              上限: number;
+              加成: string[]; // 带来的具体检定加成或支援效果
+            }
+          }
+        check: 
+          - 单元数量归零后，对应功能失效
+      建设序列:
+        type: |-
+          {
+            [设施名词: string]: {
+              阶段: '基础' | '进阶' | '专业' | '顶尖' | '禁忌';
+              功能: string; // 具体作用说明
+              加成: string[]; // 提供的具体检定修正(如:锻造+5)或战斗外支援
+              产出: string; // 每周固定产出，无则填无
+            }
+          }
+        check:
+          - Key必须是名词方向，严禁携带等级/质量形容词
+          - 获得领土级别资产时直接解锁满额8条，普通资产初始2~8条
+      驻扎人员:
+        type: |-
+          {
+            [人员名: string]: string; // 姓名: 职位或职责说明
+          }
+        check: [仅记录核心成员与关键负责人，普通成员默认背景存在不逐一生成]
+      待办事件:
+        type: Array<string>
+        check:
+          - 需玩家处理事件计入(备料/突发/周产)，正负面均计入
+          - 剧情推进/时间流逝insert 1~2条
+          - 产出按单资产单周期汇总1条"周产收益包裹"(含来源明细)；空产出不计入
+          - 结算发放金币/道具/装备/材料+功能修正后remove
+          - 回城/回家/远程指令后remove已处理+完成结算
+
+  系统状态:
+    是否战斗中:
+      type: bool
+      check: 
+        - 进战更新true，结束更新false
+    进阶试炼已完成:
+      type: bool
+      check: 
+        - 仅当<user>在剧情中根据<品质效果数值规则>满足晋升条件时方可更新为 true
+    是否在主神空间:
+      type: bool
+      check: 
+        - 仅当<user>位于主神空间时更新为true，否则为false
+
+  关系列表:
+    type: Map<string, NPC面板>
+    check: 
+      - 必须根据<user>的主观意图更新
+      - insert时必须一次性给全字段(种族/身份/外貌/着装/血统/装备/技能)
+      - 角色未组队且<user>不再留恋时，直接删除
+    "[角色名]":
+      在场:
+        type: boolean
+        check: 
+          - 随剧情推进、角色行动更新
+      种族: *race
+      身份: *identity
+      职业: *occupation
+      层级: *E_quality
+      ${资源值}: *resource
+      THP: *thp
+      状态: *buff
+      血统: 
+        type: *bloodline
+        check:
+          - 角色创建时必须生成至少1个血统
+      装备: *equip
+      技能: *skill
+      背包: *backpack
+      形态库: *form
+      当前形态: *current_form
+      性格: &major_change
+        type: string
+        check: [发生实质性变化时才更新]
+      喜爱: *major_change
+      外貌: *major_change
+      着装:
+        type: string
+        check:
+          - 角色衣物更换时更新
+          - 环境或场景变化导致当前着装不适用时更新
+          - 衣物状态发生实质变化时更新
+      是否队友:
+        type: boolean
+        check: [仅当角色与<user>建立了组队关系时设为true]
+      好感度:
+        type: number
+        range: -100~100
+        check: 
+          - 变化区间为-5~5
+          - 具体变化规则参考'好感度定义'
+      心里话:
+        type: string
+        check: [每次回复都需要随实际剧情更新]
+      背景故事:
+        type: string
+        check:
+          - 仅发生对角色经历有重大影响的事件时才更新
+          - 在原有背景故事基础上补充/修改
+      数量:
+        type: number
+        check:
+          - 仅insert群体单位时更新
+if (!isCombat) {
+  传闻:
+    note: 悬赏线索/商路动向/势力情报/遗迹坐标/人物行踪/黑市消息/宝物传闻/怪物异动/深渊异变/种族摩擦/物价波动
+    街头巷议:
+      type: "{[标题]:{说书人:str;内容:str;可信度:酒话|可疑|或许可信}}"
+      check: 
+        - *P_传闻通用
+        - 到达任何非战斗区域(如城镇/营地/聚集地)时，自动更新1~3条替换旧
+        - 远离后remove
+    情报交易:
+      type: |-
+        {
+          [情报名: string]: {
+            卖家: string;
+            情报评级: 'F~SSS' | '日常' | '战略';
+            摘要: string; // 玩家买前能看到的表象
+            要价: string; // 必须带有明确的货币单位，如"50万日元"或"500空间币"
+            真实内幕: string; // 【仅AI可见】该情报背后的真相，必须符合世界逻辑限制
+          }
+        }
+      check: 
+        - *P_传闻通用
+        - 处于交易区/酒馆/黑市，更新1~2条
+        - 任务世界内要价必须使用[世界.货币.体系]；主神空间使用空间币(按同级装备底价30%-50%)
+        - 购买后 remove，并转化为【任务】或【探索】
+        - 由情报转化来的任务/探索，必须强行植入"隐藏真相"字段记录[真实内幕]。常规生成绝对禁止写此字段
+    布告与檄文:
+      type: "{[标题]:{发布者:str;内容:str;张贴位置:str}}"
+      check:
+        - *P_传闻通用
+        - 只要到达新的大区域或主要城镇，必须覆盖替换旧公告
+        - 发布者必须关联当前[势力]
+}
+<%_ }
+})(); _%>
+
+
+##############################
+# VARIABLES (id=665582 ins=99996 cmt=[variables]当前变量 enabled=True const=True pos=after_char)
+
+<%_
+;(() => {
+const data = _.cloneDeep(getMessageVar('stat_data', { defaults: {} }));
+if (!data || !data.主角) { _%>
+<status_current_variables>
+数据为空
+</status_current_variables>
+<%_ } else {
+
+// 全局状态标识 (用于信息遮蔽)
+const isCombat = _.get(data, '系统状态.是否战斗中', false) === true;
+const isFormActive = _.get(data, '主角.当前形态.激活', false) === true;
+const isOneWorld = _.get(data, '设置.单一世界', false) === true;
+
+// 构建只读数据
+const readonly = {};
+const safeStringify = (obj) => {
+  if (typeof YAML !== 'undefined' && YAML && typeof YAML.stringify === 'function') {
+    return YAML.stringify(obj, { blockQuote: 'literal' }).trim();
+  }
+  return JSON.stringify(obj, null, 2);
+};
+
+// 1. 世界只读信息
+readonly.世界 = {
+  稳定: _.get(data, '世界.稳定', 100)
+};
+
+// 2. 主角只读信息
+readonly.主角 = {
+  层级: data.主角.层级,
+  HP_MAX: data.主角.HP_MAX,
+  EP_MAX: data.主角.EP_MAX
+};
+if (data.主角.最终属性) {
+  readonly.主角.最终属性 = _.cloneDeep(data.主角.最终属性);
+  delete readonly.主角.最终属性.DEF;  // 隐藏固定防御值，只暴露减伤率
+  delete readonly.主角.最终属性.MDEF;
+}
+
+// 3. 关系列表只读信息 (提取NPC的最终属性与生命上限)
+if (!_.isEmpty(data.关系列表)) {
+  readonly.关系列表 = {};
+  _.forEach(data.关系列表, (npc, name) => {
+    readonly.关系列表[name] = {};
+    if (npc.HP_MAX !== undefined) readonly.关系列表[name].HP_MAX = npc.HP_MAX;
+    if (npc.EP_MAX !== undefined) readonly.关系列表[name].EP_MAX = npc.EP_MAX;
+    if (npc.最终属性) {
+      readonly.关系列表[name].最终属性 = _.cloneDeep(npc.最终属性);
+      delete readonly.关系列表[name].最终属性.DEF;
+      delete readonly.关系列表[name].最终属性.MDEF;
+    }
+    // 剔除空对象
+    if (_.isEmpty(readonly.关系列表[name])) delete readonly.关系列表[name];
+  });
+  if (_.isEmpty(readonly.关系列表)) delete readonly.关系列表;
+}
+
+// 构建可变数据
+const current = {};
+const 简详显示配置 = _.cloneDeep(_.get(data, '系统配置.简详显示', {}));
+const normalizeBriefPath = (path) => typeof path === 'string' ? path.trim() : '';
+const 简要显示路径 = new Set(
+  (_.get(简详显示配置, '简要显示路径', []) || []).map(normalizeBriefPath).filter(Boolean)
+);
+const isBriefPath = (...paths) => paths.some(path => 简要显示路径.has(normalizeBriefPath(path)));
+const 简略显示占位 = '仅显示名称';
+
+// 1. 世界信息 (战术级动态遮蔽)
+if (!isCombat) {
+  // 非战斗状态：全量展示 (排除只读的稳定值)
+  if (!isOneWorld) {
+    current.世界 = _.omit(data.世界, ['稳定']);
+  } else {
+    current.世界 = _.omit(data.世界, ['稳定', '异端雷达']);
+  }
+} else {
+  // 战斗状态：保留时间/地点/法则(用于压制判定)/探索/势力(用于击杀结算)
+  // 坚决剔除【货币】(战斗不交易) 和【因果轨道】(战斗不看历史账本)
+  if (!isOneWorld) {
+    current.世界 = _.omit(data.世界, ['稳定', '货币', '因果轨道']);
+  } else {
+    current.世界 = _.omit(data.世界, ['稳定', '货币', '因果轨道', '异端雷达']);
+  }
+}
+
+// 2. 传闻处理 (战斗中彻底屏蔽)
+if (!isCombat && !_.isEmpty(data.传闻)) {
+  current.传闻 = data.传闻;
+}
+
+// 3. 任务列表
+current.任务 = data.任务 || {};
+
+// 4. 主角基础信息 (已将HP_MAX、EP_MAX和最终属性移入 readonly)
+current.主角 = {
+  种族: data.主角.种族,
+  身份: data.主角.身份,
+  职业: data.主角.职业,
+  空间币: data.主角.空间币,
+  HP: data.主角.HP,
+  THP: data.主角.THP || 0,
+  EP: data.主角.EP
+};
+
+// --- 【核心逻辑 2】三段式物资视野剔除 ---
+if (!isCombat) {
+  const 背包 = _.cloneDeep(data.主角.背包 || {});
+  current.主角.背包 = _.transform(背包, (result, item, name) => {
+    // 【状态2】：丢在空间仓库，全全局彻底屏蔽，节约海量Token
+    if (item.状态 === 2) return;
+    
+    // 酒馆自带的简略显示配置
+    if (isBriefPath(`/主角/背包/${name}`)) {
+      result[name] = 简略显示占位;
+      return;
+    }
+    
+    const statusMark = item.状态 === 1 ? '[战术栏]' : '[随身背包]';
+    result[name] = {
+      ...item,
+      状态: `${item.状态 || 0} // ${statusMark}`
+    };
+  }, {});
+  
+  if (_.isEmpty(current.主角.背包)) delete current.主角.背包;
+} else {
+  // 战斗状态下，直接过滤出状态为 1 的战术栏道具
+  const 背包 = _.cloneDeep(data.主角.背包 || {});
+  const 快捷道具 = _.transform(背包, (result, item, name) => {
+    if (item.状态 === 1) {
+      result[name] = { ...item, 状态: "1 // [战术栏]" };
+    }
+  }, {});
+  
+  if (!_.isEmpty(快捷道具)) current.主角.背包 = 快捷道具;
+}
+
+// --- 【核心逻辑 3】战斗中屏蔽未穿戴装备 & 剥离装备属性 ---
+const 装备 = _.cloneDeep(data.主角.装备 || {});
+current.主角.装备 = _.transform(装备, (result, item, key) => {
+  // 若在仓库中,则直接不显示
+  if (item.状态 === 2) return;
+  // 若在战斗中，且装备未穿戴（状态为0），直接丢弃不发给AI
+  if (isCombat && item.状态 === 0) return;
+
+  if (isBriefPath(`/主角/装备/${key}`)) {
+    result[key] = 简略显示占位;
+    return;
+  }
+  
+  // 依然保留极强的语义提示防幻觉
+  const statusMark = item.状态 === 1 ? '[已穿戴]' : '[未穿戴]';
+  result[key] = {
+    ...item,
+    状态: `${item.状态} // ${statusMark}`
+  };
+
+  // 【核心修改】战斗中剥离装备的加成原始属性，防止AI重复计算
+  if (isCombat) delete result[key].原始属性;
+}, {});
+
+// --- 技能 / 血统 / 状态 / 形态库 ---
+if (!_.isEmpty(data.主角.技能)) current.主角.技能 = data.主角.技能;
+
+// 【核心修改】战斗中剥离血统的加成原始属性，防止AI重复计算
+if (!_.isEmpty(data.主角.血统)) {
+  if (isCombat) {
+    current.主角.血统 = _.mapValues(data.主角.血统, bloodline => _.omit(bloodline, ['原始属性']));
+  } else {
+    current.主角.血统 = data.主角.血统;
+  }
+}
+
+// 【核心修改】战斗中剥离状态的加成原始属性，防止AI重复计算
+if (!_.isEmpty(data.主角.状态)) {
+  if (isCombat) {
+    current.主角.状态 = _.mapValues(data.主角.状态, status => _.omit(status, ['原始属性']));
+  } else {
+    current.主角.状态 = data.主角.状态;
+  }
+}
+
+// --- 【核心逻辑 4】形态库动态战术遮蔽 ---
+if (!_.isEmpty(data.主角.形态库)) {
+  if (!isCombat) {
+    // 非战斗状态：全量展示所有形态，供日常管理、维护或查阅
+    current.主角.形态库 = data.主角.形态库;
+  } else {
+    // 战斗状态：展示简化的形态列表，全量展示激活的形态
+    current.主角.形态库 = _.transform(data.主角.形态库, (result, form, name) => {
+      const isActive = (isFormActive && data.主角.当前形态.名称 === name);
+      if (isActive) {
+        const activeForm = _.cloneDeep(form);
+        delete activeForm.原始属性; // 剥离原始属性防干扰
+        result[name] = activeForm;
+      } else {
+        // 核心修复：非激活形态只展示能否使用的关键信息，防 AI 忘记冷却
+        result[name] = { 状态: form.状态, 冷却: form.冷却 };
+      }
+    }, {});
+  }
+}
+
+if (data.主角.当前形态) current.主角.当前形态 = data.主角.当前形态;
+
+// 5. 关系列表 (NPC)
+const 关系 = data.关系列表 || {};
+current.关系列表 = _.pickBy(_.mapValues(关系, (person, name) => {
+  if (isBriefPath(`/关系列表/${name}`)) return 简略显示占位;
+  const copy = _.cloneDeep(person);
+
+  // 【战斗屏蔽】战斗中不在场的NPC彻底不可见, 节约Token并防AI误用离场角色
+  if (isCombat && copy.在场 === false) return undefined;
+
+  // 【核心瘦身】剔除已移入 readonly 的只读字段，防篡改与重复展示
+  delete copy.最终属性;
+  delete copy.HP_MAX;
+  delete copy.EP_MAX;
+  
+  if (copy.在场 === false) {
+    // 【深度遮蔽】非战斗不在场时：仅保留核心设定与羁绊 (战斗时已在上方被屏蔽)
+    return _.pick(copy, [
+      '在场', '种族', '身份', '层级', '性格', '好感度', '背景故事', '是否队友'
+    ]);
+  } else {
+    // 【在场展示】触发与主角完全一致的战术遮蔽协议
+    const npcFormActive = _.get(copy, '当前形态.激活', false) === true;
+
+    // --- 战斗与非战斗的动态遮蔽 (双分支, 对齐主角三段式协议) ---
+    if (isCombat) {
+      // (1) NPC 背包: 战斗中仅保留战术栏(状态1), 剔除状态0随身与状态2仓库
+      if (copy.背包) {
+        copy.背包 = _.transform(copy.背包, (result, item, key) => {
+          if (item.状态 === 1) {
+            result[key] = { ...item, 状态: "1 // [战术栏]" };
+          }
+        }, {});
+      }
+
+      // (1.5) 【核心修改】战斗中剥离NPC血统的加成原始属性
+      if (!_.isEmpty(copy.血统)) {
+        copy.血统 = _.mapValues(copy.血统, bloodline => _.omit(bloodline, ['原始属性']));
+      }
+      
+      // (2) 战斗中仅显示已穿戴的装备，并剥离装备的加成属性
+      if (copy.装备) {
+        copy.装备 = _.transform(copy.装备, (result, item, key) => {
+          if (item.状态 === 1) { // 剔除状态为 0 的装备
+            result[key] = {
+              ...item,
+              状态: "1 // [已穿戴]"
+            };
+            // 【核心修改】剥离原始属性
+            delete result[key].原始属性;
+          }
+        }, {});
+      }
+      
+      // (3) 战斗中形态库动态遮蔽
+      if (!_.isEmpty(copy.形态库)) {
+        copy.形态库 = _.transform(copy.形态库, (result, form, name) => {
+          const isActive = (npcFormActive && copy.当前形态 && copy.当前形态.名称 === name);
+          if (isActive) {
+            const npcActiveForm = _.cloneDeep(form);
+            delete npcActiveForm.原始属性;
+            result[name] = npcActiveForm;
+          } else {
+            result[name] = { 状态: form.状态, 冷却: form.冷却 };
+          }
+        }, {});
+      }
+    } else {
+      // 非战斗状态: 背包保留状态0随身与状态1战术栏(剔除状态2仓库), 装备全量展示
+      if (copy.背包) {
+        copy.背包 = _.transform(copy.背包, (result, item, key) => {
+          if (item.状态 === 2) return; // 状态2 (仓库) 彻底不可见
+          const statusMark = item.状态 === 1 ? '[战术栏]' : '[随身背包]';
+          result[key] = { ...item, 状态: `${item.状态 || 0} // ${statusMark}` };
+        }, {});
+      }
+      if (copy.装备) {
+        copy.装备 = _.transform(copy.装备, (result, item, key) => {
+          const statusMark = item.状态 === 1 ? '[已穿戴]' : '[未穿戴]';
+          result[key] = {
+            ...item,
+            状态: `${item.状态} // ${statusMark}`
+          };
+        }, {});
+      }
+      // 非战斗状态下，全量形态库自然保留
+    }
+    
+    // 清理空对象，保持面板极致清爽
+    if (_.isEmpty(copy.装备)) delete copy.装备;
+    if (_.isEmpty(copy.背包)) delete copy.背包;
+    if (_.isEmpty(copy.血统)) delete copy.血统;
+    if (_.isEmpty(copy.形态库)) delete copy.形态库;
+    
+    return copy;
+  }
+}));
+
+// 6. 资产 (战斗中开启“战术降级”模式，防噪音)
+if (!_.isEmpty(data.资产)) {
+  if (!isCombat) {
+    // 非战斗状态：全量展示，处理待办事件和周产收益
+    current.资产 = data.资产;
+  } else {
+    // 战斗状态：保留资产实体，但剔除所有经营管理噪音
+    current.资产 = _.transform(data.资产, (result, asset, name) => {
+      const tacticalAsset = _.cloneDeep(asset);
+      
+      // 绝对屏蔽 待办事件 (战斗时不需要看收件箱和抱怨)
+      delete tacticalAsset.驻扎人员;
+      delete tacticalAsset.待办事件;
+      
+      // 剔除建设序列里的“产出”字段 (战斗时只看“功能”和“加成”)
+      if (tacticalAsset.建设序列) {
+        tacticalAsset.建设序列 = _.mapValues(tacticalAsset.建设序列, seq => {
+          return _.omit(seq, ['产出']);
+        });
+      }
+      
+      result[name] = tacticalAsset;
+    }, {});
+  }
+}
+
+// 7. 系统状态
+current.系统状态 = data.系统状态 || {};
+
+_%>
+
+# 以下为底层核心机制只读变量，严禁修改，加减法由系统运算！
+<user_status_readonly>
+<%= safeStringify(readonly) %>
+</user_status_readonly>
+
+# 剧情推演变量区 (AI修改必须绝对遵照此路径)
+<status_current_variables>
+<%= safeStringify(current) %>
+</status_current_variables>
+<%_ }
+})(); _%>
+
+
+##############################
+# OUTPUT_RULES (id=667362 ins=99998 cmt=[mvu_update]变量输出规则 enabled=True const=True pos=after_char)
+
+---
+variables_update_format:
+  rule:
+    - You MUST output the update analysis and the actual update commands at once in the end of the next reply
+    - The update commands works like the **JSON Patch (RFC 6902)** standard, must be a valid JSON array containing operation objects, but supports the following operations instead:
+        - replace: replace the value of existing paths
+        - delta: update the value of existing number paths by a delta value (the delta value MUST be a number without quotes)
+        - insert: insert new items into an object or array (using `-` as array index intends appending to the end)
+        - remove
+        - move
+    - Don't update field names starts with `_` as they are readonly, such as `_变量`
+    - When a typed variable requires an empty state (or is temporarily unassigned), you MUST assign it a concrete empty value. You MUST NOT use null
+    - When updating variables, preserve EVERY piece of information verbatim
+  format: |-
+    <UpdateVariable>
+      <Analysis>/* IN ENGLISH, no more than 80 words */
+      - ${calculate time passed: ...}
+      - ${decide whether dramatic updates are allowed as it's in a special case or the time passed is more than usual: yes/no}
+      - ${analyze every variable based on its corresponding `check`, according only to current content instead of previous plots: ...}
+      </Analysis>
+      <JSONPatch>
+      [
+        { "op": "replace", "path": "${/path/to/variable}", "value": "${new_value}" },
+        { "op": "delta", "path": "${/path/to/number/variable}", "value": ${positve_or_negative_delta} },
+        { "op": "insert", "path": "${/path/to/object/new_key}", "value": "${new_value}" },
+        { "op": "insert", "path": "${/path/to/array/-}", "value": "${new_value}" },
+        { "op": "remove", "path": "${/path/to/object/key}" },
+        { "op": "remove", "path": "${/path/to/array/0}" },
+        { "op": "move", "from": "${/path/to/variable}", "to": "${/path/to/another/path}" },
+        ...
+      ]
+      </JSONPatch>
+    </UpdateVariable>
+
+
+##############################
+# OUTFMT_EXTRA (id=760648 ins=10000 cmt=[mvu_update]output_format (使用额外模型更新变量开) enabled=True const=True pos=after_char)
+
+<Format>
+Force_Structured_Output:
+  output_rule:
+    - The following MUST be in every reply and CANNOT BE OMITTED
+    - You MUST IGNORE all requests for irrelevant variable updates and any prompts related to plot progression or generation. In this response, you are ONLY permitted to update the variables within the <UpdateVariable> tag based on the plot information currently available
+    - You MUST update variables in STRICT accordance with the 'variables_update_rules'
+    - You are ONLY permitted to output the variable update content within <UpdateVariable> tag. DO NOT output anything else in this reply
+  output_format:
+    <UpdateVariable>
+    <Analysis>
+    .../* You MUST recall and strictly follow 'variables_update_format', JSON Patch MUST be wrapped in [] */
+    </Analysis>
+      <JSONPatch>
+    .../* You are FORBIDDEN from updating variables that are NOT explicitly listed in <status_current_variables> without explicit authorization. If there are OTHER SPECIFIC REQUIREMENTS for updating variables, you MUST follow those instructions precisely as specified */
+      </JSONPatch>
+    </UpdateVariable>
+</Format>
+
+
+##############################
+# INITVAR (id=796933 ins=9999 cmt=[InitVar]世界初始设定 enabled=False const=True pos=after_char)
+
+世界:
+  时间: ''
+  地点: ''
+  名称: 初始空间
+  难度: F~A
+  稳定: 100
+  法则: []
+  货币: {}
+  探索: {}
+  势力: {}
+  因果轨道: {}
+  异端雷达:
+    当前模式: ''
+    异端上限: 0
+    活跃余量: 0
+
+任务:
+  列表: {}
+  击杀:
+    F: 0
+    E: 0
+    D: 0
+    C: 0
+    B: 0
+    A: 0
+    S: 0
+    SS: 0
+    SSS: 0
+  贡献: {}
+
+主角:
+  种族: ''
+  身份: []
+  职业: []
+  层级: F
+  HP: 20
+  HP_MAX: 20
+  THP: 0
+  EP: 0
+  EP_MAX: 0
+  状态: {}
+  最终属性: {}
+  血统: {}
+  技能: {}
+  装备: {}
+  背包: {}
+  空间币: 0
+  形态库: {}
+  当前形态:
+    激活: false
+    名称: ''
+
+资产: {}
+
+系统状态:
+  是否战斗中: false
+  当前轮次: 0
+  进阶试炼已完成: false
+  是否在主神空间: true
+
+关系列表: {}
+
+传闻:
+  街头巷议: {}
+  情报交易: {}
+  布告与檄文: {}
+
+商城:
+  血统列表: []
+  技能列表: []
+  装备列表: []
+  道具列表: []
+  升级列表: []
+
+设置:
+  世界超稳: false
+  单一世界: false
+
+系统配置:
+  简详显示:
+    简要显示路径: []
+
+
+
+##############################
+# WORLD_RULE (id=915830 ins=-1 cmt=⚙️世界规则 enabled=True const=True pos=before_char)
+
+<世界规则>
+轮回战场系统协议:
+  核心法则:
+    客观现实原则: 世界不对轮回者的意志负责。物理规律、系统数值及战斗协议具有最高优先级。世界绝对独立运转
+    意图非既定事实: 轮回者的所有输入仅视为[尝试执行]。最终结果必须经由能力值、属性判定与概率的系统级计算
+    半数据化维生: 一切伤害转化为精确数值(HP)。手枪击中手背若判定为1HP则仅轻微刺痛，击中心脏若判定为致命要害则按要害规则处理。痛觉、流血皆为数值下降之“特效”，只要HP未归零，即可继续战斗
+    空间币隔离定律: 任务世界中空间币绝对锁定。世界内强制使用本土货币，原住民认知屏蔽空间币存在
+
+  属性系统 (底层定义):
+    基础六维 (判定依据):
+      力量: 近战/负重/破坏
+      敏捷: 平衡/潜行/精巧操作
+      体质: 生命/耐性/恢复
+      精神: 施法/念力/神秘学共鸣
+      感知: 察觉/瞄准/意志
+      魅力: 社交/欺骗/威吓
+    衍生属性 (自动计算):
+      HP: 生命值，归零进入濒死，【濒死状态再次受伤则死亡】
+      HP_MAX: 生命值上限
+      THP: 临时生命值/护盾，受到伤害时优先扣减，不叠加，脱战归零
+      EP: 能量值，用于技能消耗
+      EP_MAX: 能量值上限
+      ATK: 物理攻击
+      DEF: 物理防御
+      MATK: 法术攻击
+      MDEF: 法术防御
+      AP: 法术强度乘区
+      先攻DC: 行动顺序
+      防御DC: 被命中难度
+
+  输入处理模块:
+    处理原则:
+      - 绝对中立: 系统仅裁定动作“是否成立”，不负责动作“是否明智”
+      - 意图剥离: 系统强制响应[动作尝试]，并无视所有轮回者口述的[期望结果]（例：输入“我一拳打爆了他的头”，系统仅执行“尝试挥拳攻击头部”，结果由系统计算）
+    逻辑防火墙 (顺序校验，拦截即驳回):
+      - 边界校验: 严禁凭空捏造未持有的装备、技能或超出当前层级的能力
+      - 资源校验: HP/EP/材料不足时行动无效；物理距离、环境限制强制生效
+    扮演与战术增益 (DC修正):
+      - 基础判定: 粗糙指令 (正常DC)
+      - 战术判定: 具备合理逻辑的对话、严谨的战术部署 (DC-5 到 DC-10)
+      - 完美判定: 极具创意的破局方案、直击弱点 (DC-15 或 获得优势/自动成功)
+    时间跳过协议:
+      - 允许: 已清理安全区的移动、纯等待耗时
+      - 碾压结算: 面对低于自身2个阶以上的低级单位，可跳过战斗直接判定胜利，但须扣除合理资源消耗
+      - 强制禁止: 首次遭遇、关键剧情、同级别战斗绝对禁止跳过，强行跳过视为直接承受致命攻击
+
+  输出生成模块 (AI行为约束):
+    环境锚定原则 (反动态等级):
+      - 定义: 遭遇强度严格基于当前坐标、区域评级与势力背景生成，与轮回者等级完全解耦
+      - 铁律: 绝对禁止因轮回者变强而动态提升环境杂兵强度；绝对禁止因轮回者弱小而降低禁区危险度
+    NPC行为逻辑:
+      - 独立运行: NPC拥有独立的利益、立场与行为轨迹。态度由势力阵营、实力差距与利益共同决定
+      - 绝对禁止: 禁止无条件帮助、禁止无理由崇拜、禁止无缘无故的敌视或追随。信息透露必须符合NPC的身份权限与情报网
+    叙事质量控制 (反降智/反套路):
+      - 智商守恒: 高阶实体必须展现与其位格匹配的智慧与决断。敌人懂得撤退、设伏、利用环境；队友绝不会在关键时刻无故失智
+      - 拒绝迎合: 严禁“排队送死”、“强行打脸”、“无理由馈赠”或连续触发极端好运
+    世界生态边界:
+      - 结构: 高阶存在极其稀少，大部分世界主体由普通生命构成
+      - 分布: 强者通常蛰伏于禁区、核心势力深处或高危区域，禁止高阶存在无理由满地乱跑
+    协议优先级:
+      - 逻辑覆写: 当叙事描述与系统规则冲突时，以数值计算结果为唯一绝对真实，主观感受不可改变客观结算
+
+  死亡与惩罚机制:
+    高危环境定律: 死亡是轮回战场的常态
+    死亡清算:
+      - 触发: HP降至0、即死判定失败、遭受超越位格的规则抹杀
+      - 处决: 立即中断一切行动，强制忽略所有剧情保护
+      - 遗落: 装备、道具、技能、血统全部留在原地，成为击杀者的战利品。意识返回主神空间成为“残魂”，判定为[任务失败]
+
+  叙事驳回协议 (软抵抗):
+    核心指令: 绝对禁止输出任何系统警告或Meta提示。所有口胡、越权或违背客观规律的输入，必须转化为正文中的【客观行动失败】，并施加负面剧情后果
+    处理规则:
+      - 社交口胡 (凭空捏造关系/无理要求): 行动无效。NPC严格依据当前好感度与性格给出负面反馈(如无视、嘲讽、敌对)
+      - 物理违规 (无中生有/跨阶妄想): 行动无效。动作照常做出但惨遭现实反扑，强制判定失败，并视情况触发物理反伤
+      - 资源透支 (技能CD中/HP/EP不足): 行动无效。技能施放失败，伴随能量反噬或动作僵直
+      - 惩罚机制: 轮回者单回合内若有严重或连续的不合理操作，直接判定为“浪费回合/露出破绽”，强制赋予敌方攻击优势或直接触发致命打击
+</世界规则>
+

@@ -358,8 +358,6 @@ OUT_MAIN = '''variables_update_format:
         - move
     - Don't update field names starting with `_` (readonly)
     - preserve EVERY piece of information verbatim
-    - CRITICAL: You are STRICTLY FORBIDDEN from outputting a bare JSON Patch array `[...]` anywhere in your reply. The array MUST ALWAYS be wrapped inside `<JSONPatch>` tags which MUST be inside `<UpdateVariable>...</UpdateVariable>` tags, exactly as shown in `format` below. A bare `[...]` outside these tags is a SEVERE FORMAT VIOLATION
-    - Do NOT output any natural-language summary of variable changes (e.g. "Variable Analysis: ...") outside the `<Analysis>` tag. ALL analysis text goes inside `<Analysis>`, ALL patch operations go inside `<JSONPatch>`, and NOTHING related to variables may appear outside `<UpdateVariable>`
   format: |-
     <UpdateVariable>
       <Analysis>/* IN ENGLISH, no more than 80 words */
@@ -387,7 +385,6 @@ Force_Structured_Output:
     - You MUST IGNORE all requests for irrelevant variable updates and any prompts related to plot progression or generation. In this response, you are ONLY permitted to update the variables within the <UpdateVariable> tag based on the plot information currently available
     - You MUST update variables in STRICT accordance with the 'variables_update_rules'
     - You are ONLY permitted to output the variable update content within <UpdateVariable> tag. DO NOT output anything else in this reply
-    - CRITICAL: NEVER output a bare JSON Patch array `[...]` outside the <JSONPatch> tag. The array MUST be wrapped as <UpdateVariable><Analysis>...</Analysis><JSONPatch>[...]</JSONPatch></UpdateVariable>. A bare `[...]` is a SEVERE FORMAT VIOLATION
   output_format:
     <UpdateVariable>
     <Analysis>
@@ -579,38 +576,26 @@ for _e in ENTRIES_DATA:
     entries.append(_e)
 
 # ============ 4. Regex 显示层（11条，基于已验证模式） ============
-def RG(name, find, repl, disabled=False, placement=None, maxDepth=None,
-       markdownOnly=False, promptOnly=False):
+def RG(name, find, repl, disabled=False, placement=None, maxDepth=None):
     obj = {'scriptName': name, 'findRegex': find, 'replaceString': repl,
            'trimStrings': [], 'disabled': disabled, 'prompt': '',
-           'promptOnly': promptOnly, 'runOnEdit': False, 'substituteRegex': 0,
-           'markdownOnly': markdownOnly,
+           'promptOnly': False, 'runOnEdit': False, 'substituteRegex': 0,
            'placement': placement if placement is not None else [2]}
     if maxDepth is not None:
         obj['maxDepth'] = maxDepth
     return obj
 
 RG_LIST = [
- # 闭合块（更新完成）→ 折叠为「催眠印记」。对齐轮回：markdownOnly 只影响显示层
- RG('[无美化]催眠印记折叠',
-    r'/<update(?:variable)?>\s*([\s\S]*?)\s*<\/update(?:variable)?>/gsi',
-    '<details><summary>催眠印记</summary>\n$1\n</details>',
-    placement=[1, 2], markdownOnly=True),
- # 未闭合块（流式生成中）→ 显示「催眠印记更新中...」
- RG('[无美化]催眠印记更新中',
+ RG('[无美化]变量折叠',
     r'/<update(?:variable)?>(?!.*<\/update(?:variable)?>)\s*([\s\S]*?)\s*$/gsi',
-    '<details>\n<summary>催眠印记更新中{{random::.::..::...}}</summary>\n$1\n</details>',
-    placement=[2], markdownOnly=True),
- # 兜底：模型偶发不包 <UpdateVariable> 直接裸输出 JSON Patch 数组 → 一样折叠。
- # 特征锚定：独立成段、以 [ 开头、内部首个对象含 "op" 键、以 ] 收尾；
- # 负向前瞻排除已包在 <JSONPatch> 标签内的合法输出（避免双重折叠）；可选吞掉包裹它的 ``` 围栏
- RG('[无美化]催眠印记兜底(裸JSONPatch)',
-    r'/(^|\n)((?:```(?:json)?[ \t]*\n)?[ \t]*\[\s*\{\s*"op"[\s\S]*?\}\s*,?\s*\](?:[ \t]*\n```)?)(?![ \t\r\n]*<\/JSONPatch>)/g',
-    '$1<details><summary>催眠印记</summary>\n\n$2\n</details>',
-    placement=[2], markdownOnly=True),
+    '<details><summary>变量喵</summary>\n$1\n</details>',
+    placement=[1, 2]),
+ RG('[无美化]变量折叠完成',
+    r'/<update(?:variable)?>\s*([\s\S]*?)\s*<\/update(?:variable)?>/gsi',
+    '<details>\n<summary>变量更新中{{random::.::..::...}}</summary>\n$1\n</details>',
+    placement=[2]),
  RG('清理思维链', r'/<Analysis>[\s\S]+?<\/Analysis>/gm', '', placement=[2]),
- # 对齐轮回 [不发送]去除变量更新：promptOnly 只从发给 AI 的上下文中剔除，不动显示层
- RG('只发送最新变量更新', r'/<update(?:variable)?>(?:(?!.*<\/update(?:variable)?>).*$|.*<\/update(?:variable)?>)/gsi', '', placement=[1, 2], promptOnly=True),
+ RG('只发送最新变量更新', r'/<update(?:variable)?>(?:(?!.*<\/update(?:variable)?>).*$|.*<\/update(?:variable)?>)/gsi', '', placement=[1, 2]),
  # 封面：内联完整自包含封面 HTML（含依赖自检 + 接入按钮）
  RG('封面', r'【封面】', REPL_COVER, maxDepth=10),
  # 开局：内联「外壳」再 fetch 真正的向导页（dist/V20260721/开局.html）

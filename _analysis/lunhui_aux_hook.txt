@@ -1,0 +1,130 @@
+==== HEAD ====
+// 这是一个用于数值计算和属性更新的脚本，适用于角色扮演游戏中的角色属性管理。
+// 在每轮结束后自动触发，确保角色属性始终保持最新状态。
+(function () {
+    'use strict';
+    
+    /** 是否已初始化日志 */
+    let isInitLog = false;
+    /**
+     * 防重入标志：防止脚本修改 stat_data 后触发 schema reconciliation
+     * 再次进入 VARIABLE_UPDATE_ENDED 导致无限循环
+     */
+    let isProcessing = false;
+    /**
+     * 核心函数：在 stat_data 更新完成后执行，进行数值计算和属性更新
+     * @param {*} rawVariables 原始变量
+     * @param {*} rawVariablesBefore 之前的原始变量
+     */
+    function onUpdateData(rawVariables, rawVariablesBefore) {
+        // 防重入：如果正在处理中，直接跳过
+        if (isProcessing) {
+            return;
+        }
+        isProcessing = true;
+
+        try {
+            /** 当前数据 */
+            const statData = rawVariables?.stat_data;
+            /** 之前的当前数据 */
+            const statDataBefore = rawVariablesBefore?.stat_data;
+
+            if (!statData) return;
+
+            const users = statData.主角;
+            if (!users) return;
+
+            // ★ 先回滚受保护字段，再执行后续计算
+            guardProtectedFields(statData, statDataBefore);
+
+            // 初始化日志（只打印一次）
+            if (!isInitLog) {
+                isInitLog = true;
+            }
+
+            // 重算所有角色属性（传入 before 供 NPC 群体 THP/数量同步判断）
+            recalcAllCharacters(statData, statDataBefore);
+
+            // 插入：功法熟练度守卫 (模块4)
+            // guardProficiency(statData.主角);
+
+            // 插入：伴生神器自动成长 (模块3)
+            // processArtifactGrowth(statData.主角);
+
+            // 插入：全自动收菜系统 (模块1)
+            autoHarvestAssets(statData);
+
+            // 【新增】：执行三大后台清理逻辑
+            const isCombat = statData.系统状态?.是否战斗中 === true;
+
+            // 1. 清理主角的背包和状态
+            if (statData.主角) {
+                cleanupZeroQuantityItems(statData.主角);
+                processStatusDuration(statData.主角, isCombat);
+            }
+            
+            // 2. 清理 NPC 的背包和状态
+            if (statData.关系列表) {
+                Object.values(statData.关系列表).forEach(npc => {
+                    if (!npc) return;
+                    cleanupZeroQuantityItems(npc);
+                    processStatusDuration(npc, isCombat);
+                });
+                
+                // 3. 清理已死亡的 NPC
+                cleanupDeadNPCs(statData);
+            }
+
+            // 4. 世界稳定值自动推演 (模块9)
+            calcWorldStability(statData);
+
+            // 5. 战斗轮次与形态冷却全自动管理 (模块10)
+            processCombatAndCooldowns(statData, statDataBefore);
+
+        } finally {
+            isProcessing = false;
+        }
+    };
+
+    // ===== 轻量路径工具(供数据守卫使用) =====
+    /** 按 a.b.c 路径读取嵌套值 */
+    function getByPath(obj, path) {
+        return path.split('.').reduce((o, k) => o?.[k], obj);
+    }
+
+    /** 按 a.b.c 路径写入嵌套值(父节点不存在则放弃,不创建) */
+    function setByPath(obj, path, value) {
+        const keys = path.split('.');
+        let cur = obj;
+        for (let i = 0; i < keys.length - 1; i++) {
+            if (cur[keys[i]] === undefined) return;
+            cur = cur[keys[i]];
+        }
+        cur[keys[keys.length - 1]] = value;
+    }
+
+    /** 变更检测:对象走 JSON 序列化比较,基本类型走 === */
+    function hasChanged(oldVal, newVal) {
+        if (oldVal === newVal) return false;
+        if (typeof oldVal === 'object' && typeof newVal === 'object') {
+            return JSON.stringify(oldVal) !== JSON.stringify(newVal);
+        }
+        return true;
+    }
+
+    /** 安全深拷贝(优先 lodash,回退 JSON) */
+    function clonePlainValue(value) {
+        if (value === undefined) return undefined;
+        if (typeof _ !== 'undefined' && _?.cloneDeep) return _.cloneDeep(value);
+        return JSON.parse(JSON.stringify(value));
+    }
+
+
+==== KEY LINES ====
+     * 再次进入 VARIABLE_UPDATE_ENDED 导致无限循环
+    let isProcessing = false;
+        if (isProcessing) {
+        isProcessing = true;
+            isProcessing = false;
+        // ★ UI 来源守卫: 若本次 VARIABLE_UPDATE_ENDED 由悬浮球UI操作(穿脱装备/道具/激活形态)触发, 跳过轮次推进+冷却递减
+        eventOn(Mvu.events.VARIABLE_UPDATE_ENDED, onUpdateData);

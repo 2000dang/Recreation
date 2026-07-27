@@ -1,0 +1,775 @@
+```text
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>轮回战场 - 任务选择</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+        :root {
+            --bg-dark: #0a0c10;
+            --bg-panel: #141821;
+            --border-color: rgba(46, 230, 255, 0.28);
+            --border-glow: rgba(46, 230, 255, 0.7);
+            --text-color: #e6ecf3;
+            --text-dim: #93a4b5;
+            --accent-color: #2ee6ff;
+            --accent-glow: rgba(46, 230, 255, 0.4);
+            --secondary-accent-color: #ff3b8b;
+            --label-color: #38d6e6;
+            --value-color: #f3f7fb;
+            --tier-low: #2ecc71;
+            --tier-mid: #f4c542;
+            --tier-high: #ff8c42;
+            --tier-extreme: #ff4d5e;
+            --font-main: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            --font-display: 'Orbitron', var(--font-main);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-color);
+            font-family: var(--font-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
+            /* 在小屏幕上减小 body 的 padding */
+            background-image: radial-gradient(rgba(0, 240, 255, 0.05) 1px, transparent 1px);
+            background-size: 16px 16px;
+        }
+
+        .terminal-container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            /* 在小屏幕上减小内边距 */
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(0, 240, 255, 0.1);
+            position: relative;
+        }
+
+        /* 桌面端样式增强 */
+        @media (min-width: 768px) {
+            .terminal-container {
+                padding: 25px 30px;
+                /* 在大屏幕上恢复较大的内边距 */
+            }
+        }
+
+
+        .terminal-container::before,
+        .terminal-container::after {
+            content: '';
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            /* 减小边角装饰大小 */
+            border-color: var(--accent-color);
+            border-style: solid;
+        }
+
+        .terminal-container::before {
+            top: -2px;
+            left: -2px;
+            border-width: 2px 0 0 2px;
+        }
+
+        .terminal-container::after {
+            top: -2px;
+            right: -2px;
+            border-width: 2px 2px 0 0;
+        }
+
+        .terminal-container>.corner-bottom-left::before,
+        .terminal-container>.corner-bottom-right::after {
+            content: '';
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            /* 减小边角装饰大小 */
+            border-color: var(--accent-color);
+            border-style: solid;
+        }
+
+        .terminal-container>.corner-bottom-left::before {
+            bottom: -2px;
+            left: -2px;
+            border-width: 0 0 2px 2px;
+        }
+
+        .terminal-container>.corner-bottom-right::after {
+            bottom: -2px;
+            right: -2px;
+            border-width: 0 2px 2px 0;
+        }
+
+        .selection-header {
+            text-align: center;
+            color: var(--accent-color);
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            /* 减小默认字体大小 */
+            margin-bottom: 20px;
+            letter-spacing: 3px;
+            /* 略微减小字间距 */
+            text-shadow: 0 0 15px var(--accent-glow);
+            animation: flicker 3s infinite alternate;
+        }
+
+        /* 桌面端样式增强 */
+        @media (min-width: 768px) {
+            .selection-header {
+                font-size: 1.8rem;
+                /* 在大屏幕上恢复字体大小 */
+                letter-spacing: 4px;
+                margin-bottom: 25px;
+            }
+        }
+
+        @keyframes flicker {
+
+            0%,
+            18%,
+            22%,
+            25%,
+            53%,
+            57%,
+            100% {
+                text-shadow: 0 0 10px var(--accent-glow), 0 0 20px var(--accent-glow);
+                opacity: 1;
+            }
+
+            20%,
+            24%,
+            55% {
+                text-shadow: none;
+                opacity: 0.8;
+            }
+        }
+
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            padding: 10px 0;
+            padding-right: 12px;
+            /* 为滚动条留出空间 */
+            margin-right: -8px;
+            /* 向右偏移，让滚动条与边框分开 */
+            margin-top: 6px;
+            /* 向下移动6个像素点 */
+            position: relative;
+            z-index: 2;
+            max-height: 65vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        /* 桌面端和平板端：固定显示2列，更紧凑 */
+        @media (min-width: 768px) {
+            .options-container {
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+                max-height: 70vh;
+            }
+        }
+
+        /* 大屏幕：显示3列 */
+        @media (min-width: 1200px) {
+            .options-container {
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 18px;
+            }
+        }
+
+        /* 滚动条样式 */
+        .options-container::-webkit-scrollbar {
+            width: 6px;
+            /* 稍微减小滚动条宽度 */
+        }
+
+        .options-container::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+            margin: 20px 0 0px 0;
+            /* 上边距14px（向下移动6px），下边距8px */
+        }
+
+        .options-container::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+            border: 1px solid transparent;
+            /* 添加透明边框，看起来更精致 */
+            background-clip: content-box;
+            /* 让背景不覆盖边框区域 */
+            transition: background 0.2s ease;
+        }
+
+        .options-container::-webkit-scrollbar-thumb:hover {
+            background: var(--border-glow);
+            background-clip: content-box;
+        }
+
+        /* ===== 世界卡片结构化样式 ===== */
+        .world-rating { margin: 6px 0 10px; }
+        .rating-badge {
+            display: inline-block;
+            font-family: var(--font-display);
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            padding: 3px 11px;
+            border-radius: 3px;
+            color: #0a0c10;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.45);
+        }
+        .rating-badge.tier-low { background: var(--tier-low); }
+        .rating-badge.tier-mid { background: var(--tier-mid); }
+        .rating-badge.tier-high { background: var(--tier-high); }
+        .rating-badge.tier-extreme { background: var(--tier-extreme); color: #fff; }
+
+        .world-fields { display: flex; flex-direction: column; gap: 5px; }
+        .wd-row {
+            display: flex;
+            gap: 8px;
+            align-items: baseline;
+            font-size: 0.85rem;
+            line-height: 1.55;
+        }
+        .wd-row-plain { color: var(--text-dim); }
+        .wd-label {
+            flex: 0 0 auto;
+            min-width: 66px;
+            color: var(--label-color);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .wd-value { color: var(--value-color); word-break: break-word; flex: 1 1 auto; }
+        .wd-sep { color: var(--text-dim); margin: 0 1px; }
+        .wd-part-dim { color: var(--text-dim); }
+        /* 模式高亮: 竞争/团战偏红, 单人偏青, 多人偏紫 */
+        .wd-mode-competitive { color: var(--tier-extreme); font-weight: 600; }
+        .wd-mode-solo { color: var(--accent-color); }
+        .wd-mode-neutral { color: #b07cff; }
+        /* 重点字段底色: 预期收益 */
+        .wd-row-key {
+            background: rgba(46, 230, 255, 0.07);
+            border-left: 2px solid var(--accent-color);
+            padding: 4px 8px;
+            border-radius: 0 3px 3px 0;
+            margin-left: -4px;
+        }
+        .wd-row-key .wd-value { color: #fff; }
+        /* 锚定目标: 粉色强调 */
+        .wd-row-goal {
+            background: rgba(255, 59, 139, 0.08);
+            border-left: 2px solid var(--secondary-accent-color);
+            padding: 4px 8px;
+            border-radius: 0 3px 3px 0;
+            margin-left: -4px;
+        }
+        .wd-row-goal .wd-value { color: var(--secondary-accent-color); font-weight: 600; }
+
+        .world-option {
+            background-color: rgba(0, 240, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--border-color);
+            border-radius: 4px;
+            padding: 12px;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            position: relative;
+        }
+
+        @media (min-width: 768px) {
+            .world-option {
+                padding: 15px;
+            }
+        }
+
+        .world-option:hover {
+            border-color: var(--border-glow);
+            border-left-color: var(--border-glow);
+            background-color: rgba(0, 240, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* 在触摸设备上，hover效果可能不理想，可以禁用transform */
+        @media (hover: none) {
+            .world-option:hover {
+                transform: none;
+            }
+        }
+
+        .world-option.selected {
+            border-color: var(--secondary-accent-color);
+            border-left-color: var(--secondary-accent-color);
+            background: rgba(255, 0, 127, 0.1);
+            box-shadow: inset 0 0 10px rgba(255, 0, 127, 0.2);
+        }
+
+        .world-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            /* 调整标题字体 */
+            margin-bottom: 8px;
+            color: #fff;
+            letter-spacing: 1px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border-color);
+            transition: color 0.2s ease;
+        }
+
+        @media (min-width: 768px) {
+            .world-title {
+                font-size: 1.2rem;
+                /* 桌面端稍大 */
+            }
+        }
+
+        .world-option.selected .world-title {
+            color: var(--secondary-accent-color);
+        }
+
+        .world-description {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            line-height: 1.6;
+            margin-top: 4px;
+        }
+
+        .radio-indicator {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            height: 22px;
+            width: 22px;
+            /* 增大点击指示器大小 */
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+        }
+
+        .world-option.selected .radio-indicator::after {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            background: var(--secondary-accent-color);
+            box-shadow: 0 0 8px rgba(255, 0, 127, 0.5);
+        }
+
+        .execute-button {
+            width: 100%;
+            padding: 15px;
+            /* 增加按钮垂直内边距，方便点击 */
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            /* 调整按钮字体大小 */
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(90deg, var(--secondary-accent-color), var(--accent-color));
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 25px;
+            transition: all 0.3s ease;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .execute-button:hover {
+            box-shadow: 0 0 25px rgba(255, 0, 127, 0.5), 0 0 25px rgba(0, 240, 255, 0.5);
+            transform: scale(1.02);
+        }
+
+        @media (hover: none) {
+            .execute-button:hover {
+                box-shadow: none;
+                transform: none;
+            }
+        }
+
+        .execute-button:disabled {
+            background: #555;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- HTML 结构保持不变 -->
+    <div class="terminal-container">
+        <div class="corner-bottom-left">
+            <div class="corner-bottom-right"></div>
+        </div>
+
+        <div class="selection-header">
+            WORLD SELECTION
+        </div>
+
+        <div class="options-container">
+            <!-- 世界选项将通过 JavaScript 动态生成 -->
+            <div class="loading-indicator" style="text-align: center; padding: 40px; color: var(--accent-color);">
+                <div style="font-size: 1.2rem; margin-bottom: 10px;">加载中...</div>
+                <div style="font-size: 0.9rem; opacity: 0.8;">正在解析世界数据...</div>
+            </div>
+        </div>
+
+        <button id="executeBtn" class="execute-button">Confirm Selection</button>
+    </div>
+
+    <script>
+
+        try {
+            const chat_message = getChatMessages(getCurrentMessageId())[0];
+            const matchContent = chat_message.message;
+            // console.log('原始消息:', matchContent);
+
+            // 解析策略: 合并所有 <mission> 块内容为文本池, 按【世界名】切分世界
+            // 关键: 世界名后必紧跟 "(综合评级" (评级行首), 字段值【稳定】【扰动】【平静】等不会跟,
+            //        这样可在单 <mission> 块内安全拆出多个世界
+            const missionBlockRegex = /<mission>([\s\S]*?)<\/mission>/gi;
+            let pool = '';
+            let blockMatch;
+            while ((blockMatch = missionBlockRegex.exec(matchContent)) !== null) {
+                pool += '\n' + blockMatch[1];
+            }
+            // 回退: 若无 <mission> 标签, 用全文当文本池
+            if (!pool.trim()) pool = matchContent;
+
+            const worldData = [];
+            const seenTitles = new Set();
+
+            // 锚定世界起点: 【世界名】 后紧跟 (\s*综合评级 (评级行首部)
+            // 新格式世界名前带 "1. 2. " 序号, 序号一并计入匹配,
+            // 使下一个世界的起点落在其序号开头, 避免序号残留到上一世界描述末尾 (如 "...[预期收益]: xxx\n2.")
+            // 第二捕获组用于回算 titleEnd (保留 "(" 在描述里, 不被吞掉)
+            const worldStartRegex = /(?:^|\n)[ \t]*(?:\d+\.[ \t]*)?【([^】]+)】(\s*\(\s*综合评级)/g;
+            const starts = [];
+            let ws;
+            while ((ws = worldStartRegex.exec(pool)) !== null) {
+                // titleEnd = 【世界名】 结束位置 (不含后面评级行的空白与"(")
+                const titleEnd = ws.index + (ws[0].length - ws[2].length);
+                starts.push({ title: ws[1].trim(), idx: ws.index, titleEnd: titleEnd });
+            }
+
+            for (let i = 0; i < starts.length; i++) {
+                const s = starts[i];
+                // 描述 = 【世界名】之后(含 "(综合评级:..." 评级行), 到下一个世界起点之前
+                const nextStart = (i + 1 < starts.length) ? starts[i + 1].idx : pool.length;
+                const descRaw = pool.slice(s.titleEnd, nextStart).trim();
+                // 过滤格式示例/占位: 描述过短或省略号过多则跳过
+                const ellipsisCount = (descRaw.match(/…/g) || []).length;
+                if (descRaw.length >= 20 && ellipsisCount <= 10 && !seenTitles.has(s.title)) {
+                    seenTitles.add(s.title);
+                    worldData.push({ title: s.title, description: descRaw });
+                }
+            }
+
+            // 回退 A: 新格式无 "(综合评级" 标记时, 按 【世界名】+换行+[字段 配对
+            if (worldData.length === 0) {
+                const worldPatternA = /【([^】]+)】\s*\n\s*\[([\s\S]*?)(?=【[^】]+】\s*\n\s*\[|$)/g;
+                let m;
+                while ((m = worldPatternA.exec(pool)) !== null) {
+                    const t = m[1].trim();
+                    const d = m[2].trim();
+                    const ec = (d.match(/…/g) || []).length;
+                    if (d.length >= 50 && ec <= 5 && !seenTitles.has(t)) {
+                        seenTitles.add(t);
+                        worldData.push({ title: t, description: d });
+                    }
+                }
+            }
+
+            // 回退 B: 旧格式 【世界名】紧跟[描述] 同行配对
+            if (worldData.length === 0) {
+                const worldPatternB = /【([^】]+)】[\s\n]*\[([\s\S]*?)\]/g;
+                let m;
+                while ((m = worldPatternB.exec(pool)) !== null) {
+                    const t = m[1].trim();
+                    const d = m[2].trim();
+                    const ec = (d.match(/…/g) || []).length;
+                    if (d.length >= 50 && ec <= 5 && !seenTitles.has(t)) {
+                        seenTitles.add(t);
+                        worldData.push({ title: t, description: d });
+                    }
+                }
+            }
+
+            if (worldData.length === 0) {
+                throw new Error("未找到 <mission> 标签或未能解析出世界数据");
+            }
+
+            // 动态生成世界选项HTML
+            const container = document.querySelector('.options-container');
+            container.innerHTML = ''; // 清空加载指示器
+
+            worldData.forEach((world, index) => {
+                const worldElement = document.createElement('div');
+                worldElement.className = 'world-option';
+                worldElement.setAttribute('data-index', index);
+
+                const parsed = parseDescription(world.description);
+                worldElement.innerHTML = `
+                <div class="radio-indicator"></div>
+                <div class="world-title">【${escapeHtml(world.title)}】</div>
+                <div class="world-description">${renderDescriptionHtml(parsed)}</div>
+            `;
+                // 保留原始描述(含换行/管道符)供发送时使用
+                worldElement.querySelector('.world-description').dataset.raw = world.description;
+
+                container.appendChild(worldElement);
+            });
+
+            // 重新绑定事件监听器
+            bindWorldOptionEvents();
+
+        } catch (e) {
+            // console.error("处理世界数据时发生错误:", e);
+            const container = document.querySelector('.options-container');
+            container.innerHTML = `
+            <div style="color: var(--secondary-accent-color); text-align: center; font-size: 1.1rem; line-height: 1.8; padding: 40px;">
+                <div style="font-size: 1.3rem; margin-bottom: 15px;"><b>数据加载失败</b></div>
+                <div style="opacity: 0.8;">错误信息: ${e.message}</div>
+                <div style="margin-top: 15px; font-size: 0.9rem; opacity: 0.6;">
+                    请检查消息格式是否包含正确的 &lt;mission&gt; 标签和世界信息
+                </div>
+            </div>
+        `;
+        }
+
+        // ===== 结构化解析世界描述 =====
+        // 评级危险度: 取挑战极限(范围右端)判定, F/E低危, D/C中危, B/A高危, S+极危
+        function ratingTier(ratingCore) {
+            const high = String(ratingCore).split('-').pop().trim().toUpperCase();
+            const order = ['F', 'E', 'D', 'C', 'B', 'A', 'S', 'SS', 'SSS'];
+            const idx = order.indexOf(high);
+            if (idx <= 1) return 'low';
+            if (idx <= 3) return 'mid';
+            if (idx <= 5) return 'high';
+            return 'extreme';
+        }
+
+        // 把描述文本解析为 { rating, ratingCore, tier, rows[] }
+        // rows[] 每项: { label, value, parts[] }; parts 为按 | 拆分的子项
+        function parseDescription(desc) {
+            const result = { rating: null, ratingCore: '', tier: 'mid', rows: [] };
+            const lines = String(desc).replace(/\r/g, '').split('\n');
+            for (let raw of lines) {
+                const line = raw.trim();
+                if (!line) continue;
+                // 评级行: (综合评级: E-C级)
+                const rm = line.match(/^\(\s*综合评级\s*[：:]\s*([^）]+?)\s*级\s*\)\s*$/);
+                if (rm) {
+                    result.ratingCore = rm[1].trim();
+                    result.rating = result.ratingCore + '级';
+                    result.tier = ratingTier(result.ratingCore);
+                    continue;
+                }
+                // 字段行 [label]: value 或 【label】：value
+                const fm = line.match(/^(\[[^\]]+\]|【[^】]+】)\s*[：:]\s*([\s\S]*)$/);
+                if (fm) {
+                    const label = fm[1].replace(/[\[\]【】]/g, '').trim();
+                    const value = fm[2].trim();
+                    result.rows.push({ label, value, parts: value.split(/\s*\|\s*/).filter(p => p.trim()) });
+                } else {
+                    result.rows.push({ label: '', value: line, parts: [line] });
+                }
+            }
+            return result;
+        }
+
+        // 识别 "模式: xxx" 子项的配色类
+        function modeClass(part) {
+            const mm = part.match(/模式\s*[：:]\s*(\S+)/);
+            if (!mm) return '';
+            const mode = mm[1];
+            if (/竞争|团战|敌对/.test(mode)) return 'wd-mode-competitive';
+            if (/单人|固定/.test(mode)) return 'wd-mode-solo';
+            if (/多人|同场|中立/.test(mode)) return 'wd-mode-neutral';
+            return '';
+        }
+
+        // 渲染结构化卡片内容
+        function renderDescriptionHtml(parsed) {
+            let html = '';
+            if (parsed.rating) {
+                html += `<div class="world-rating"><span class="rating-badge tier-${parsed.tier}">综合评级 ${escapeHtml(parsed.rating)}</span></div>`;
+            }
+            html += '<div class="world-fields">';
+            parsed.rows.forEach(row => {
+                if (!row.label) {
+                    html += `<div class="wd-row wd-row-plain">${escapeHtml(row.value)}</div>`;
+                    return;
+                }
+                const isGoal = /锚定目标|任务/.test(row.label);
+                const isKey = /预期收益/.test(row.label);
+                const cls = isGoal ? 'wd-row wd-row-goal' : (isKey ? 'wd-row wd-row-key' : 'wd-row');
+                let valueHtml;
+                if (row.parts.length > 1) {
+                    valueHtml = row.parts.map((p, i) => {
+                        if (i === 0) return escapeHtml(p);
+                        return `<span class="wd-sep">|</span> <span class="wd-part-dim ${modeClass(p)}">${escapeHtml(p)}</span>`;
+                    }).join('');
+                } else {
+                    valueHtml = escapeHtml(row.value);
+                }
+                html += `<div class="${cls}"><span class="wd-label">${escapeHtml(row.label)}</span><span class="wd-value">${valueHtml}</span></div>`;
+            });
+            html += '</div>';
+            return html;
+        }
+
+        function escapeHtml(s) {
+            if (typeof s !== 'string') return '';
+            return s.replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+        let selectedIndex = null;
+        const confirmButton = document.getElementById('executeBtn');
+
+        // 绑定世界选项事件的函数
+        function bindWorldOptionEvents() {
+            const worldOptions = document.querySelectorAll('.world-option');
+
+            worldOptions.forEach(option => {
+                option.addEventListener('click', function () {
+                    // 移除所有选中状态
+                    worldOptions.forEach(opt => opt.classList.remove('selected'));
+
+                    // 添加当前选中状态
+                    this.classList.add('selected');
+                    selectedIndex = parseInt(this.getAttribute('data-index'));
+
+                    // console.log('选中世界索引:', selectedIndex);
+                });
+            });
+        }
+
+        confirmButton.addEventListener('click', function () {
+            if (selectedIndex === null) {
+                alert('错误：未选择任何世界坐标。');
+                return;
+            }
+
+            const selectedOption = document.querySelector(`.world-option[data-index="${selectedIndex}"]`);
+            if (!selectedOption) {
+                alert('错误：选中的世界不存在。');
+                return;
+            }
+
+            confirmButton.disabled = true;
+            confirmButton.textContent = 'TRANSMITTING...';
+
+            const worldTitle = selectedOption.querySelector('.world-title').textContent.trim();
+            // 发送时用 data-raw 保留原始换行 (AI 现用 [子字段]: 分行式, 不再需要 " - " 列表转换)
+            const descEl = selectedOption.querySelector('.world-description');
+            const worldDescription = (descEl.dataset.raw || descEl.textContent || '')
+                .replace(/\r/g, '')
+                .replace(/\n{3,}/g, '\n\n')   // 压缩多余空行
+                .trim();
+
+            const message = `
+## 【世界信息】
+**世界名称：** ${worldTitle}
+
+## 【世界背景】
+${worldDescription}
+
+## 正在进入该世界...
+      `.trim();
+
+            // 把可确认的世界资料写入 stat_data.世界 (名称/难度/模式/异端上限与活跃余量)
+            try {
+                const parsed = parseDescription(worldDescription);
+                const win = window.parent || window;
+                if (win.Mvu && win._) {
+                    const c = win.Mvu.getMvuData({type:'message', message_id:'latest'});
+                    const _set = win._.set;
+                    _set(c, 'stat_data.世界.名称', worldTitle);
+                    if (parsed.rating) _set(c, 'stat_data.世界.难度', parsed.rating);
+                    // 干涉模式行: 提取模式文本 + 预计异端数量(上限与活跃余量初始一致)
+                    const modeRow = parsed.rows.find(r => /干涉模式/.test(r.label));
+                    if (modeRow) {
+                        const alienMatch = modeRow.value.match(/预计异端[:：]\s*(\d+)/);
+                        const alienCount = alienMatch ? parseInt(alienMatch[1], 10) : 0;
+                        const modeText = modeRow.value.replace(/\s*\(?\s*预计异端[:：]\s*\d+人?\s*\)?\s*/g, '').trim();
+                        _set(c, 'stat_data.世界.异端雷达.当前模式', modeText);
+                        _set(c, 'stat_data.世界.异端雷达.异端上限', alienCount);
+                        _set(c, 'stat_data.世界.异端雷达.活跃余量', alienCount);
+                    }
+                    win.Mvu.replaceMvuData(c, {type:'message', message_id:'latest'});
+                    try { win.Mvu.replaceMvuData(c, {type:'chat'}); } catch(e2){}
+                }
+            } catch(e) { console.warn('写入世界数据失败:', e); }
+
+            sendData(message);
+
+            setTimeout(() => {
+                confirmButton.disabled = false;
+                confirmButton.textContent = 'Confirm Selection';
+            }, 5000);
+        });
+
+        function sendData(data) {
+            // console.log('准备发送指令...');
+            confirmButton.textContent = '指令已发送';
+
+            try {
+                if (typeof triggerSlash === 'function') {
+                    // 转义消息内容中的管道符 |, 防止被 STScript 当作命令分隔符截断
+                    // (世界描述含 "[时空/匹配]: xxx | 模式: yyy" 等管道符, 会导致 /send 在首个 | 处被截断)
+                    const escapedData = data.replace(/\|/g, '\\|');
+                    triggerSlash(`/send ${escapedData}|/trigger`);
+                    // console.log('成功通过 triggerSlash 发送');
+                    return;
+                }
+            } catch (e) { console.warn('triggerSlash 不可用'); }
+
+            try {
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ type: 'world_selection', content: data }, '*');
+                    // console.log('成功通过 postMessage 发送');
+                    return;
+                }
+            } catch (e) { console.warn('postMessage 不可用'); }
+
+            try {
+                navigator.clipboard.writeText(data).then(() => {
+                    // console.log('指令已复制到剪贴板');
+                    alert('指令已复制到剪贴板！请手动粘贴发送。');
+                    confirmButton.textContent = '已复制到剪贴板';
+                });
+            } catch (e) {
+                // console.error('所有发送方式均失败:', e);
+                alert('自动发送失败，请手动复制指令。');
+                confirmButton.textContent = '发送失败';
+            }
+        }
+
+    </script>
+</body>
+
+</html>
+```
