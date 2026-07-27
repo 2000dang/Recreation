@@ -368,6 +368,37 @@
     $m.off('click.hxModalBg').on('click.hxModalBg', function(e) { if (e.target === this) $('#hx-stat-modal').removeClass('open'); });
   }
 
+  function showScriptManagement() {
+    var sd = getStatData();
+    if (!sd || !sd.催眠系统 || !sd.催眠系统.可用剧本 || sd.催眠系统.可用剧本.length === 0) {
+      showModal('催眠剧本管理', '<div style="padding:20px;text-align:center;color:#7d709f;">暂无可用剧本。<br>提升职级或解锁更多助理后可获得更多剧本。</div>');
+      return;
+    }
+    var scripts = sd.催眠系统.可用剧本;
+    var current = sd.催眠系统.当前剧本 || '无';
+    var hackOn = sd.主角状态 && sd.主角状态.破解模式;
+    var contrib = sd.主角状态 ? sd.主角状态.贡献点 : 0;
+    var html = '<div style="margin-bottom:12px;font-size:11px;color:#9b8fc0;">当前剧本：<span style="color:#b39dff;font-weight:bold;">'+esc(current)+'</span></div>';
+    html += '<div style="margin-bottom:8px;font-size:11px;color:#9b8fc0;">可用剧本（'+scripts.length+'个）·在正文中说出剧本名即可启动：</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:6px;">';
+    scripts.forEach(function(s) {
+      var isActive = (s === current);
+      var bg = isActive ? 'rgba(134,239,172,0.12)' : 'rgba(155,109,255,0.06)';
+      var border = isActive ? '1px solid rgba(134,239,172,0.4)' : '1px solid rgba(155,109,255,0.12)';
+      html += '<div style="padding:10px 12px;background:'+bg+';border:'+border+';border-radius:8px;font-size:12px;color:#e8e3f5;cursor:default;">';
+      html += '<div style="display:flex;align-items:center;gap:6px;">';
+      html += '<span style="font-weight:bold;color:'+(isActive?'#86efac':'#b39dff')+';">'+esc(s)+'</span>';
+      if (isActive) html += '<span style="font-size:10px;color:#86efac;background:rgba(134,239,172,0.15);padding:1px 6px;border-radius:4px;">进行中</span>';
+      html += '</div></div>';
+    });
+    html += '</div>';
+    var tip = hackOn
+      ? '💡 破解模式下所有剧本免费无限使用。在聊天框中输入「启动剧本名」即可开始。'
+      : '💡 在聊天框中输入「启动剧本名」即可开始。非破解模式下需确保贡献点充足（当前：'+contrib+'）。';
+    html += '<div style="margin-top:12px;padding:10px;background:rgba(155,109,255,0.04);border-radius:8px;font-size:11px;color:#7d709f;line-height:1.6;">'+tip+'</div>';
+    showModal('催眠剧本管理', html);
+  }
+
   // ===== 14. UI 事件绑定  =====
   function bindUIEvents() {
     var $panel = $('#hx-stat-panel');
@@ -392,6 +423,10 @@
       var next = getTheme() === 'dark' ? 'light' : 'dark';
       setTheme(next);
       renderAll();
+    });
+    // 剧本管理
+    $panel.off('click.hxScript').on('click.hxScript', '.hx-script-btn', function() {
+      showScriptManagement();
     });
     // 公司地图
     $panel.off('click.hxMap').on('click.hxMap', '.hx-map-btn', function() {
@@ -744,6 +779,12 @@
         display = '<div style="display:inline-block;width:120px;height:6px;background:rgba(155,109,255,0.15);border-radius:3px;vertical-align:middle;margin-right:6px;"><div style="height:100%;width:'+pct+'%;background:'+c+';border-radius:3px;"></div></div><span style="font-size:11px;color:'+c+';">'+vFloor+'/100</span>';
       } else {
         display = String(val);
+      }
+    } else if (key === '可用剧本' && Array.isArray(val)) {
+      if (val.length === 0) {
+        display = '<span style="color:#7d709f;font-size:11px;">暂无</span>';
+      } else {
+        display = '<button class="hx-script-btn" title="查看和管理催眠剧本" style="background:rgba(155,109,255,0.15);border:1px solid rgba(155,109,255,0.3);border-radius:6px;padding:4px 12px;color:#b39dff;cursor:pointer;font-size:12px;">📋 剧本管理 ('+val.length+'个)</button>';
       }
     } else {
       display = esc(String(val === '' || val === null || val === undefined ? '—' : val));
