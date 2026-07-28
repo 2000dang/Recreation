@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>环晓科技 · 资源加载层 本地测试桩</title>
+<style>
+  body{font-family:'Segoe UI','Microsoft YaHei',sans-serif;background:#0d1b2a;color:#e8f0f7;padding:24px;line-height:1.6}
+  h1{color:#5fd0ff;font-size:1.3rem}
+  .case{padding:10px 14px;margin:8px 0;border-radius:8px;background:#16263a;border-left:3px solid #5fd0ff}
+  .ok{border-left-color:#22c55e}.bad{border-left-color:#ef4444}.warn{border-left-color:#eab308}
+  .case b{display:inline-block;min-width:130px}
+  pre{background:#0a0f17;padding:10px;border-radius:6px;overflow:auto;font-size:12px;max-height:160px}
+  #bar{position:fixed;top:14px;right:14px;width:260px;min-height:48px;background:#16263a;border:1px solid #5fd0ff55;border-radius:12px;padding:8px;font-size:12px;z-index:99999}
+  button{background:#5fd0ff;color:#04263a;border:0;border-radius:6px;padding:8px 14px;cursor:pointer;font-weight:600}
+</style>
+</head>
+<body>
+<h1>🧪 环晓科技 资源加载层 — 本地测试桩</h1>
+<p>本页模拟 SillyTavern 的全局环境，加载 <code>资源加载器.js</code> 与 <code>悬浮球状态栏.js</code>，并自动验证资源加载能力。
+请通过 <code>http://localhost:8080/test-harness.html</code> 访问（不要直接双击打开，否则 fetch 受 CORS/file 协议限制）。</p>
+<button onclick="runTests()">▶ 运行全部测试</button>
+<div id="report"></div>
+
+<!-- ① 先注入 SillyTavern 全局桩 -->
+<script>
+  window._ = {
+    clamp: function(v,min,max){ return Math.min(max, Math.max(min, v)); },
+    uniq:  function(a){ return Array.isArray(a) ? Array.from(new Set(a)) : a; }
+  };
+  window.Mvu = {
+    _h: {},
+    getMvuData: function(){ return { stat_data: { 主角状态:{职级:'正式员工',贡献点:5}, 环境与系统:{当前场景:'办公室'} } }; },
+    on: function(ev, cb){ (this._h[ev]=this._h[ev]||[]).push(cb); },
+    replaceMvuData: function(){}, updateVariable: function(){},
+    fire: function(ev, a, b){ (this._h[ev]||[]).forEach(function(cb){ try{cb(a,b);}catch(e){console.error(e);} }); }
+  };
+  // 极简 jQuery 桩（仅避免未定义报错）
+  window.jQuery = window.$ = function(){ return { on:function(){}, off:function(){}, html:function(){}, append:function(){}, css:function(){} }; };
+  window.SillyTavern = { ...(window.SillyTavern||{}) };
+</script>
+
+<!-- ② 加载资源加载层 与 状态栏（模拟卡片 import） -->
+<script src="资源加载器.js"></script>
+<script src="悬浮球状态栏.js"></script>
+
+<!-- ③ 测试运行器 -->
+<script>
+  const R = document.getElementById('report');
+  function add(name, ok, detail, cls){
+    const d=document.createElement('div');
+    d.className='case '+(cls||(ok?'ok':'bad'));
+    d.innerHTML='<b>'+(ok?'✅':'❌')+' '+name+'</b><span>'+(detail||'')+'</span>';
+    R.appendChild(d);
+  }
+  async function runTests(){
+    R.innerHTML='';
+    // 0. 模块加载
+    add('资源加载器挂载 HX', !!(window.HX && window.HX.loadImage), 'CDN_BASE='+(window.HX&&window.HX.CDN_BASE));
+    // 1. 数据加载
+    try{
+      const data = await HX.loadData('角色档案');
+      const ok = data && data['杨玉兰'];
+      add('loadData(角色档案)', ok, '键: '+Object.keys(data||{}).join(','));
+    }catch(e){ add('loadData(角色档案)', false, e.message); }
+    // 2. 图片加载
+    try{
+      const url = await HX.loadImage('杨玉兰');
+      const ok = url && url.indexOf('data:image')===0;
+      add('loadImage(杨玉兰)', ok, ok?'已转为 dataURL':'返回: '+String(url).slice(0,40));
+    }catch(e){ add('loadImage(杨玉兰)', false, e.message); }
+    // 3. iframe 注入
+    try{
+      const box=document.createElement('div'); box.id='ifr-box'; document.body.appendChild(box);
+      const f=HX.injectIframe('封面.html', box);
+      add('injectIframe(封面.html)', !!f, f?'iframe.src='+f.src.slice(0,50):'失败');
+    }catch(e){ add('injectIframe(封面.html)', false, e.message); }
+    // 4. 状态栏挂载（best-effort）
+    try{
+      window.Mvu.fire('VARIABLE_UPDATE_ENDED', window.Mvu.getMvuData(), null);
+      const bar=document.getElementById('bar');
+      add('状态栏 (VARIABLE_UPDATE_ENDED)', true, '已派发更新事件（完整渲染请在 SillyTavern 内 F12 验证）', 'warn');
+    }catch(e){ add('状态栏渲染', false, e.message, 'warn'); }
+    // 5. 预载
+    try{ await HX.preload(['杨玉兰','角色档案']); add('preload 批量预热', true, '完成'); }
+    catch(e){ add('preload 批量预热', false, e.message); }
+  }
+  // 自动跑一次
+  window.addEventListener('load', function(){ setTimeout(runTests, 400); });
+</script>
+</body>
+</html>

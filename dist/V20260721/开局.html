@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>环晓科技 · 入职建档向导</title>
+    <style>
+        :root {
+            --bg: #100a18;
+            --surface: #181024;
+            --text: #d8d0ea;
+            --text-sub: #8a7fa8;
+            --accent: #9b6dff;
+            --accent-dark: #6d4bb0;
+            --accent-soft: rgba(155, 109, 255, 0.14);
+            --ok: #5fd0ff;
+            --font-ui: 'Noto Sans SC', sans-serif;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            background: transparent;
+            color: var(--text);
+            font-family: var(--font-ui);
+            line-height: 1.7;
+        }
+        .wizard-layout {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 18px 16px 28px;
+        }
+        .wiz-head {
+            text-align: center;
+            margin-bottom: 14px;
+        }
+        .wiz-head .tag {
+            font-size: 0.62rem;
+            letter-spacing: 0.4rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            font-family: monospace;
+        }
+        .wiz-head h2 {
+            font-size: 1.4rem;
+            color: #fff;
+            letter-spacing: 0.15rem;
+            margin-top: 4px;
+        }
+        .steps {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .step-dot {
+            font-size: 0.72rem;
+            padding: 3px 10px;
+            border-radius: 20px;
+            background: rgba(155,109,255,0.1);
+            color: var(--text-sub);
+        }
+        .step-dot.active { background: var(--accent); color: #fff; }
+        .panel { display: none; }
+        .panel.active { display: block; }
+        .field {
+            margin-bottom: 12px;
+        }
+        .field label {
+            display: block;
+            font-size: 0.78rem;
+            color: var(--text-sub);
+            margin-bottom: 4px;
+        }
+        .field input, .field select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid rgba(155,109,255,0.3);
+            border-radius: 6px;
+            background: var(--surface);
+            color: var(--text);
+            font-size: 0.9rem;
+            font-family: var(--font-ui);
+        }
+        .field input:focus, .field select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-soft);
+        }
+        .hint {
+            font-size: 0.7rem;
+            color: var(--text-sub);
+            margin-top: 2px;
+        }
+        .nav {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            margin-top: 18px;
+        }
+        button.wiz {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.1rem;
+            cursor: pointer;
+            font-family: var(--font-ui);
+        }
+        .wiz.primary { background: var(--accent); color: #100a18; }
+        .wiz.primary:hover { background: #fff; }
+        .wiz.ghost { background: rgba(255,255,255,0.06); color: var(--text); }
+        .wiz.ghost:hover { background: rgba(255,255,255,0.12); }
+        .wiz:disabled { opacity: 0.35; pointer-events: none; }
+        .err { color: #e74c3c; font-size: 0.78rem; min-height: 18px; margin-top: 8px; text-align: center; }
+        .skip {
+            display: block;
+            width: 100%;
+            margin-top: 10px;
+            background: none;
+            border: none;
+            color: var(--text-sub);
+            font-size: 0.75rem;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 24px;
+            transform: translateX(-50%);
+            background: var(--surface);
+            border: 1px solid var(--accent-dark);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 999;
+        }
+        .toast.show { opacity: 1; }
+        .toast.success { border-color: var(--ok); }
+        .toast.error { border-color: #e74c3c; }
+    </style>
+</head>
+<body>
+<div class="wizard-layout">
+    <div class="wiz-head">
+        <div class="tag">EMPLOYEE ONBOARDING</div>
+        <h2>环晓科技 · 入职建档向导</h2>
+    </div>
+
+    <div class="steps">
+        <div class="step-dot active" id="dot-1">① 身份信息</div>
+        <div class="step-dot" id="dot-2">② 资产权限</div>
+    </div>
+
+    <!-- Step 1 -->
+    <div class="panel active" id="panel-1">
+        <div class="field">
+            <label>你的姓名 / 代号</label>
+            <input id="f-name" type="text" placeholder="输入你的角色名" value="用户" />
+        </div>
+        <div class="field">
+            <label>工号（员工系统唯一标识）</label>
+            <input id="f-empId" type="text" value="HX-0001" />
+        </div>
+        <div class="field">
+            <label>职级 · 催眠权限等级（固定初始）</label>
+            <div style="display:flex;gap:10px;align-items:center;">
+                <input type="text" value="助理工程师" readonly style="flex:1;background:rgba(155,109,255,0.06);color:#e8e3f5;border:1px solid rgba(155,109,255,0.3);padding:8px 12px;border-radius:8px;font-size:13px;cursor:default;" />
+                <span style="color:#7d709f;font-size:12px;">→</span>
+                <input type="text" value="Lv.1 助理工程师" readonly style="flex:1;background:rgba(155,109,255,0.06);color:#e8e3f5;border:1px solid rgba(155,109,255,0.3);padding:8px 12px;border-radius:8px;font-size:13px;cursor:default;" />
+            </div>
+            <div class="hint">入职即助理工程师，后续通过贡献点晋升解锁更高级职位。上方共有 9 级晋升路线：工程师→高级工程师→资深工程师→技术专家→高级技术专家→首席专家→技术总监→副总裁→总裁。</div>
+            <input type="hidden" id="f-rank" value="助理工程师" />
+            <input type="hidden" id="f-perm" value="1" />
+        </div>
+        <div class="err" id="err-1"></div>
+        <div class="nav">
+            <button class="wiz primary" onclick="next(2)">下一步</button>
+        </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="panel" id="panel-2">
+        <div class="field">
+            <label>贡献点（员工系统硬通货）</label>
+            <input id="f-credit" type="number" value="5" />
+            <div class="hint">换发型1 / 普通指令10 / 强制主奴20；破解模式开启后显示为 ∞。</div>
+        </div>
+        <div class="field">
+            <label>个人金钱（¥）</label>
+            <input id="f-money" type="number" value="5000" />
+            <div class="hint">个人资金为入职起始资金。催眠权限等级已在身份信息中固定为 Lv.1 助理工程师。</div>
+        </div>
+        <div class="err" id="err-2"></div>
+        <div class="nav">
+            <button class="wiz ghost" onclick="setStep(1)">上一步</button>
+            <button class="wiz primary" onclick="descend()">完成建档 · 进入剧情</button>
+        </div>
+        <button class="skip" onclick="skipDescend()">跳过建档，直接降临环晓科技</button>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+    'use strict';
+    function $(id) { return document.getElementById(id); }
+
+    function toast(msg, type) {
+        var t = $('toast');
+        if (!t) return;
+        t.textContent = msg;
+        t.className = 'toast show' + (type ? ' ' + type : '');
+        setTimeout(function () { t.className = 'toast' + (type ? ' ' + type : ''); }, 2200);
+    }
+
+    window.setStep = function (n) {
+        for (var i = 1; i <= 2; i++) {
+            var p = $('panel-' + i); if (p) p.classList.toggle('active', i === n);
+            var d = $('dot-' + i); if (d) d.classList.toggle('active', i === n);
+        }
+    };
+    window.next = function (n) {
+        if (n === 2 && !$('f-name').value.trim()) {
+            $('err-1').textContent = '请填写姓名 / 代号'; return;
+        }
+        window.setStep(n);
+    };
+
+    function collect() {
+        return {
+            name: $('f-name').value.trim() || '零',
+            empId: $('f-empId').value.trim() || 'HX-0001',
+            rank: $('f-rank').value,
+            credit: Math.max(0, Number($('f-credit').value) || 0),
+            money: Math.max(0, Number($('f-money').value) || 0),
+            perm: Number($('f-perm').value) || 1
+        };
+    }
+
+    // === MVU 同步（_.set 深层写入 + replaceMvuData）===
+    function syncMVU(d) {
+        try {
+            var win = window.parent || window;
+            if (!win.Mvu || !win._ || typeof win.Mvu.getMvuData !== 'function') {
+                if (win.Mvu && typeof win.Mvu.updateVariable === 'function') {
+                    win.Mvu.updateVariable('主角状态', {
+                        工号: d.empId, 职级: d.rank, 贡献点: d.credit,
+                        '个人金钱': d.money,
+                        '催眠权限等级': d.perm
+                    });
+                    return true;
+                }
+                return false;
+            }
+            var cloned = win.Mvu.getMvuData({ type: 'message', message_id: 'latest' });
+            if (!cloned || !cloned.stat_data) return false;
+            cloned = win._.cloneDeep ? win._.cloneDeep(cloned) : JSON.parse(JSON.stringify(cloned));
+            if (!cloned.stat_data['主角状态']) cloned.stat_data['主角状态'] = {};
+            var ps = cloned.stat_data['主角状态'];
+            win._.set(ps, '工号', d.empId);
+            win._.set(ps, '职级', d.rank);
+            win._.set(ps, '贡献点', d.credit);
+            win._.set(ps, '个人金钱', d.money);
+            win._.set(ps, '催眠权限等级', d.perm);
+
+            // 助理管理: 写入杨玉兰初始数据(环境与系统/催眠系统等由 InitVar 提供)
+            if (!cloned.stat_data['助理管理']) cloned.stat_data['助理管理'] = {};
+            var am = cloned.stat_data['助理管理'];
+            if (!am['实习助���']) am['实习助理'] = {};
+            if (!am['实习助理']['杨玉兰']) am['实习助理']['杨玉兰'] = {};
+            var yll = am['实习助理']['杨玉兰'];
+            win._.set(yll, '类型', '实习助理');
+            win._.set(yll, '在场', true);
+            win._.set(yll, '状态', '正常');
+            win._.set(yll, '情绪', '不耐烦');
+            win._.set(yll, '催眠状态', '未被催眠');
+            win._.set(yll, '身高', '165cm');
+            win._.set(yll, '身材', '偏瘦但曲线明显');
+            win._.set(yll, '罩杯', 'D');
+            win._.set(yll, '改造状态', '无');
+            win._.set(yll, '婚姻状态', '未婚');
+            win._.set(yll, '人际关系', '与同事秦燕霞疑似母女关系(未公开确认);对公司制度有抵触但依赖工资;与主角初始关系冷淡。');
+            win._.set(yll, '过往经历事件', '入职报到当天分配为{{user}}的实习助理。');
+            win._.set(yll, '归属', '{{user}}的助理');
+            win._.set(yll, '好感度', 5);
+            win._.set(yll, '派系', '初始');
+            win._.set(yll, '心理状态', '警惕');
+            win._.set(yll, '经历事件', ['入职报到']);
+            if (!am['正式助理']) am['正式助理'] = {};
+            if (!am['组长助理']) am['组长助理'] = {};
+
+            win.Mvu.replaceMvuData(cloned, { type: 'message', message_id: 'latest' });
+            try { win.Mvu.replaceMvuData(cloned, { type: 'chat' }); } catch (e2) {}
+            try {
+                var evt = win.Mvu.events && win.Mvu.events.VARIABLE_UPDATE_ENDED;
+                if (evt && typeof win.eventEmit === 'function') win.eventEmit(evt, cloned, cloned);
+            } catch (e3) {}
+            console.log('✅ MVU 主角状态已同步 (_.set 深度写入)');
+            return true;
+        } catch (e) {
+            console.warn('[开局] MVU同步失败(非致命):', e.message);
+            return false;
+        }
+    }
+
+    // === 发送到酒馆 ===
+    function sendToTavern(text) {
+        try {
+            var win = window.parent || window;
+            var ta = win.document.getElementById('send_textarea');
+            var btn = win.document.getElementById('send_but');
+            if (ta && btn) {
+                ta.value = text;
+                ta.dispatchEvent(new Event('input', { bubbles: true }));
+                btn.click();
+                toast('正在降临环晓科技...', 'success');
+                try { parent.postMessage({ type: 'embed-resize', height: 0 }, '*'); } catch (e) {}
+                return true;
+            } else {
+                console.log(text);
+                toast('未检测到酒馆界面，已输出到控制台', 'error');
+                return false;
+            }
+        } catch (e) {
+            console.error(e);
+            toast('跨域访问受限，无法自动发送', 'error');
+            return false;
+        }
+    }
+
+    function buildPrompt(d) {
+        var parts = [];
+        parts.push('【角色建档完成】');
+        parts.push('姓名：' + d.name + '　工号：' + d.empId + '　职级：' + d.rank);
+        parts.push('催眠权限等级：Lv.' + d.perm + '　贡献点：' + d.credit + '　个人资金：¥' + d.money);
+        parts.push('');
+        parts.push('【开局段落（请承接演绎）】');
+        parts.push('{{user}}推开环晓科技总部大厦的旋转门，一股混合着高级空调和淡香的气息扑面而来。');
+        parts.push('');
+        parts.push('大厅宽敞气派，大理石地面映着天花板环形灯带的柔光。前台几位穿着统一蓝色职业套装的年轻女性正在忙碌，她们的妆容精致，姿态优雅，丝袜包裹的长腿在高跟鞋中若隐若现。');
+        parts.push('');
+        parts.push('你拿着入职通知书走到前台，一位梳着低马尾的前台小姐微笑着接过你的文件：「{{user}}博士？欢迎来到环晓科技。研发部在八层，您的工号和门禁卡已经准备好了。」');
+        parts.push('');
+        parts.push('她递过来一张印着公司logo的工牌，指尖不经意地划过你的手背，触感微凉而柔软。');
+        parts.push('');
+        parts.push('电梯到了八层，门一开，走廊里几乎清一色是穿着OL制服、踩着高跟鞋的女性员工。她们手持平板电脑，三三两两地走过，偶尔投来好奇的目光——在这个楼层看到男性员工，似乎是一件稀罕事。');
+        parts.push('');
+        parts.push('你找到了自己的办公室，推门进去。离门口不远的地方，一个年轻女孩正翘着二郎腿坐在那里修指甲。她头发挑染成红的粉的绿的蓝的，烫着波浪卷披在肩上，眼影画得很浓，脖子上像狗一样戴了个皮质脖圈，一边耳朵挂着硕大的耳环。本来长得蛮好看的小姑娘，非得打扮成这副模样。');
+        parts.push('');
+        parts.push('她懒洋洋地瞅了你一眼，有气无力地打了个招呼：「早。——你就是我上司？{{user}}博士？」');
+        parts.push('');
+        parts.push('她把升降桌慢慢升高到合适站着工作的高度，然后站起身来，低头整理了一下包臀裙的裙摆。虽然这姑娘的打扮让你直摇头，但不可否认的是——她的身材确实好得离谱，那包臀裙下挺翘的弧度，让你不由得多看了两眼。');
+        parts.push('');
+        parts.push('「我叫杨玉兰，你的实习助理。公司规定，你在办公室的时候我得一直站着，背对你，不许回头。」她撇了撇嘴，「所以你最好别干太恶心的事。」');
+        return parts.join('\n');
+    }
+
+    window.descend = function () {
+        var d = collect();
+        syncMVU(d);
+        var prompt = buildPrompt(d);
+        sendToTavern(prompt);
+    };
+
+    window.skipDescend = function () {
+        var d = {
+            name: '零', empId: 'HX-0001', rank: '助理工程师', credit: 5, money: 5000,
+            perm: 1
+        };
+        syncMVU(d);
+        sendToTavern(buildPrompt(d));
+    };
+
+    // === 自适配 iframe 高度 ===
+    function installHeight() {
+        var app = document.querySelector('.wizard-layout') || document.body;
+        function getH() {
+            var b = document.body;
+            var bs = b ? getComputedStyle(b) : null;
+            var pt = bs ? (parseFloat(bs.paddingTop) || 0) : 0;
+            var pb = bs ? (parseFloat(bs.paddingBottom) || 0) : 0;
+            var rect = app.getBoundingClientRect();
+            return Math.max(1, Math.ceil(Math.max(app.scrollHeight || 0, app.offsetHeight || 0, rect.height || 0) + pt + pb));
+        }
+        function apply() {
+            try { if (window.frameElement) { window.frameElement.style.minHeight = '0px'; window.frameElement.style.height = getH() + 'px'; } } catch (e) {}
+        }
+        function queue() { if (window.requestAnimationFrame) requestAnimationFrame(apply); else apply(); }
+        if (window.ResizeObserver) { var ro = new ResizeObserver(queue); ro.observe(app); }
+        if (window.MutationObserver) { var mo = new MutationObserver(queue); mo.observe(app, { childList: true, subtree: true, attributes: true }); }
+        window.addEventListener('load', queue);
+        window.addEventListener('resize', queue);
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(queue).catch(function () {});
+        queue(); setTimeout(queue, 200); setTimeout(queue, 600);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', installHeight, { once: true });
+    else installHeight();
+})();
+</script>
+</body>
+</html>
