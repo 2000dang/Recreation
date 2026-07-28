@@ -368,6 +368,71 @@
     $m.off('click.hxModalBg').on('click.hxModalBg', function(e) { if (e.target === this) $('#hx-stat-modal').removeClass('open'); });
   }
 
+  // ===== 14.5 剧本成本表 + 客户端准入校验 + 发送助手 =====
+  // 与 9900 映射表/剧本条目成本保持一致（单一来源：build_hx_v2.py）
+  var SCRIPT_COST = {
+    '琛雨式奸击机': {cost:30, lv:1}, '奸击机': {cost:30, lv:1},
+    '女体咖啡机': {cost:25, lv:1}, '人型咖啡机': {cost:25, lv:1}, '咖啡机': {cost:25, lv:1},
+    '女体桥头堡': {cost:30, lv:1}, '桥头堡': {cost:30, lv:1},
+    '性交辅助': {cost:20, lv:1},
+    '加莹式俯冲轰炸机': {cost:35, lv:3}, '俯冲轰炸机': {cost:35, lv:3},
+    '女体人肉沙包': {cost:30, lv:3}, '人肉沙包': {cost:30, lv:3},
+    '子宫守卫者': {cost:30, lv:3},
+    '女助理运动会': {cost:35, lv:3},
+    '环晓科技之战': {cost:40, lv:5},
+    '女特工最后之舞': {cost:30, lv:5},
+    '帝国骑兵小队': {cost:35, lv:5},
+    '女体摩托车': {cost:35, lv:5},
+    '总监办公室五人接龙': {cost:20, lv:7},
+    '人力轮椅与人肉沙包': {cost:30, lv:7},
+    '总裁办公室接待': {cost:45, lv:7},
+    '真女教祭祀': {cost:50, lv:9},
+    '性奴特工队2': {cost:35, lv:9},
+    '养生馆双人技师': {cost:25, lv:9}, '插入式养生馆': {cost:25, lv:9},
+    '女特工潜入与反杀': {cost:30, lv:9}, '女特工潜入': {cost:30, lv:9},
+    '女特工喂奶搏斗': {cost:35, lv:9}
+  };
+  function lookupScriptCost(name) {
+    if (!name) return null;
+    if (SCRIPT_COST[name]) return SCRIPT_COST[name];
+    for (var k in SCRIPT_COST) { if (name.indexOf(k) >= 0) return SCRIPT_COST[k]; }
+    return null;
+  }
+  // 往酒馆主窗口聊天框填入并发送一条消息（依赖 GS_PARENT 主窗口）
+  function sendChatCommand(text) {
+    try {
+      var pd = GS_PARENT.document;
+      var ta = pd.getElementById('send_textarea');
+      if (!ta) ta = pd.querySelector('#send_textarea, textarea.send_textarea, #input_send_textarea');
+      if (!ta) return false;
+      ta.value = text;
+      ta.dispatchEvent(new Event('input', {bubbles: true}));
+      var btn = pd.getElementById('send_button') || pd.getElementById('send_buttton') ||
+                pd.querySelector('#send_button, #send_buttton, button.send-button, button[aria-label="Send"]');
+      if (btn) { btn.click(); return true; }
+      return false;
+    } catch (e) { return false; }
+  }
+  // 客户端确定性准入校验（兜底，不依赖 AI 自觉）：true=放行，false=已拦截并提示
+  function clientScriptGate(name) {
+    var sd = getStatData();
+    if (!sd || !sd.主角状态) return true; // 数据缺失时放行，交 AI 处理
+    if (sd.主角状态.破解模式) return true; // 破解模式免校验
+    var c = lookupScriptCost(name);
+    if (!c) return true; // 未知剧本放行，交 AI 处理
+    var lv = (typeof sd.主角状态.催眠权限等级 === 'number') ? sd.主角状态.催眠权限等级 : 0;
+    var contrib = (typeof sd.主角状态.贡献点 === 'number') ? sd.主角状态.贡献点 : 0;
+    if (lv < c.lv) {
+      showModal('⚠️ 权限不足', '<div style="padding:16px;color:#ffb454;line-height:1.7;">该剧本需要催眠权限 <b>Lv'+c.lv+'</b> 以上，你当前 <b>Lv'+lv+'</b>。<br><br>提升职级后即可解锁（助理工程师=1→工程师=2→…→总裁=10）。</div>');
+      return false;
+    }
+    if (contrib < c.cost) {
+      showModal('⚠️ 贡献点不足', '<div style="padding:16px;color:#ffb454;line-height:1.7;">启动【'+esc(name)+'】需 <b>'+c.cost+'</b> 贡献点，你当前仅有 <b>'+contrib+'</b>。<br><br>请先赚取贡献点（完成项目/成就/周常），或在破解模式下无限体验。</div>');
+      return false;
+    }
+    return true;
+  }
+
   function showScriptManagement() {
     var sd = getStatData();
     if (!sd || !sd.催眠系统 || !sd.催眠系统.可用剧本 || sd.催眠系统.可用剧本.length === 0) {
@@ -385,7 +450,7 @@
       var isActive = (s === current);
       var bg = isActive ? 'rgba(134,239,172,0.12)' : 'rgba(155,109,255,0.06)';
       var border = isActive ? '1px solid rgba(134,239,172,0.4)' : '1px solid rgba(155,109,255,0.12)';
-      html += '<div style="padding:10px 12px;background:'+bg+';border:'+border+';border-radius:8px;font-size:12px;color:#e8e3f5;cursor:default;">';
+      html += '<div class="hx-script-item" data-script="'+esc(s)+'" title="点击启动该剧本" style="padding:10px 12px;background:'+bg+';border:'+border+';border-radius:8px;font-size:12px;color:#e8e3f5;cursor:pointer;">';
       html += '<div style="display:flex;align-items:center;gap:6px;">';
       html += '<span style="font-weight:bold;color:'+(isActive?'#86efac':'#b39dff')+';">'+esc(s)+'</span>';
       if (isActive) html += '<span style="font-size:10px;color:#86efac;background:rgba(134,239,172,0.15);padding:1px 6px;border-radius:4px;">进行中</span>';
@@ -427,6 +492,18 @@
     // 剧本管理
     $panel.off('click.hxScript').on('click.hxScript', '.hx-script-btn', function() {
       showScriptManagement();
+    });
+    // 点击剧本条目 → 客户端校验 + 自动发送启动指令
+    $panel.off('click.hxScriptItem').on('click.hxScriptItem', '.hx-script-item', function() {
+      var name = $(this).attr('data-script');
+      if (!name) return;
+      if (!clientScriptGate(name)) return; // 客户端已拦截并提示
+      var ok = sendChatCommand('启动剧本：' + name);
+      if (!ok) {
+        // 兜底：复制到剪贴板
+        try { if (GS_PARENT.navigator.clipboard) GS_PARENT.navigator.clipboard.writeText('启动剧本：' + name); } catch (e) {}
+        alert('已复制「启动剧本：' + name + '」，请粘贴到输入框发送');
+      }
     });
     // 公司地图
     $panel.off('click.hxMap').on('click.hxMap', '.hx-map-btn', function() {
