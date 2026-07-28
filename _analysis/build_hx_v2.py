@@ -8,13 +8,13 @@ import os
 
 SRC = '催眠助理·环晓科技_v2.1完善版.json'
 OUT = '催眠助理·环晓科技_v2.1完善版.json'
-CDN = 'https://cdn.jsdelivr.net/gh/2000dang/Recreation@main/dist/V20260721'
+CDN = 'https://cdn.jsdelivr.net/gh/2000dang/Recreation@main/dist/2026-07-28'
 
 # 悬浮球脚本改为内联到卡里，避免 jsdelivr/import 在部分浏览器环境失效导致看不到球
-FLOAT_JS = open(os.path.join('dist', 'V20260721', '悬浮球状态栏.js'), encoding='utf-8').read()
+FLOAT_JS = open(os.path.join('dist', '2026-07-28', '悬浮球状态栏.js'), encoding='utf-8').read()
 
 # 封面 HTML：全内联自包含页（含依赖自检 + 接入按钮）
-COVER_HTML = open(os.path.join('dist', 'V20260721', '封面.html'), encoding='utf-8').read()
+COVER_HTML = open(os.path.join('dist', '2026-07-28', '封面.html'), encoding='utf-8').read()
 REPL_COVER = '```text\n' + COVER_HTML + '\n```'
 
 src = json.load(open(SRC, encoding='utf-8'))
@@ -658,7 +658,7 @@ RG_LIST = [
  RG('只发送最新变量更新', r'/<update(?:variable)?>(?:(?!.*<\/update(?:variable)?>).*$|.*<\/update(?:variable)?>)/gsi', '', placement=[1, 2], promptOnly=True),
  # 封面：内联完整自包含封面 HTML（含依赖自检 + 接入按钮）
  RG('封面', r'【封面】', REPL_COVER, maxDepth=10),
- # 开局：内联「外壳」再 fetch 真正的向导页（dist/V20260721/开局.html）
+ # 开局：内联「外壳」再 fetch 真正的向导页（dist/2026-07-28/开局.html）
  RG('开局', r'【开局】',
     '```text\n<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n  <meta charset="UTF-8" />\n'
     '  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n'
